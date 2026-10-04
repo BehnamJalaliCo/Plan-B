@@ -32,6 +32,7 @@ rootProject.name = "Plan-B"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
+include(":wear")
 include(":core:common")
 include(":core:model")
 include(":core:datetime")

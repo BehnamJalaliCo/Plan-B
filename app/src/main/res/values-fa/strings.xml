@@ -84,4 +84,8 @@
     <string name="shortcut_today_long">باز کردن برنامهٔ امروز</string>
     <string name="shortcut_focus">شروع تمرکز</string>
     <string name="shortcut_focus_long">شروع جلسهٔ تمرکز</string>
+    <string name="wear_tasks">امروز</string>
+    <string name="wear_habits">عادت‌ها</string>
+    <string name="wear_empty">برای امروز کاری نمانده.</string>
+    <string name="wear_locked">برنامهٔ ساعت به Plan-B Pro روی گوشی نیاز دارد.</string>
 </resources>

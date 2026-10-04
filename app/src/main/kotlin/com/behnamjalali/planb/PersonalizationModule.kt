@@ -8,6 +8,7 @@ import com.behnamjalali.planb.core.data.platform.WidgetUpdater
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
 import com.behnamjalali.planb.launcher.LauncherIconSwitcher
 import com.behnamjalali.planb.quick.ShortcutPublisher
+import com.behnamjalali.planb.wear.WearSync
 import com.behnamjalali.planb.widget.GlanceWidgetUpdater
 import dagger.Binds
 import dagger.Module
@@ -41,19 +42,29 @@ class PersonalizationSync @Inject constructor(
     private val shortcuts: ShortcutPublisher,
     private val entitlements: EntitlementRepository,
     private val settings: SettingsRepository,
+    private val wear: WearSync,
     @ApplicationScope private val scope: CoroutineScope,
 ) {
     fun start() {
-        scope.launch { changes.changes.collect { widgets.requestUpdate() } }
+        scope.launch {
+            changes.changes.collect {
+                widgets.requestUpdate()
+                wear.publish()
+            }
+        }
         scope.launch {
             entitlements.isPro.collect { pro ->
                 shortcuts.publish(pro)
                 widgets.requestUpdate()
+                wear.publish()
             }
         }
         scope.launch {
             settings.settings.map { listOf(it.language, it.calendarSystem, it.firstDayOfWeek, it.usePersianDigits) }
-                .distinctUntilChanged().drop(1).collect { widgets.requestUpdate() }
+                .distinctUntilChanged().drop(1).collect {
+                    widgets.requestUpdate()
+                    wear.publish()
+                }
         }
     }
 }

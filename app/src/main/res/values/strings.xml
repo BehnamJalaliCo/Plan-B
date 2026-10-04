@@ -85,4 +85,8 @@
     <string name="shortcut_today_long">Open today’s plan</string>
     <string name="shortcut_focus">Start focus</string>
     <string name="shortcut_focus_long">Start a focus session</string>
+    <string name="wear_tasks">Today</string>
+    <string name="wear_habits">Habits</string>
+    <string name="wear_empty">Nothing left for today.</string>
+    <string name="wear_locked">The watch app needs Plan-B Pro on your phone.</string>
 </resources>

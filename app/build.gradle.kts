@@ -141,6 +141,9 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
+    // Wear OS companion sync; every call is guarded so devices without Play services are unaffected.
+    implementation(libs.play.services.wearable)
+    implementation(libs.kotlinx.coroutines.play.services)
     baselineProfile(projects.baselineprofile)
 
     testImplementation(projects.core.testing)
