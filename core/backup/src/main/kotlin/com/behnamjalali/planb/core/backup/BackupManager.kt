@@ -13,6 +13,8 @@ import com.behnamjalali.planb.core.datastore.UserPreferencesDataSource
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 data class AppVersion(val name: String, val code: Int)
 
@@ -122,10 +124,14 @@ class BackupManager @Inject constructor(
             // The transaction rolled back; report it like any other failed restore.
             throw BackupException.RestoreFailed(e)
         }
-        cancel(oldReminders)
-        // Preferences are restored only after the data committed successfully.
-        if (archive.preferences.isNotEmpty()) runCatching { preferences.import(archive.preferences) }
-        runCatching { reminders.rescheduleAll() }
+        // The data is committed: the follow-up steps must run to the end even if the caller
+        // is cancelled meanwhile, or preferences and alarms would not match the data.
+        withContext(NonCancellable) {
+            cancel(oldReminders)
+            // Preferences are restored only after the data committed successfully.
+            if (archive.preferences.isNotEmpty()) runCatchingSafely { preferences.import(archive.preferences) }
+            runCatchingSafely { reminders.rescheduleAll() }
+        }
     }
 
     /** Topological order so a subtask is never inserted before its parent. */
@@ -149,9 +155,11 @@ class BackupManager @Inject constructor(
     suspend fun deleteAllData() {
         val oldReminders = currentReminders()
         db.withTransaction { dao.clearAll() }
-        cancel(oldReminders)
-        runCatching { reminders.cancelFocusEnd() }
-        runCatching { reminders.rescheduleAll() }
+        withContext(NonCancellable) {
+            cancel(oldReminders)
+            runCatchingSafely { reminders.cancelFocusEnd() }
+            runCatchingSafely { reminders.rescheduleAll() }
+        }
     }
 
     private class Reminders(val tasks: List<Long>, val events: List<Long>, val habits: List<Long>)
