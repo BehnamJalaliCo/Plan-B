@@ -110,6 +110,7 @@ class DataViewModel @Inject constructor(
     }
 
     fun cancelRestore() {
+        _state.value.pendingRestore?.let(backup::discard)
         _state.update { it.copy(pendingRestore = null) }
     }
 
@@ -120,7 +121,10 @@ class DataViewModel @Inject constructor(
         work(appScope) {
             runCatchingSafely { backup.restore(archive) }
                 .onSuccess { report(DataMessage.Restored(settings.current().language)) }
-                .onFailure { report(DataMessage.RestoreError(it)) }
+                .onFailure {
+                    backup.discard(archive)
+                    report(DataMessage.RestoreError(it))
+                }
         }
     }
 

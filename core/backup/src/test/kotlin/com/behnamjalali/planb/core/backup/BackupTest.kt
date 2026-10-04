@@ -5,13 +5,26 @@ import android.net.Uri
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.behnamjalali.planb.core.data.AttachmentFiles
 import com.behnamjalali.planb.core.data.DocumentFiles
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.SearchIndexMaintenance
 import com.behnamjalali.planb.core.data.repository.OfflineProjectRepository
 import com.behnamjalali.planb.core.data.repository.OfflineTaskRepository
 import com.behnamjalali.planb.core.database.PlanBDatabase
+import com.behnamjalali.planb.core.database.entity.ActivityLogEntity
+import com.behnamjalali.planb.core.database.entity.AttachmentEntity
+import com.behnamjalali.planb.core.database.entity.BadgeEntity
+import com.behnamjalali.planb.core.database.entity.CalendarLinkEntity
+import com.behnamjalali.planb.core.database.entity.ChallengeEntity
 import com.behnamjalali.planb.core.database.entity.HabitEntity
+import com.behnamjalali.planb.core.database.entity.JournalEntryEntity
+import com.behnamjalali.planb.core.database.entity.MoodEntryEntity
+import com.behnamjalali.planb.core.database.entity.NoteLinkEntity
+import com.behnamjalali.planb.core.database.entity.NoteVersionEntity
+import com.behnamjalali.planb.core.database.entity.SavedFilterEntity
+import com.behnamjalali.planb.core.database.entity.TaskDependencyEntity
+import com.behnamjalali.planb.core.database.entity.TaskReminderEntity
 import com.behnamjalali.planb.core.database.entity.NoteEntity
 import com.behnamjalali.planb.core.database.entity.NotebookEntity
 import com.behnamjalali.planb.core.database.entity.ProjectEntity
@@ -67,6 +80,8 @@ class BackupTest {
     private val reminders = NoOpReminders()
     private val t0 = Instant.parse("2026-01-01T00:00:00Z")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val filesRoot: File = Files.createTempDirectory("files").toFile()
+    private val attachments = AttachmentFiles(filesRoot)
 
     @Before
     fun setUp() {
@@ -76,12 +91,15 @@ class BackupTest {
         prefs = UserPreferencesDataSource(PreferenceDataStoreFactory.create(scope = scope) { File(dir, "p.preferences_pb") })
         manager = BackupManager(
             db, db.backupDao(), prefs, DocumentFiles(context, Dispatchers.IO), SearchIndexMaintenance(db.backupDao(), db.searchDao()),
-            reminders, FakeTimeProvider(), AppVersion("1.0.0", 1),
+            reminders, FakeTimeProvider(), AppVersion("1.0.0", 1), attachments,
         )
     }
 
     @After
-    fun tearDown() = db.close()
+    fun tearDown() {
+        db.close()
+        filesRoot.deleteRecursively()
+    }
 
     private fun task(id: Long, title: String, project: Long? = null, parent: Long? = null) = TaskEntity(
         id, title, "", "TODO", false, 0, null, LocalDate.of(2026, 3, 21), null, null, null, project, parent, null, null, null, null,
@@ -402,4 +420,184 @@ class BackupTest {
         assertThat(project.title).isEqualTo("سفر")
         assertThat(db.backupDao().tasks().single().projectId).isEqualTo(project.id)
     }
+
+    // region Format 2: schema v3 tables and attachment files
+
+    private fun seedV3() = runBlocking<Unit> {
+        seed()
+        val dao = db.backupDao()
+        dao.insertTasks(listOf(task(10, "مرحلهٔ بعد").copy(deadline = LocalDate.of(2026, 4, 1), nag = true, scheduledStart = t0, scheduledEnd = t0.plusSeconds(1800))))
+        dao.insertTaskReminders(listOf(TaskReminderEntity(1, 1, "OFFSET", 60, null), TaskReminderEntity(2, 1, "ABSOLUTE", null, t0)))
+        dao.insertTaskDependencies(listOf(TaskDependencyEntity(10, 1)))
+        dao.insertNotes(listOf(NoteEntity(2, 1, null, "قفل", NoteDocument().encode(), "blocks-v1", false, false, 1, t0, t0, false, locked = true, encryptedPayload = byteArrayOf(1, 0, -1, 7))))
+        dao.insertNoteVersions(listOf(NoteVersionEntity(1, 1, t0, "نسخهٔ قدیم", "{}", 2)))
+        dao.insertNoteLinks(listOf(NoteLinkEntity(1, 2)))
+        dao.insertMoodEntries(listOf(MoodEntryEntity(1, LocalDate.of(2026, 1, 2), java.time.LocalTime.of(21, 0), 4, 3, "work", 1, t0, t0)))
+        dao.insertJournalEntries(listOf(JournalEntryEntity(1, LocalDate.of(2026, 1, 2), 1, "gratitude", t0, t0)))
+        dao.insertChallenges(listOf(ChallengeEntity(1, "HABIT_STREAK", "۲۱ روز آب", 21, LocalDate.of(2026, 1, 1), 1, "ACTIVE", null, t0, t0)))
+        dao.insertBadges(listOf(BadgeEntity(1, "first_week", t0)))
+        dao.insertActivityLog(listOf(ActivityLogEntity(1, "TASK", 1, "CREATED", t0, "کار شمارهٔ 1")))
+        dao.insertCalendarLinks(listOf(CalendarLinkEntity(1, "TASK", 1, 3, 77, t0, 5, "abc")))
+        dao.insertSavedFilters(listOf(SavedFilterEntity(1, "فوری", "star", "rose", "{\"version\":1}", 0, t0, t0)))
+        attachments.directory.mkdirs()
+        attachments.file("photo.jpg").writeBytes(ByteArray(3000) { (it % 251).toByte() })
+        dao.insertAttachments(listOf(AttachmentEntity(1, "NOTE", 1, "IMAGE", "photo.jpg", "عکس.jpg", "image/jpeg", 3000, null, 640, 480, "متن تصویر", null, 0, t0)))
+    }
+
+    private fun zipBytes(archive: BackupArchive): ByteArray = ByteArrayOutputStream().also { BackupCodec.write(archive, it) }.toByteArray()
+
+    private fun readStaged(bytes: ByteArray, maxAttachmentBytes: Long = BackupFormat.MAX_ATTACHMENTS_TOTAL_BYTES) =
+        BackupCodec.read(ByteArrayInputStream(bytes), stagingDirectory = attachments.newStagingDirectory(), maxAttachmentBytes = maxAttachmentBytes)
+
+    @Test
+    fun v3TablesAndAttachments_roundTripThroughTheZip() = runBlocking<Unit> {
+        seedV3()
+        val dao = db.backupDao()
+        val tasksBefore = dao.tasks()
+        val notesBefore = dao.notes()
+        val tablesBefore = listOf(
+            dao.taskReminders(), dao.taskDependencies(), dao.noteVersions(), dao.noteLinks(), dao.moodEntries(), dao.journalEntries(),
+            dao.challenges(), dao.badges(), dao.activityLog(), dao.calendarLinks(), dao.savedFilters(), dao.attachments(),
+        )
+        val bytes = zipBytes(manager.snapshot())
+        val names = java.util.zip.ZipInputStream(ByteArrayInputStream(bytes)).use { z -> generateSequence { z.nextEntry?.name }.toList() }
+        assertThat(names).contains("attachments/photo.jpg")
+
+        db.backupDao().clearAll()
+        attachments.deleteAll()
+        val archive = readStaged(bytes)
+        assertThat(archive.manifest.backupFormatVersion).isEqualTo(2)
+        assertThat(archive.manifest.databaseSchemaVersion).isEqualTo(PlanBDatabase.VERSION)
+        manager.restore(archive)
+
+        assertThat(dao.tasks()).containsExactlyElementsIn(tasksBefore)
+        assertThat(dao.notes()).containsExactlyElementsIn(notesBefore)
+        val tablesAfter = listOf(
+            dao.taskReminders(), dao.taskDependencies(), dao.noteVersions(), dao.noteLinks(), dao.moodEntries(), dao.journalEntries(),
+            dao.challenges(), dao.badges(), dao.activityLog(), dao.calendarLinks(), dao.savedFilters(), dao.attachments(),
+        )
+        assertThat(tablesAfter).isEqualTo(tablesBefore)
+        assertThat(attachments.file("photo.jpg").readBytes()).isEqualTo(ByteArray(3000) { (it % 251).toByte() })
+        // The staging folder became the attachment folder; nothing is left behind.
+        assertThat(archive.stagingDirectory!!.exists()).isFalse()
+        // The locked note is found by title only.
+        assertThat(db.searchDao().search("قفل*", 10).map { it.entityId }).containsExactly(2L)
+    }
+
+    @Test
+    fun attachmentRowWithoutItsFile_failsValidation() = runBlocking<Unit> {
+        seedV3()
+        val archive = manager.snapshot()
+        val withoutFiles = BackupCodec.read(ByteArrayInputStream(zipBytes(archive))) // no staging folder: files are skipped
+        val error = assertThrows(BackupException.Invalid::class.java) { runBlocking { manager.restore(withoutFiles) } }
+        assertThat(error.message).contains("no file")
+        assertThat(db.backupDao().attachments()).hasSize(1)
+        assertThat(attachments.file("photo.jpg").exists()).isTrue()
+    }
+
+    @Test
+    fun snapshot_leavesOutAttachmentsWithoutFileOrOwner() = runBlocking<Unit> {
+        seedV3()
+        db.backupDao().insertAttachments(
+            listOf(
+                AttachmentEntity(2, "NOTE", 1, "FILE", "gone.pdf", "", "application/pdf", 1, null, null, null, null, null, 0, t0),
+                AttachmentEntity(3, "TASK", 999, "FILE", "orphan.pdf", "", "application/pdf", 1, null, null, null, null, null, 0, t0),
+            ),
+        )
+        attachments.file("orphan.pdf").writeText("x")
+        val archive = manager.snapshot()
+        assertThat(archive.database.attachments.map { it.fileName }).containsExactly("photo.jpg")
+        BackupValidator.validate(archive.database, archive.attachmentFiles.keys, requireAttachmentFiles = true)
+    }
+
+    @Test
+    fun attachmentEntryNames_cannotEscapeTheStagingFolder() {
+        val out = ByteArrayOutputStream()
+        ZipOutputStream(out).use { z ->
+            for ((name, text) in listOf(
+                "manifest.json" to manifestV1, "database.json" to "{}", "attachments/../evil.txt" to "x", "attachments/a/b.txt" to "x",
+                "attachments/.hidden" to "x", "attachments/ok.jpg" to "fine",
+            )) {
+                z.putNextEntry(ZipEntry(name))
+                z.write(text.toByteArray())
+                z.closeEntry()
+            }
+        }
+        val archive = readStaged(out.toByteArray())
+        assertThat(archive.attachmentFiles.keys).containsExactly("ok.jpg")
+        assertThat(archive.stagingDirectory!!.list()!!.toList()).containsExactly("ok.jpg")
+        assertThat(File(archive.stagingDirectory!!.parentFile, "evil.txt").exists()).isFalse()
+        assertThat(File(filesRoot, "evil.txt").exists()).isFalse()
+    }
+
+    @Test
+    fun oversizedAttachments_areRejected() = runBlocking<Unit> {
+        seedV3()
+        val bytes = zipBytes(manager.snapshot())
+        val error = assertThrows(BackupException.Corrupt::class.java) { readStaged(bytes, maxAttachmentBytes = 1000) }
+        assertThat(error.message).contains("attachment too large")
+    }
+
+    @Test
+    fun failedRestore_keepsCurrentDataAndAttachments() = runBlocking<Unit> {
+        seedV3()
+        val good = readStaged(zipBytes(manager.snapshot()))
+        // Change the current state, then make the restore fail half-way.
+        db.backupDao().insertTags(listOf(TagEntity(2, "جدید", "rose")))
+        attachments.file("new.png").writeText("current")
+        db.openHelper.writableDatabase.execSQL(
+            "CREATE TRIGGER fail_restore BEFORE INSERT ON badges BEGIN SELECT RAISE(ABORT, 'boom'); END",
+        )
+        assertThrows(BackupException.RestoreFailed::class.java) { runBlocking { manager.restore(good) } }
+        assertThat(db.backupDao().tags().map { it.name }).containsExactly("کار", "جدید")
+        assertThat(attachments.file("new.png").readText()).isEqualTo("current")
+        assertThat(attachments.file("photo.jpg").exists()).isTrue()
+    }
+
+    @Test
+    fun v3References_areValidated() {
+        val base = BackupDatabase(tasks = listOf(TaskDto(1, "a"), TaskDto(2, "b")), notebooks = listOf(NotebookDto(1, "n")), notes = listOf(NoteDto(1, 1)))
+        BackupValidator.validate(base.copy(taskDependencies = listOf(RefDto(2, 1))))
+        val invalid = listOf(
+            base.copy(taskDependencies = listOf(RefDto(1, 1))),
+            base.copy(taskDependencies = listOf(RefDto(1, 9))),
+            base.copy(taskReminders = listOf(TaskReminderDto(1, 9))),
+            base.copy(noteLinks = listOf(RefDto(1, 5))),
+            base.copy(attachments = listOf(AttachmentDto(1, "NOTE", 7, fileName = "a.jpg"))),
+            base.copy(attachments = listOf(AttachmentDto(1, "NOTE", 1, fileName = "../a.jpg"))),
+            base.copy(attachments = listOf(AttachmentDto(1, "PLANET", 1, fileName = "a.jpg"))),
+            base.copy(journalEntries = listOf(JournalEntryDto(1, 5, 1), JournalEntryDto(2, 5, 1))),
+            base.copy(moodEntries = listOf(MoodEntryDto(1, 5, noteId = 3))),
+            base.copy(challenges = listOf(ChallengeDto(1, "HABIT_STREAK", startDate = 1, habitId = 4))),
+            base.copy(badges = listOf(BadgeDto(1, "k"), BadgeDto(2, "k"))),
+            base.copy(notes = listOf(NoteDto(1, 1, encryptedPayload = "not base64!"))),
+            base.copy(calendarLinks = listOf(CalendarLinkDto(1, "TASK", 1, 2, 3), CalendarLinkDto(2, "TASK", 1, 2, 4))),
+        )
+        invalid.forEach { db -> assertThrows(BackupException.Invalid::class.java) { BackupValidator.validate(db) } }
+    }
+
+    @Test
+    fun deleteAllData_removesAttachmentFiles() = runBlocking<Unit> {
+        seedV3()
+        manager.deleteAllData()
+        assertThat(db.backupDao().attachments()).isEmpty()
+        assertThat(attachments.directory.list().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun format1Backup_restoresWithNeutralValuesForNewFields() = runBlocking<Unit> {
+        val bytes = zip(
+            "manifest.json" to """{"backupFormatVersion":1,"appVersion":"1.0.1","createdAt":1,"databaseSchemaVersion":2}""",
+            "database.json" to """{"tasks":[{"id":5,"title":"قدیمی","reminderOffsetMinutes":10}],"habits":[{"id":1,"title":"h","startDate":1}],"focusSessions":[{"id":1,"startedAt":1,"plannedDurationMillis":10}]}""",
+        )
+        manager.restore(readStaged(bytes))
+        val task = db.backupDao().tasks().single()
+        assertThat(task.deadline).isNull()
+        assertThat(task.nag).isFalse()
+        assertThat(task.deletedAt).isNull()
+        assertThat(db.backupDao().habits().single().healthMetric).isNull()
+        assertThat(db.backupDao().focusSessions().single().strict).isFalse()
+    }
+
+    // endregion
 }

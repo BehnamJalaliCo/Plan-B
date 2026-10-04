@@ -9,6 +9,7 @@ import com.behnamjalali.planb.core.backup.BackupArchive
 import com.behnamjalali.planb.core.backup.BackupCodec
 import com.behnamjalali.planb.core.backup.BackupManager
 import com.behnamjalali.planb.core.backup.DataTransfer
+import com.behnamjalali.planb.core.data.AttachmentFiles
 import com.behnamjalali.planb.core.data.DocumentFiles
 import com.behnamjalali.planb.core.data.SearchIndexMaintenance
 import com.behnamjalali.planb.core.model.AppLanguage
@@ -49,7 +50,7 @@ class DataViewModelTest {
         val files = DocumentFiles(context, Dispatchers.IO)
         backup = BackupManager(
             graph.db, graph.db.backupDao(), graph.preferences, files, SearchIndexMaintenance(graph.db.backupDao(), graph.db.searchDao()),
-            graph.reminders, graph.time, AppVersion("1.0.0", 1),
+            graph.reminders, graph.time, AppVersion("1.0.0", 1), AttachmentFiles(java.nio.file.Files.createTempDirectory("files").toFile()),
         )
         transfer = DataTransfer(graph.db.backupDao(), graph.tasks, graph.projects, files)
     }

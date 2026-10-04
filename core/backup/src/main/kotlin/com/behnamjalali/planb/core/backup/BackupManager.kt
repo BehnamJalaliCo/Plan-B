@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.room.withTransaction
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.common.runCatchingSafely
+import com.behnamjalali.planb.core.data.AttachmentFiles
 import com.behnamjalali.planb.core.data.DocumentFiles
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.SearchIndexMaintenance
@@ -31,6 +32,7 @@ class BackupManager @Inject constructor(
     private val reminders: ReminderScheduler,
     private val time: TimeProvider,
     private val version: AppVersion,
+    private val attachments: AttachmentFiles,
 ) {
     /** Reads every table inside one transaction so the snapshot is consistent. */
     suspend fun snapshot(): BackupArchive {
@@ -53,8 +55,29 @@ class BackupManager @Inject constructor(
                 events = dao.events().map { it.dto() },
                 focusSessions = dao.focusSessions().map { it.dto() },
                 templates = dao.templates().map { it.dto() },
+                taskReminders = dao.taskReminders().map { it.dto() },
+                taskDependencies = dao.taskDependencies().map { it.dto() },
+                savedFilters = dao.savedFilters().map { it.dto() },
+                noteVersions = dao.noteVersions().map { it.dto() },
+                noteLinks = dao.noteLinks().map { it.dto() },
+                // Only attachments whose file exists: a restore never creates rows without bytes.
+                attachments = dao.attachments().filter { attachmentFile(it.fileName)?.isFile == true }.map { it.dto() },
+                journalEntries = dao.journalEntries().map { it.dto() },
+                moodEntries = dao.moodEntries().map { it.dto() },
+                challenges = dao.challenges().map { it.dto() },
+                badges = dao.badges().map { it.dto() },
+                activityLog = dao.activityLog().map { it.dto() },
+                calendarLinks = dao.calendarLinks().map { it.dto() },
             )
         }
+        // Rows of deleted owners are not exported (they are removed on the next sweep anyway).
+        val owners = mapOf(
+            "TASK" to database.tasks.map { it.id }.toSet(),
+            "NOTE" to database.notes.map { it.id }.toSet(),
+            "EVENT" to database.events.map { it.id }.toSet(),
+            "MOOD" to database.moodEntries.map { it.id }.toSet(),
+        )
+        val withOwners = database.copy(attachments = database.attachments.filter { owners[it.ownerType]?.contains(it.ownerId) == true })
         val prefs = preferences.export()
         return BackupArchive(
             manifest = BackupManifest(
@@ -64,23 +87,46 @@ class BackupManager @Inject constructor(
                 createdAt = time.now().toEpochMilli(),
                 databaseSchemaVersion = PlanBDatabase.VERSION,
             ),
-            database = database,
+            database = withOwners,
             preferences = prefs,
-            metadata = BackupMetadata(counts = database.counts(), language = prefs["language"]),
+            metadata = BackupMetadata(counts = withOwners.counts(), language = prefs["language"]),
+            attachmentFiles = withOwners.attachments.mapNotNull { a -> attachmentFile(a.fileName)?.let { a.fileName to it } }.toMap(),
         )
     }
+
+    private fun attachmentFile(name: String) = if (AttachmentFiles.isSafeName(name)) attachments.file(name) else null
 
     suspend fun exportTo(uri: Uri) {
         val archive = snapshot()
         files.output(uri) { BackupCodec.write(archive, it) }
     }
 
-    /** Opens, decodes and validates a backup without touching current data. */
+    /**
+     * Opens, decodes and validates a backup without touching current data. Attachment files
+     * are unpacked into a private staging folder; call [discard] if the restore is cancelled.
+     */
     suspend fun inspect(uri: Uri): BackupArchive {
-        val archive = files.input(uri) { BackupCodec.read(it) }
-        BackupValidator.validate(archive.database)
-        return archive
+        val staging = attachments.newStagingDirectory()
+        try {
+            val archive = files.input(uri) { BackupCodec.read(it, stagingDirectory = staging) }
+            validate(archive)
+            return archive
+        } catch (e: Throwable) {
+            staging.deleteRecursively()
+            throw e
+        }
     }
+
+    /** Removes the files unpacked by [inspect] for a restore that will not happen. */
+    fun discard(archive: BackupArchive) {
+        archive.stagingDirectory?.deleteRecursively()
+    }
+
+    private fun validate(archive: BackupArchive) = BackupValidator.validate(
+        archive.database,
+        attachmentFiles = archive.attachmentFiles.filterValues { it.isFile }.keys,
+        requireAttachmentFiles = true,
+    )
 
     fun preview(archive: BackupArchive) = BackupPreview(archive.manifest, archive.database.counts())
 
@@ -90,10 +136,17 @@ class BackupManager @Inject constructor(
      * transaction rolls back and the current data stays untouched.
      */
     suspend fun restore(archive: BackupArchive) {
-        BackupValidator.validate(archive.database)
+        validate(archive)
         val d = archive.database
         // Remember which alarms exist now so they can be cancelled once the data is replaced.
         val oldReminders = currentReminders()
+        // The restored files replace the current ones; the current folder is kept aside until
+        // the database transaction has committed, and put back if it fails.
+        val replacement = try {
+            attachments.replaceWith(archive.stagingDirectory?.also { dir -> keepOnly(dir, d.attachments.map { it.fileName }.toSet()) })
+        } catch (e: IllegalStateException) {
+            throw BackupException.RestoreFailed(e)
+        }
         try {
             db.withTransaction {
                 dao.clearAll()
@@ -114,16 +167,32 @@ class BackupManager @Inject constructor(
                 dao.insertEvents(d.events.map { it.entity() })
                 dao.insertFocusSessions(d.focusSessions.map { it.entity() })
                 dao.insertTemplates(d.templates.map { it.entity() })
+                dao.insertTaskReminders(d.taskReminders.map { it.entity() })
+                dao.insertTaskDependencies(d.taskDependencies.map { it.taskDependency() })
+                dao.insertSavedFilters(d.savedFilters.map { it.entity() })
+                dao.insertNoteVersions(d.noteVersions.map { it.entity() })
+                dao.insertNoteLinks(d.noteLinks.map { it.noteLink() })
+                dao.insertJournalEntries(d.journalEntries.map { it.entity() })
+                dao.insertMoodEntries(d.moodEntries.map { it.entity() })
+                dao.insertAttachments(d.attachments.map { it.entity() })
+                dao.insertChallenges(d.challenges.map { it.entity() })
+                dao.insertBadges(d.badges.map { it.entity() })
+                dao.insertActivityLog(d.activityLog.map { it.entity() })
+                dao.insertCalendarLinks(d.calendarLinks.map { it.entity() })
                 searchIndex.rebuild()
             }
         } catch (e: CancellationException) {
+            replacement.rollback()
             throw e
         } catch (e: Exception) {
+            replacement.rollback()
             throw BackupException.RestoreFailed(e)
         } catch (e: OutOfMemoryError) {
             // The transaction rolled back; report it like any other failed restore.
+            replacement.rollback()
             throw BackupException.RestoreFailed(e)
         }
+        runCatching { replacement.commit() }
         // The data is committed: the follow-up steps must run to the end even if the caller
         // is cancelled meanwhile, or preferences and alarms would not match the data.
         withContext(NonCancellable) {
@@ -132,6 +201,11 @@ class BackupManager @Inject constructor(
             if (archive.preferences.isNotEmpty()) runCatchingSafely { preferences.import(archive.preferences) }
             runCatchingSafely { reminders.rescheduleAll() }
         }
+    }
+
+    /** Deletes unpacked files that no attachment row refers to. */
+    private fun keepOnly(dir: java.io.File, names: Set<String>) {
+        dir.listFiles().orEmpty().filter { it.name !in names }.forEach { it.deleteRecursively() }
     }
 
     /** Topological order so a subtask is never inserted before its parent. */
@@ -156,6 +230,7 @@ class BackupManager @Inject constructor(
         val oldReminders = currentReminders()
         db.withTransaction { dao.clearAll() }
         withContext(NonCancellable) {
+            runCatchingSafely { attachments.deleteAll() }
             cancel(oldReminders)
             runCatchingSafely { reminders.cancelFocusEnd() }
             runCatchingSafely { reminders.rescheduleAll() }

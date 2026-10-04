@@ -21,8 +21,8 @@ restore logic in `core/backup`:
 ## 1. Archive layout
 
 A backup is a standard ZIP file (`application/zip`). The UI suggests the file name
-`Plan-B-backup-<stamp>.zip`. The archive contains exactly four **flat** entries, all
-UTF-8 JSON (compact, not pretty-printed):
+`Plan-B-backup-<stamp>.zip`. The archive contains four **flat** JSON entries, all UTF-8
+(compact, not pretty-printed), and, from format 2, one `attachments/` folder:
 
 | Entry | Required on read | Content |
 |---|---|---|
@@ -30,8 +30,10 @@ UTF-8 JSON (compact, not pretty-printed):
 | `database.json` | **yes** | `BackupDatabase`: one array per table |
 | `preferences.json` | no, defaults to `{}` | `Map<String, String>` of DataStore preference keys |
 | `metadata.json` | no, and ignored if malformed | `BackupMetadata`: counts and language |
+| `attachments/<fileName>` | only for attachment rows (format 2) | the raw bytes of each attachment file; one flat level |
 
-Writers always emit all four entries in this order. The JSON codec is configured as
+Writers always emit the four JSON entries in this order, followed by one entry per attachment
+row whose file exists. The JSON codec is configured as
 `ignoreUnknownKeys = true`, `encodeDefaults = true` and `explicitNulls = false`, so `null`
 fields are **omitted** from the output.
 
@@ -39,22 +41,22 @@ fields are **omitted** from the output.
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `backupFormatVersion` | Int | — (required) | Archive format. Currently `BackupFormat.CURRENT = 1`. |
+| `backupFormatVersion` | Int | — (required) | Archive format. Currently `BackupFormat.CURRENT = 2`. Format 2 (app schema v3) adds the Pro tables and columns and the `attachments/` folder; format 1 files still restore. |
 | `appVersion` | String | — (required) | `versionName` of the app that wrote the file |
 | `appVersionCode` | Int | `0` | `versionCode` |
 | `createdAt` | Long | — (required) | Epoch milliseconds, UTC |
-| `databaseSchemaVersion` | Int | `0` | `PlanBDatabase.VERSION` at write time. This is information only and is not checked on read. |
+| `databaseSchemaVersion` | Int | `0` | `PlanBDatabase.VERSION` at write time (`3`). A value newer than the app's schema is rejected (`NewerDatabase`). |
 | `application` | String | `"com.behnamjalali.planb"` | Must equal `BackupFormat.APPLICATION_ID` |
 
-Example, consistent with the code (app 1.0.0, schema v2, created 4 Oct 2026 10:00 Tehran):
+Example, consistent with the code (app 1.0.1, schema v3, created 4 Oct 2026 10:00 Tehran):
 
 ```json
 {
-  "backupFormatVersion": 1,
-  "appVersion": "1.0.0",
-  "appVersionCode": 1,
+  "backupFormatVersion": 2,
+  "appVersion": "1.0.1",
+  "appVersionCode": 2,
   "createdAt": 1791095400000,
-  "databaseSchemaVersion": 2,
+  "databaseSchemaVersion": 3,
   "application": "com.behnamjalali.planb"
 }
 ```
@@ -67,7 +69,8 @@ package name.
 
 ```json
 { "counts": { "tasks": 42, "projects": 3, "notebooks": 2, "notes": 17, "habits": 4,
-              "goals": 1, "events": 9, "focusSessions": 12, "templates": 0, "tags": 6 },
+              "goals": 1, "events": 9, "focusSessions": 12, "templates": 0, "tags": 6,
+              "attachments": 2 },
   "language": "fa" }
 ```
 
@@ -105,13 +108,42 @@ are the Kotlin property names (camelCase). All values use the canonical forms fr
 | `focusSessions` | `FocusDto` | `id`, `linkedTaskId`?, **`startedAt`**, `endedAt`?, **`plannedDurationMillis`**, `actualDurationMillis`=0, `status`=`"COMPLETED"`, `runningSince`?, `accumulatedMillis`=0 |
 | `templates` | `TemplateDto` | `id`, `title`, `type`, `payload`, `createdAt`=0, `updatedAt`=0 |
 
-`?` marks an optional, nullable field (omitted when null). These tables are **not** in a
-backup:
+Fields and arrays added in **format 2** (schema v3). All have defaults, so a format 1 file
+restores with neutral values (no deadline, no time block, not nagging, not in the trash, not
+locked, no health metric, no sound, not strict, empty new tables):
+
+| Array / DTO | Added fields or content |
+|---|---|
+| `tasks` (`TaskDto`) | `deadline`? (epoch day), `scheduledStart`?, `scheduledEnd`? (epoch ms), `nag`=false, `deletedAt`? |
+| `notes` (`NoteDto`) | `deletedAt`?, `locked`=false, `encryptedPayload`? (Base64, standard alphabet, padded) |
+| `habits` (`HabitDto`) | `healthMetric`?, `healthThreshold`? |
+| `focusSessions` (`FocusDto`) | `soundId`?, `strict`=false |
+| `taskReminders` (`TaskReminderDto`) | `id`, `taskId`, `kind`=`"OFFSET"`, `offsetMinutes`?, `at`? |
+| `taskDependencies` (`RefDto`) | `a` = task id, `b` = the task it depends on |
+| `savedFilters` (`SavedFilterDto`) | `id`, `name`, `icon`=`"star"`, `color`=`"lavender"`, `query`=`"{}"`, `sortOrder`, `createdAt`, `updatedAt` |
+| `noteVersions` (`NoteVersionDto`) | `id`, `noteId`, `createdAt`, `title`, `content`, `size` |
+| `noteLinks` (`RefDto`) | `a` = linking note, `b` = linked note |
+| `attachments` (`AttachmentDto`) | `id`, `ownerType`, `ownerId`, `kind`=`"FILE"`, `fileName`, `displayName`=`""`, `mimeType`, `sizeBytes`, `durationMillis`?, `width`?, `height`?, `ocrText`?, `transcript`?, `sortOrder`, `createdAt` |
+| `journalEntries` (`JournalEntryDto`) | `id`, `date`, `noteId`, `promptId`?, `createdAt`, `updatedAt` |
+| `moodEntries` (`MoodEntryDto`) | `id`, `date`, `time`?, `mood`?, `energy`?, `tags`=`""`, `noteId`?, `createdAt`, `updatedAt` |
+| `challenges` (`ChallengeDto`) | `id`, `kind`, `title`, `targetDays`, `startDate`, `habitId`?, `status`=`"ACTIVE"`, `completedAt`?, `createdAt`, `updatedAt` |
+| `badges` (`BadgeDto`) | `id`, `key`, `earnedAt` |
+| `activityLog` (`ActivityDto`) | `id`, `entityType`, `entityId`, `action`, `at`, `summary` |
+| `calendarLinks` (`CalendarLinkDto`) | `id`, `localType`, `localId`, `calendarId`, `externalEventId`, `lastSyncedAt`, `localVersion`?, `remoteVersion`? |
+
+Items in the trash are part of a backup. Only attachment rows whose owner exists and whose file
+is on disk are written, so every row in a backup has its bytes.
+
+`?` marks an optional, nullable field (omitted when null). These are **not** in a backup:
 
 - `note_drafts`: transient editor state.
 - `search_index`: rebuilt on restore.
 - `planner_templates.built_in`: built-in templates are not stored in the database, and
   restored templates always get `built_in = 0`.
+- The Plan-B Pro purchase state (it is re-verified with Cafe Bazaar; a backup can never
+  grant Pro) and the AI assistant settings, **including the provider key** (stored encrypted
+  with a key that never leaves the device). Neither lives in the preferences file that is
+  exported.
 
 ### 1.4 `preferences.json`
 
@@ -149,9 +181,10 @@ empty, current preferences are left alone.
 
 | Rule | Constant or behaviour |
 |---|---|
-| Max entries iterated in the ZIP | `MAX_ENTRIES = 16`. More raises `Corrupt("too many entries")`. Ignored entries count too. |
+| Max entries iterated in the ZIP | `MAX_ENTRIES = 16 + MAX_ATTACHMENTS` (10 016). More raises `Corrupt("too many entries")`. Ignored entries count too. |
+| Attachment files | Streamed to a private staging folder (`files/backup-staging/<random>/`), never held in memory. At most `MAX_ATTACHMENTS = 10 000` files, `MAX_ATTACHMENT_BYTES = 32 MiB` each and `MAX_ATTACHMENTS_TOTAL_BYTES = 1 GiB` together, counted while streaming; more raises `Corrupt("too many attachments")` / `Corrupt("attachment too large")`. Only `attachments/<name>` entries whose name passes `AttachmentFiles.isSafeName` (one flat level of ASCII letters, digits, `.`, `-`, `_`, no `..`, not starting with a dot) are written; others are ignored, so no entry can land outside the folder. An I/O failure (for example a full disk) raises `Corrupt`. |
 | Max uncompressed bytes | `MAX_ENTRY_BYTES = 32 MiB` per entry and `MAX_TOTAL_BYTES = 40 MiB` for all entries together, counted while streaming (header sizes are never trusted). More raises `Corrupt("entry too large")`. This keeps a zip bomb from exhausting memory. Running out of memory anyway while reading raises `Corrupt("too large to open")` instead of crashing. |
-| Entry names | Directories and names containing `/`, `\` or `..` are skipped. Only the four known names are read. Everything else is ignored. |
+| Entry names | Apart from `attachments/`, directories and names containing `/`, `\` or `..` are skipped. Only the four known names are read. Everything else is ignored. |
 | Invalid ZIP or truncated stream | `ZipException` or `EOFException` raises `Corrupt` |
 | No known entries | `NotABackup("empty or not a ZIP archive")` |
 | `manifest.json` missing | `NotABackup` |
@@ -183,6 +216,11 @@ defensively inside `restore()`. Any failure raises `BackupException.Invalid`.
    (ASCII letters case-insensitively, everything else exactly), and no duplicate
    task/project/note tag links.
 5. **No cycles** in the task parent hierarchy.
+6. **Format 2 tables:** unique ids; reminders, versions, links, journal and mood entries,
+   challenges and dependencies point at existing rows; a task never depends on itself; no
+   duplicate dependencies, note links, badge keys, journal dates or calendar links; encrypted
+   note bodies are valid Base64; every attachment has a safe, unique file name and an existing
+   owner (`TASK`, `NOTE`, `EVENT` or `MOOD`), and — on restore — its file in the archive.
 
 ---
 
@@ -190,11 +228,13 @@ defensively inside `restore()`. Any failure raises `BackupException.Invalid`.
 
 ### 5.1 Create (`BackupManager.snapshot` / `exportTo`)
 
-1. Read every table inside **one** `withTransaction`, so the snapshot is consistent.
+1. Read every table inside **one** `withTransaction`, so the snapshot is consistent. Leave
+   out attachment rows whose owner or file is missing.
 2. Export preferences.
 3. Build the manifest (format `CURRENT`, app version, `createdAt = now`, schema version) and
    the metadata (counts and language).
-4. Write the ZIP to the user-chosen `Uri` (Storage Access Framework `CreateDocument`).
+4. Write the ZIP to the user-chosen `Uri` (Storage Access Framework `CreateDocument`),
+   streaming each attachment file from `files/attachments/`.
 
 ### 5.2 Restore: validate → confirm → replace → reminders → preferences
 
@@ -210,28 +250,37 @@ DataViewModel.confirmRestore() ── BackupManager.restore(archive)
 
 `BackupManager.restore(archive)`:
 
-1. Validate again.
+1. Validate again (attachment files must have been unpacked by `inspect`).
 2. Record the ids of tasks, events and habits that currently have reminders, so their
    alarms can be cancelled later.
-3. **In one `db.withTransaction`:**
+3. **Swap the attachment folder:** unreferenced unpacked files are deleted, the current
+   `files/attachments/` is renamed to `attachments-previous`, and the staging folder is renamed
+   to `files/attachments/` (renames on one file system are atomic).
+4. **In one `db.withTransaction`:**
    1. `BackupDao.clearAll()` (children first, search index last).
    2. Insert, in FK-safe order: tags → projects → project tags → project milestones → tasks
       (**topologically ordered, parents first**, by `orderParentsFirst`) → task tags →
       notebooks → sections → notes → note tags → habits → habit completions → goals → goal
-      milestones → events → focus sessions → templates.
+      milestones → events → focus sessions → templates → task reminders → task dependencies →
+      saved filters → note versions → note links → journal entries → mood entries →
+      attachments → challenges → badges → activity log → calendar links.
    3. `SearchIndexMaintenance.rebuild()`.
-4. If any exception occurs, the transaction **rolls back** and current data is untouched.
-   The exception (or an `OutOfMemoryError`) is wrapped as `BackupException.RestoreFailed`.
-   `CancellationException` is re-thrown unchanged.
-5. After commit, cancel the old alarms and their posted notifications (each one is
+5. If any exception occurs, the transaction **rolls back**, the previous attachment folder
+   is put back, and current data is untouched. The exception (or an `OutOfMemoryError`) is
+   wrapped as `BackupException.RestoreFailed`. `CancellationException` is re-thrown unchanged.
+   After a commit, `attachments-previous` is deleted.
+6. After commit, cancel the old alarms and their posted notifications (each one is
    best-effort).
-6. **Preferences** are imported only after the data has committed, and only if the map is
+7. **Preferences** are imported only after the data has committed, and only if the map is
    non-empty. This step is best-effort.
-7. `ReminderScheduler.rescheduleAll()` re-creates alarms from the restored data
+8. `ReminderScheduler.rescheduleAll()` re-creates alarms from the restored data
    (best-effort).
 
+Cancelling the confirmation, or a failed restore, deletes the staging folder
+(`BackupManager.discard`); the next `inspect` also clears any abandoned staging folder.
+
 `deleteAllData()` (*Settings › Data management*) records the items with reminders, runs
-`clearAll()` in a transaction, then cancels their alarms and posted notifications and the
+`clearAll()` in a transaction, deletes every attachment file, then cancels their alarms and posted notifications and the
 focus end alarm, and reschedules reminders. It does not touch preferences. Alarms also carry
 their planned trigger time, and the receiver drops one that no longer matches the item, so a
 leftover alarm can never notify for a restored item that reuses an id.
@@ -283,7 +332,7 @@ restored as a backup.
 - A field that a spreadsheet would treat as a formula (starting with `=`, `+`, `-`, `@`, tab
   or CR) gets a leading apostrophe, as are fields that already start with an apostrophe
   followed by such a character. Import removes exactly that apostrophe, so exports round-trip.
-- Every task is exported. Each top-level task is followed by its subtasks, which carry the
+- Every task is exported except tasks in the trash. Each top-level task is followed by its subtasks, which carry the
   parent's title in the `parent` column.
 - Header and column order:
 
@@ -311,7 +360,7 @@ title, subtasks only). Null fields are omitted.
 
 ### 7.3 Notes: Markdown ZIP export
 
-- One `.md` file per note (archived notes included), in a folder named after its notebook:
+- One `.md` file per note (archived notes included, notes in the trash left out), in a folder named after its notebook:
   `<Notebook>/<Note title>.md`.
 - In folder and file names, `\ / : * ? " < > |` and control characters become spaces, runs
   of dots become one dot and leading/trailing dots are removed (so no entry name contains
@@ -382,4 +431,9 @@ through `TaskRepository.save`, which also indexes it for search. The settings st
 `restoreFailure_rollsBack_andKeepsCurrentData`, `subtasksBeforeParents_inArchive_areOrdered`,
 `csv_roundTripsPersianAndQuotes`, `oversizedArchive_isRejectedBeforeExhaustingMemory`,
 `taskExport_thenImport_addsCopiesLinkedToProjects_withoutOverwriting`,
-`csvImport_unknownProject_createsIt_andSkipsInvalidRows`.
+`csvImport_unknownProject_createsIt_andSkipsInvalidRows`, and for format 2:
+`v3TablesAndAttachments_roundTripThroughTheZip`, `attachmentRowWithoutItsFile_failsValidation`,
+`snapshot_leavesOutAttachmentsWithoutFileOrOwner`, `attachmentEntryNames_cannotEscapeTheStagingFolder`,
+`oversizedAttachments_areRejected`, `failedRestore_keepsCurrentDataAndAttachments`,
+`v3References_areValidated`, `deleteAllData_removesAttachmentFiles`,
+`format1Backup_restoresWithNeutralValuesForNewFields`.

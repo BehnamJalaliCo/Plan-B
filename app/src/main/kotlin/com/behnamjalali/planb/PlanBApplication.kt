@@ -3,6 +3,7 @@ package com.behnamjalali.planb
 import android.app.Application
 import android.util.Log
 import com.behnamjalali.planb.core.common.ApplicationScope
+import com.behnamjalali.planb.core.data.AttachmentMaintenance
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.SearchIndexUpgrade
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
@@ -20,6 +21,7 @@ class PlanBApplication : Application() {
     @Inject lateinit var reminders: ReminderScheduler
     @Inject lateinit var settings: SettingsRepository
     @Inject lateinit var searchIndex: SearchIndexUpgrade
+    @Inject lateinit var attachments: AttachmentMaintenance
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
 
     override fun onCreate() {
@@ -36,6 +38,8 @@ class PlanBApplication : Application() {
             runCatching { reminders.rescheduleAll() }
             // Existing installs rebuild the search index once after a normalizer change.
             runCatching { searchIndex.rebuildIfOutdated() }.onFailure { Log.w(TAG, "Search index rebuild failed (${it.javaClass.simpleName})") }
+            // Attachment rows of deleted owners and files without a row are removed.
+            runCatching { attachments.sweep() }.onFailure { Log.w(TAG, "Attachment sweep failed (${it.javaClass.simpleName})") }
         }
     }
 
