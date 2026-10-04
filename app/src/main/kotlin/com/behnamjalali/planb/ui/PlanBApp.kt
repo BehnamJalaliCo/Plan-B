@@ -26,6 +26,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -77,20 +80,21 @@ fun PlanBApp(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        // Test tags double as resource ids so UiAutomator (benchmarks, baseline profiles) can find them.
+        modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true },
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
             AnimatedVisibility(current != null && current.showsCapture, enter = scaleIn() + fadeIn(), exit = scaleOut() + fadeOut()) {
-                PlannerFAB(Icons.Rounded.Add, stringResource(R.string.quick_capture), { capturing = true })
+                PlannerFAB(Icons.Rounded.Add, stringResource(R.string.quick_capture), { capturing = true }, Modifier.testTag("quick_capture"))
             }
         },
         bottomBar = {
             if (current != null) {
                 PlannerNavigationBar(
                     items = TopLevelDestination.entries.map {
-                        PlannerNavItem(stringResource(it.label), it.icon, it.selectedIcon)
+                        PlannerNavItem(stringResource(it.label), it.icon, it.selectedIcon, testTag = "nav_${it.name.lowercase()}")
                     },
                     selectedIndex = current.ordinal,
                     onSelect = { index ->

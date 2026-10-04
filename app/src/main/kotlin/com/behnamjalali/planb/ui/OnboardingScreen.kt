@@ -29,6 +29,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -56,11 +58,11 @@ fun OnboardingScreen(onDone: () -> Unit) {
     val pager = rememberPagerState { pages.size }
     val scope = rememberCoroutineScope()
     val numbers = PlannerLocals.numbers
-    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }, color = MaterialTheme.colorScheme.background) {
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(Spacing.screen)) {
             Row(Modifier.fillMaxWidth()) {
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onDone) { Text(stringResource(R.string.onboarding_skip)) }
+                TextButton(onClick = onDone, modifier = Modifier.testTag("onboarding_skip")) { Text(stringResource(R.string.onboarding_skip)) }
             }
             HorizontalPager(pager, Modifier.weight(1f)) { index ->
                 val page = pages[index]

@@ -14,6 +14,8 @@ class HiltConventionPlugin : Plugin<Project> {
                 add("implementation", libs.lib("hilt-android"))
                 add("testImplementation", libs.lib("hilt-android-testing"))
                 add("kspTest", libs.lib("hilt-compiler"))
+                add("androidTestImplementation", libs.lib("hilt-android-testing"))
+                add("kspAndroidTest", libs.lib("hilt-compiler"))
             }
         }
         pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {

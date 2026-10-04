@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -103,6 +104,8 @@ data class PlannerNavItem(
     val label: String,
     val icon: ImageVector,
     val selectedIcon: ImageVector,
+    /** Stable id for UI tests and benchmarks (exposed as a resource id). */
+    val testTag: String = "",
 )
 
 @Composable
@@ -122,6 +125,7 @@ fun PlannerNavigationBar(
             NavigationBarItem(
                 selected = selected,
                 onClick = { onSelect(index) },
+                modifier = if (item.testTag.isEmpty()) Modifier else Modifier.testTag(item.testTag),
                 icon = { Icon(if (selected) item.selectedIcon else item.icon, contentDescription = null) },
                 label = { Text(item.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 colors = NavigationBarItemDefaults.colors(
