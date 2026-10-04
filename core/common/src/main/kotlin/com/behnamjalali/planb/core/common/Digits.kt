@@ -45,9 +45,15 @@ class NumberFormatter(val persianDigits: Boolean) {
 
     fun format(value: Long): String = Digits.localize(value.toString(), persianDigits)
 
-    /** Formats with at most [maxFractionDigits] decimals, trimming trailing zeros. */
+    /**
+     * Formats with at most [maxFractionDigits] decimals, trimming trailing zeros. Uses the
+     * shortest decimal form of [value] (BigDecimal.valueOf), so 0.15 rounds to 0.2, not 0.1.
+     * Infinite values render as ∞ and NaN as a dash instead of throwing.
+     */
     fun format(value: Double, maxFractionDigits: Int = 1): String {
-        val rounded = java.math.BigDecimal(value)
+        if (value.isNaN()) return "–"
+        if (value.isInfinite()) return if (value > 0) "∞" else "-∞"
+        val rounded = java.math.BigDecimal.valueOf(value)
             .setScale(maxFractionDigits, java.math.RoundingMode.HALF_UP)
             .stripTrailingZeros()
             .toPlainString()
@@ -55,12 +61,22 @@ class NumberFormatter(val persianDigits: Boolean) {
         return Digits.localize(text, persianDigits)
     }
 
+    /**
+     * Whole percent, rounded down so an unfinished value never reads 100%. A tiny epsilon
+     * absorbs float error (0.53f * 100 = 52.99999…) before flooring.
+     */
     fun percent(fraction: Float): String {
-        val pct = (fraction.coerceIn(0f, 1f) * 100).toInt()
+        val clamped = fraction.coerceIn(0f, 1f)
+        var pct = kotlin.math.floor(clamped.toDouble() * 100 + PERCENT_EPSILON).toInt()
+        if (clamped < 1f) pct = pct.coerceAtMost(99)
         return if (persianDigits) "${format(pct)}٪" else "${format(pct)}%"
     }
 
     fun twoDigits(value: Int): String = Digits.localize(value.toString().padStart(2, '0'), persianDigits)
 
     fun localize(text: String): String = Digits.localize(text, persianDigits)
+
+    private companion object {
+        const val PERCENT_EPSILON = 1e-4
+    }
 }

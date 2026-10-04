@@ -35,4 +35,28 @@ class GoalPaceTest {
     fun noDeadline_noPace() {
         assertThat(GoalPace.of(Goal(title = "g"), start, start)).isNull()
     }
+
+    @Test
+    fun largeGoal_justShortOfTarget_isNotDone() {
+        val goal = Goal(title = "g", target = 100_000_000.0, currentValue = 99_999_999.0, deadline = deadline)
+        assertThat(goal.isComplete).isFalse()
+        assertThat(goal.progress).isLessThan(1f)
+        assertThat(GoalPace.of(goal, start, start.plusDays(50))!!.status).isNotEqualTo(GoalPace.Status.DONE)
+        assertThat(goal.copy(currentValue = 100_000_000.0).progress).isEqualTo(1f)
+    }
+
+    @Test
+    fun deadlineDay_expectsEverything_andNeedsAllRemaining() {
+        val today = LocalDate.of(2026, 3, 1)
+        val createdToday = GoalPace.of(Goal(title = "g", target = 10.0, deadline = today), today, today)!!
+        assertThat(createdToday.expectedProgress).isEqualTo(1f)
+        assertThat(createdToday.status).isEqualTo(GoalPace.Status.BEHIND)
+        assertThat(createdToday.neededPerWeek).isWithin(0.001).of(10.0)
+
+        val onDeadline = pace(40.0, deadline)
+        assertThat(onDeadline.daysLeft).isEqualTo(0)
+        assertThat(onDeadline.expectedProgress).isEqualTo(1f)
+        assertThat(onDeadline.neededPerWeek).isWithin(0.001).of(60.0)
+        assertThat(pace(10.0, deadline.plusDays(1)).neededPerWeek).isEqualTo(0.0)
+    }
 }
