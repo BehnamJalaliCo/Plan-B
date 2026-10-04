@@ -1,6 +1,7 @@
 package com.behnamjalali.planb.core.backup
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -157,6 +158,8 @@ object AutoBackupNotifier {
     private const val CHANNEL = "planb_backup"
     private const val ID = 0x0B4C
 
+    // The permission is checked right below (Android 13+); without it nothing is shown.
+    @SuppressLint("MissingPermission")
     fun notifyFailure(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED

@@ -17,7 +17,6 @@ import com.behnamjalali.planb.core.data.SearchIndexMaintenance
 import com.behnamjalali.planb.core.datastore.createPreferencesDataStore
 import com.behnamjalali.planb.core.testing.RealMainDispatcherRule
 import com.behnamjalali.planb.core.testing.TestDataGraph
-import com.behnamjalali.planb.core.testing.awaitItem
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.io.OutputStream
@@ -84,20 +83,27 @@ class AutoBackupViewModelTest {
 
     private fun viewModel() = main.track(AutoBackupViewModel(preferences, AutoBackupScheduler { scheduled += it }, runner, appScope))
 
+    /** Waits until [count] schedule calls arrived (each change reschedules once). */
+    private suspend fun awaitScheduled(count: Int) = withTimeout(60_000) {
+        while (scheduled.size < count) kotlinx.coroutines.delay(10)
+    }
+
     @Test
     fun pickingAFolder_enablesAndSchedules_andChangesReschedule() = runBlocking<Unit> {
         val vm = viewModel()
-        main.keepCollecting(vm.settings)
         vm.folderPicked("content://tree/backups", "Backups")
-        val enabled = vm.settings.awaitItem { it?.enabled == true }!!
+        awaitScheduled(1)
+        val enabled = preferences.current()
+        assertThat(enabled.enabled).isTrue()
         assertThat(enabled.folderName).isEqualTo("Backups")
         vm.update { it.copy(frequency = AutoBackupFrequency.WEEKLY, chargingOnly = true) }
-        vm.settings.awaitItem { it?.frequency == AutoBackupFrequency.WEEKLY }
+        awaitScheduled(2)
+        assertThat(preferences.current().frequency).isEqualTo(AutoBackupFrequency.WEEKLY)
         vm.update { it.copy(enabled = false) }
-        vm.settings.awaitItem { it?.enabled == false }
-        withTimeout(10_000) { while (scheduled.size < 3) kotlinx.coroutines.delay(10) }
+        awaitScheduled(3)
         assertThat(scheduled.map { it.enabled }).containsExactly(true, true, false).inOrder()
         assertThat(scheduled[1].chargingOnly).isTrue()
+        assertThat(scheduled[1].frequency).isEqualTo(AutoBackupFrequency.WEEKLY)
     }
 
     @Test
