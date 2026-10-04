@@ -28,7 +28,7 @@ A reliability update after a full code and screen review. Recommended for everyo
 
 ## Privacy
 
-No Internet permission, accounts, ads, analytics or tracking. Your data stays on your device.
+No accounts, ads, analytics or tracking. Your data stays on your device.
 
 ## Files
 

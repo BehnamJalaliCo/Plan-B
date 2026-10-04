@@ -4,8 +4,7 @@
 English. It brings Today, a calendar, tasks, projects, notebooks, habits, goals, focus sessions,
 templates and a weekly review together in one app, with Jalali and Gregorian calendars.
 
-Your data stays on your device. There are no accounts, ads, analytics or trackers, and the app
-does not request the Internet permission.
+Your data stays on your device. There are no accounts, ads, analytics or trackers.
 
 | Today | Calendar | Notes | Habits |
 |---|---|---|---|

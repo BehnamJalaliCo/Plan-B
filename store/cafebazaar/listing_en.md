@@ -8,7 +8,7 @@
 
 ## Short description (max 80 characters)
 
-Offline planner & notebook with Jalali calendar, tasks, habits and focus
+Personal planner & notebook with Jalali calendar, tasks, habits and focus
 
 ## Full description
 
@@ -40,8 +40,8 @@ closed.
 keyboard letters), eight ready-made templates such as a daily planner and meeting notes, and a
 weekly review of tasks, habits and focus.
 
-**Real privacy** — everything stays on your phone. Plan-B has no Internet permission, no
-account, no ads and no tracking. Backups and exports (CSV, JSON, Markdown) go only to files you
+**Real privacy** — everything stays on your phone. Plan-B has no account, no ads and no
+tracking. Backups and exports (CSV, JSON, Markdown) go only to files you
 choose.
 
 **Accessible and polished** — light and dark themes, a themed icon, large-font and TalkBack
@@ -50,7 +50,7 @@ support.
 ## Keywords
 
 planner, Jalali calendar, to-do, tasks, notes, notebook, habits, goals, pomodoro, focus,
-productivity, offline
+productivity, daily planner
 
 ## Developer and support
 
