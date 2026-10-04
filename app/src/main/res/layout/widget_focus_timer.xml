@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Focus widget countdown (Plan-B Pro). A Chronometer counts down without widget updates. -->
+<Chronometer xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_focus_chronometer"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:textAppearance="@android:style/TextAppearance.DeviceDefault.Large"
+    android:textSize="32sp"
+    android:textStyle="bold" />

@@ -123,6 +123,7 @@ dependencies {
     implementation(projects.feature.review)
     implementation(projects.feature.settings)
     implementation(projects.feature.pro)
+    implementation(projects.feature.reports)
     implementation(projects.core.backup)
     implementation(projects.core.billing)
     implementation(projects.core.ai)
@@ -138,6 +139,8 @@ dependencies {
     implementation(libs.androidx.compose.material.iconsExtended)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.profileinstaller)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
     baselineProfile(projects.baselineprofile)
 
     testImplementation(projects.core.testing)
@@ -145,6 +148,7 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.room.runtime)
     testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.androidx.glance.appwidget.testing)
 
     androidTestImplementation(projects.core.database)
     androidTestImplementation(libs.androidx.room.runtime)

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan-B Pro alternate launcher icon (ocean); the themed icon uses the same monochrome mark. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/planb_icon_ocean_background" />
+    <foreground android:drawable="@drawable/planb_icon_ocean_foreground" />
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
+</adaptive-icon>

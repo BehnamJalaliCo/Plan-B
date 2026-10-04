@@ -198,3 +198,6 @@ fun colorThemeSwatch(theme: ColorTheme): List<Color> =
 
 /** The primary color of [theme] in light or dark mode (for previews such as the icon picker). */
 fun colorThemePrimary(theme: ColorTheme, dark: Boolean): Color = ThemePalettes.scheme(theme, dark).primary
+
+/** The full Material color scheme of [theme] (for surfaces outside Compose UI, such as widgets). */
+fun planBColorScheme(theme: ColorTheme, dark: Boolean): ColorScheme = ThemePalettes.scheme(theme, dark)

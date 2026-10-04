@@ -17,6 +17,7 @@ import com.behnamjalali.planb.core.designsystem.theme.PlanBTheme
 import com.behnamjalali.planb.core.model.SearchEntityType
 import com.behnamjalali.planb.core.model.SearchResult
 import com.behnamjalali.planb.core.model.TemplateType
+import com.behnamjalali.planb.core.ui.ProFeature
 import com.behnamjalali.planb.feature.calendar.CalendarDestination
 import com.behnamjalali.planb.feature.calendar.CalendarRoute
 import com.behnamjalali.planb.feature.calendar.EventEditorDestination
@@ -49,12 +50,18 @@ import com.behnamjalali.planb.feature.projects.ProjectEditorDestination
 import com.behnamjalali.planb.feature.projects.ProjectEditorRoute
 import com.behnamjalali.planb.feature.projects.ProjectsDestination
 import com.behnamjalali.planb.feature.projects.ProjectsRoute
+import com.behnamjalali.planb.feature.reports.StatisticsDestination
+import com.behnamjalali.planb.feature.reports.StatisticsRoute
+import com.behnamjalali.planb.feature.reports.YearReportDestination
+import com.behnamjalali.planb.feature.reports.YearReportRoute
 import com.behnamjalali.planb.feature.review.ReviewDestination
 import com.behnamjalali.planb.feature.review.ReviewRoute
 import com.behnamjalali.planb.feature.search.SearchDestination
 import com.behnamjalali.planb.feature.search.SearchRoute
 import com.behnamjalali.planb.feature.settings.AboutDestination
 import com.behnamjalali.planb.feature.settings.AboutRoute
+import com.behnamjalali.planb.feature.settings.AppearanceDestination
+import com.behnamjalali.planb.feature.settings.AppearanceRoute
 import com.behnamjalali.planb.feature.settings.BackupDestination
 import com.behnamjalali.planb.feature.settings.BackupRoute
 import com.behnamjalali.planb.feature.settings.LicensesDestination
@@ -265,6 +272,15 @@ fun PlanBNavHost(
         composable<PrivacyRoute> { entry -> PrivacyDestination(onBack = rememberScreenNavigator(navController, entry).back) }
         composable<AboutRoute> { entry -> AboutDestination(onBack = rememberScreenNavigator(navController, entry).back) }
         composable<LicensesRoute> { entry -> LicensesDestination(onBack = rememberScreenNavigator(navController, entry).back) }
+        // Plan-B Pro: reports and personalization (WP5).
+        composable<StatisticsRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            StatisticsDestination(onBack = nav.back, onOpenYear = { nav.navigate(YearReportRoute()) }, snackbarHostState = snackbarHostState)
+        }
+        composable<YearReportRoute> { entry ->
+            YearReportDestination(onBack = rememberScreenNavigator(navController, entry).back, snackbarHostState = snackbarHostState)
+        }
+        composable<AppearanceRoute> { entry -> AppearanceDestination(onBack = rememberScreenNavigator(navController, entry).back) }
     }
 }
 
@@ -346,5 +362,12 @@ fun NavHostController.handleDeepLink(uri: Uri) {
         "event" -> id?.let { navigate(EventEditorRoute(eventId = it)) }
         "habit" -> id?.let { navigate(HabitDetailRoute(it)) }
         "focus" -> navigate(FocusRoute)
+        // Widgets, quick-settings tiles and launcher shortcuts (Plan-B Pro #32, #34).
+        "new-task" -> navigate(TaskEditorRoute())
+        "new-note" -> navigate(NoteEditorRoute())
+        "today" -> navigateTopLevel(TopLevelDestination.TODAY)
+        "calendar" -> navigateTopLevel(TopLevelDestination.CALENDAR)
+        "habits" -> navigate(HabitsRoute)
+        "pro" -> navigate(PaywallRoute(ProFeature.entries.firstOrNull { it.id == segments.getOrNull(1) }?.id))
     }
 }

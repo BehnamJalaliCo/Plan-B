@@ -25,6 +25,7 @@ class PlanBApplication : Application() {
     @Inject lateinit var attachments: AttachmentMaintenance
     @Inject lateinit var entitlements: EntitlementRepository
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
+    @Inject lateinit var personalization: PersonalizationSync
 
     override fun onCreate() {
         super.onCreate()
@@ -35,6 +36,8 @@ class PlanBApplication : Application() {
         AppLocales.applyStartupLanguage(this, stored.language)
         AppTheme.applyStartupNightMode(stored.themeMode)
         notifier.createChannels(notifier.localizedContext(stored.language.tag))
+        // Widgets, launcher shortcuts and the watch follow data and Plan-B Pro changes.
+        personalization.start()
         appScope.launch {
             // Alarms can be lost (force-stop, restore); re-sync them off the main thread.
             runCatching { reminders.rescheduleAll() }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Static launcher shortcuts (free). The dynamic Plan-B Pro shortcuts ("Today", "Start focus")
+  are published by ShortcutPublisher. targetPackage is the release application id; the debug
+  build overrides this file in src/debug.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_task"
+        android:shortcutId="new_task"
+        android:shortcutLongLabel="@string/shortcut_new_task_long"
+        android:shortcutShortLabel="@string/shortcut_new_task">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="planb://open/new-task"
+            android:targetClass="com.behnamjalali.planb.MainActivity"
+            android:targetPackage="com.behnamjalali.planb" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_note"
+        android:shortcutId="new_note"
+        android:shortcutLongLabel="@string/shortcut_new_note_long"
+        android:shortcutShortLabel="@string/shortcut_new_note">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="planb://open/new-note"
+            android:targetClass="com.behnamjalali.planb.MainActivity"
+            android:targetPackage="com.behnamjalali.planb" />
+    </shortcut>
+</shortcuts>
