@@ -515,6 +515,26 @@ by id still return trashed rows so they can be restored. Trash queries:
 `TaskDao.observeTrash()` / `setDeletedAt()` / `trashedBefore()` and the same on `NoteDao`.
 Backups include trashed rows. Purging after 30 days is a hard delete through the repositories.
 
+**Behaviour (Plan-B Pro #38).** Only Pro users' deletions go to the trash
+(`DataHistory.active()`); free users keep the permanent delete after the undo snackbar. A task
+and its live subtasks get the *same* `deleted_at`, which is how the trash list
+(`TaskDao.observeTrashRows`) shows them as one item and how `restoreFromTrash` brings them back
+together (a trashed parent of a restored subtask comes back too). Trashing removes search rows
+and cancels reminders; restoring re-indexes and reschedules them. `TrashRepository.purgeExpired`
+runs at app start and daily (`MaintenanceWorker`), for everyone.
+
+**Activity history.** Repositories write `activity_log` inside the transaction of the change
+(Pro only). An edit within 10 minutes of the item's previous created/edited entry refreshes that
+entry instead of adding one (note autosave), and the table is pruned to the newest 5,000 rows
+(`ActivityLogDao.pruneToNewest`, every 100 inserts and daily). An empty note discarded by the
+editor is deleted with its history (`NoteRepository.discardNote`).
+
+**Encrypted notes (#36).** The envelope in `notes.encrypted_payload` is `version (1) |
+iterations (int32 BE) | salt (16) | IV (12) | AES-256-GCM ciphertext + tag`, with the header
+as associated data; the key is PBKDF2-HMAC-SHA256 of the user's passphrase. Locking sets
+`locked = 1`, writes the envelope, empties `content`, deletes the note's versions and draft and
+re-indexes the title only; edits of a locked note are encrypted again and never drafted.
+
 ---
 
 ## 4. Full-text search pipeline

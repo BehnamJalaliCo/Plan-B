@@ -37,6 +37,8 @@ The merged release manifest must request only the permissions in
 | androidx.hilt:hilt-lifecycle-viewmodel-compose | 1.4.0 | Apache 2.0 | `hiltViewModel()` |
 | androidx.profileinstaller | 1.4.1 | Apache 2.0 | Installs the baseline profile |
 | Dagger Hilt | 2.60.1 | Apache 2.0 | Dependency injection |
+| androidx.work:work-runtime-ktx | 2.12.0 | Apache 2.0 | Plan-B Pro automatic backups and the daily trash purge (`ACCESS_NETWORK_STATE` and `FOREGROUND_SERVICE` are removed from the manifest; `WAKE_LOCK` stays) |
+| androidx.biometric:biometric | 1.1.0 | Apache 2.0 | Plan-B Pro App lock and fingerprint unlock of locked notes (`USE_BIOMETRIC`, `USE_FINGERPRINT`) |
 | Poolakey (`com.github.cafebazaar.Poolakey:poolakey`) | 2.2.0 | Apache 2.0 | Cafe Bazaar in-app billing (Plan-B Pro). From JitPack, restricted to this group by an `exclusiveContent` filter in `settings.gradle.kts`; brings `androidx.fragment` and adds only `PAY_THROUGH_BAZAAR` |
 | OkHttp (+ Okio) | 5.5.0 | Apache 2.0 | HTTP client of the optional AI assistant (`core:ai`) |
 | Anjoman Max font (Regular, Medium, SemiBold, Bold) | 3.000 | Proprietary, fontiran.com — used under the owner's license | App typeface (supplied at build time, see [FONTS.md](FONTS.md)) |

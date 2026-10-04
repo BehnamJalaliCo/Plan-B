@@ -27,6 +27,8 @@ device (a local database and a preferences file) and are readable only by Plan-B
 | Run at startup (`RECEIVE_BOOT_COMPLETED`) | To restore your reminders after the device restarts. |
 | Internet (`INTERNET`) | Used only by the optional AI assistant, which is off until you turn it on and add your own provider key. Nothing else in the app uses the network. |
 | Pay through Cafe Bazaar (`com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR`) | Lets the installed Cafe Bazaar app handle Plan-B Pro purchases. |
+| Biometrics (`USE_BIOMETRIC`, `USE_FINGERPRINT`) | Plan-B Pro App lock and locked notes: your device's own fingerprint, face or screen lock confirms it's you. Plan-B never sees or stores biometric data. |
+| Keep awake (`WAKE_LOCK`) | Lets short background jobs finish: Plan-B Pro automatic backups and emptying the 30-day trash. |
 
 Plan-B does not access contacts, location, camera, microphone, accounts or shared storage.
 
@@ -57,6 +59,13 @@ choose with the system file picker. Imports read only the file you pick. These f
 encrypted by Plan-B; keep them somewhere you trust. Android cloud backup and device-to-device
 transfer of the app's data are disabled so your private notes never leave the device without
 your action.
+
+With Plan-B Pro you can turn on **automatic backups**: the same backup file is written on a
+schedule into a folder you pick (for example a Google Drive folder, in which case the file is
+uploaded by that provider's app, not by Plan-B). Only the newest 21 automatic backups are kept;
+other files in the folder are never touched. **Locked notes** are encrypted with a passphrase
+only you know (PBKDF2-HMAC-SHA256 and AES-256-GCM); backups contain them encrypted, and nobody,
+including the developer, can recover a forgotten passphrase.
 
 ## Notifications on the lock screen
 
@@ -112,6 +121,8 @@ Plan-B یک برنامه‌ریز آفلاین است. **هر چیزی که وا
 | اجرا پس از روشن شدن دستگاه | بازگرداندن یادآورها پس از راه‌اندازی دوبارهٔ دستگاه. |
 | اینترنت | فقط برای دستیار هوش مصنوعی اختیاری که تا وقتی خودتان روشنش نکنید و کلید شخصی وارد نکنید خاموش است. هیچ بخش دیگری از برنامه از شبکه استفاده نمی‌کند. |
 | پرداخت از طریق کافه‌بازار | برنامهٔ کافه‌بازار نصب‌شده روی دستگاه، خرید Plan-B Pro را انجام می‌دهد. |
+| بیومتریک (اثر انگشت) | قفل برنامه و یادداشت‌های قفل‌شدهٔ Plan-B Pro: اثر انگشت، چهره یا قفل صفحهٔ خود گوشی هویت شما را تأیید می‌کند. Plan-B هیچ دادهٔ بیومتریکی نمی‌بیند و ذخیره نمی‌کند. |
+| بیدار نگه داشتن دستگاه | تمام شدن کارهای کوتاه پس‌زمینه: پشتیبان‌گیری خودکار Plan-B Pro و خالی شدن سطل زبالهٔ ۳۰ روزه. |
 
 Plan-B به مخاطبین، موقعیت مکانی، دوربین، میکروفون، حساب‌ها یا حافظهٔ مشترک دسترسی ندارد.
 
@@ -142,6 +153,13 @@ Plan-B به مخاطبین، موقعیت مکانی، دوربین، میکرو
 سیستم انتخاب می‌کنید ذخیره می‌شوند. ورودی فقط همان فایلی را می‌خواند که انتخاب کرده‌اید.
 این فایل‌ها توسط Plan-B رمزگذاری نمی‌شوند؛ آن‌ها را در جای امن نگه دارید. پشتیبان‌گیری
 ابری اندروید و انتقال داده بین دستگاه‌ها برای این برنامه غیرفعال است.
+
+با Plan-B Pro می‌توانید **پشتیبان‌گیری خودکار** را روشن کنید: همان فایل پشتیبان طبق زمان‌بندی
+در پوشه‌ای که انتخاب می‌کنید (مثلاً پوشه‌ای در گوگل‌درایو، که در این صورت برنامهٔ همان سرویس
+فایل را بارگذاری می‌کند، نه Plan-B) ذخیره می‌شود. فقط ۲۱ پشتیبان خودکار تازه‌تر نگه داشته
+می‌شوند و به فایل‌های دیگر پوشه دست زده نمی‌شود. **یادداشت‌های قفل‌شده** با رمزی که فقط شما
+می‌دانید رمزنگاری می‌شوند؛ پشتیبان‌ها آن‌ها را رمزنگاری‌شده نگه می‌دارند و هیچ‌کس، حتی
+سازنده، نمی‌تواند رمز فراموش‌شده را بازیابی کند.
 
 ## اعلان‌ها روی صفحهٔ قفل
 

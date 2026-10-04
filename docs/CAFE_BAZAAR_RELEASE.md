@@ -18,10 +18,18 @@ Plan-B is published on [Cafe Bazaar](https://cafebazaar.ir) as `com.behnamjalali
 | Screenshots | `store/cafebazaar/graphics/screenshots/{fa,en}/` | Eight real screenshots per language, in listing order |
 | Privacy policy | https://github.com/BehnamJalaliCo/Plan-B/blob/main/PRIVACY.md | Persian and English |
 
-Permissions to declare in the listing: notifications, exact alarms and start at boot (all for
-reminders); Internet (used only by the optional AI assistant, off until the user turns it on
-with their own provider key); and paying through Cafe Bazaar (Plan-B Pro). The app has no
-ads, analytics or tracking. The complete list is `tools/allowed-permissions.txt`.
+Permissions to declare in the listing (the complete list is `tools/allowed-permissions.txt`;
+the app has no ads, analytics or tracking):
+
+| Permission | English | فارسی |
+|---|---|---|
+| `POST_NOTIFICATIONS` | Reminders for tasks, events, habits and focus | یادآور کارها، رویدادها، عادت‌ها و تمرکز |
+| `SCHEDULE_EXACT_ALARM` | Reminders at the exact minute | یادآور در همان دقیقهٔ تعیین‌شده |
+| `RECEIVE_BOOT_COMPLETED` | Restore reminders and scheduled backups after a restart | بازگرداندن یادآورها و پشتیبان‌گیری زمان‌بندی‌شده پس از راه‌اندازی دوباره |
+| `INTERNET` | Only the optional AI assistant, off until the user adds their own key | فقط دستیار هوش مصنوعی اختیاری؛ تا وارد کردن کلید شخصی خاموش است |
+| `PAY_THROUGH_BAZAAR` | Plan-B Pro purchases through Cafe Bazaar | خرید Plan-B Pro از طریق کافه‌بازار |
+| `USE_BIOMETRIC`, `USE_FINGERPRINT` | Plan-B Pro App lock and locked notes (the device's own fingerprint, face or screen lock) | قفل برنامه و یادداشت‌های قفل‌شدهٔ Plan-B Pro (اثر انگشت، چهره یا قفل صفحهٔ خود گوشی) |
+| `WAKE_LOCK` | Let short background jobs finish (Plan-B Pro automatic backups, emptying the 30-day trash) | تمام شدن کارهای کوتاه پس‌زمینه (پشتیبان‌گیری خودکار Plan-B Pro، خالی شدن سطل زبالهٔ ۳۰ روزه) |
 
 ## In-app products (Plan-B Pro)
 

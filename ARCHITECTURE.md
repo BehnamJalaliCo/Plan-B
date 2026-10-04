@@ -48,6 +48,7 @@ graph TD
 | `core:notifications` | `AlarmReminderScheduler` (implements `ReminderScheduler`), reminder/reschedule broadcast receivers, notification channels, private notifications and deep links. |
 | `core:backup` | Versioned ZIP backup (with attachment files), validation, transactional restore, CSV/JSON/Markdown export and import. |
 | `core:billing` | Plan-B Pro: `BillingClient` (Cafe Bazaar via Poolakey, or a fake in debug builds), on-device purchase verification, `EntitlementRepository` with an offline cache. See [docs/PRO.md](docs/PRO.md). |
+| `feature:security` | Plan-B Pro #36–#38 screens: `AppLockGate` and the lock screen, Security settings, Trash, Activity. App lock state (`AppLockController`), the note vault (`NoteVault`, `NoteCrypto`), `DataHistory` and the trash/activity repositories live in `core:data`. |
 | `core:ai` | Optional AI assistant infrastructure: provider catalog, settings with the key encrypted by the Android Keystore, `AiClient` (OkHttp; OpenAI and Anthropic wire formats). The only module that declares `INTERNET`. |
 | `core:designsystem` | Theme, color/typography/tokens and generic components. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md). |
 | `core:ui` | Planner-specific shared composables: cards, pickers (date/time/color/icon), editor rows, recurrence and reminder menus, heatmap, formatting locals, and Pro gating (`ProFeature`, `LocalProAccess`, `ProGate`, `rememberProGuard`). |
@@ -105,8 +106,9 @@ counts and end dates, and starts Jalali weeks on Saturday.
 ## Background work and notifications
 
 - Reminders use `AlarmManager`: exact alarms when the user allows them, otherwise
-  `setAndAllowWhileIdle`. Reminders need wall-clock precision and the app has no deferrable
-  background jobs (no sync, no uploads), so WorkManager is not used.
+  `setAndAllowWhileIdle`, because reminders need wall-clock precision. Deferrable jobs use
+  WorkManager: Plan-B Pro automatic backups (`AutoBackupWorker` in `core:backup`) and the daily
+  `MaintenanceWorker` (30-day trash purge, activity history cap) in `app`.
 - `ReminderReceiver` re-reads the item before notifying (completed or deleted items never
   notify) and schedules the next occurrence. `RescheduleReceiver` restores all alarms after
   boot, app updates, clock or time-zone changes and exact-alarm permission changes.
