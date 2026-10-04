@@ -50,11 +50,19 @@ class UserPreferencesDataSource @Inject constructor(
         val focusMinutes = intPreferencesKey("focus_minutes")
         val breakMinutes = intPreferencesKey("short_break_minutes")
         val onboarding = booleanPreferencesKey("onboarding_completed")
+
+        /** Normalizer version the search index was built with (device state, never exported). */
+        val searchIndexVersion = intPreferencesKey("search_index_version")
     }
 
-    val settings: Flow<UserSettings> = dataStore.data
+    /**
+     * Unreadable storage reads as "defaults" instead of failing every collector; any other
+     * error is a bug and is propagated rather than silently ending the flow.
+     */
+    private val data: Flow<Preferences> = dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
-        .map(::toSettings)
+
+    val settings: Flow<UserSettings> = data.map(::toSettings)
 
     suspend fun current(): UserSettings = settings.first()
 
@@ -65,11 +73,18 @@ class UserPreferencesDataSource @Inject constructor(
         }
     }
 
-    /** Raw key/value snapshot for backups; device-specific onboarding state is left out. */
+    /** Version of the search normalizer the full-text index was last built with (0 = unknown). */
+    suspend fun searchIndexVersion(): Int = data.first()[Keys.searchIndexVersion] ?: 0
+
+    suspend fun setSearchIndexVersion(version: Int) {
+        dataStore.edit { it[Keys.searchIndexVersion] = version }
+    }
+
+    /** Raw key/value snapshot for backups; device-specific state (onboarding, index version) is left out. */
     suspend fun export(): Map<String, String> {
-        val prefs = dataStore.data.first()
+        val prefs = data.first()
         val values = prefs.asMap().entries
-            .filter { (k, _) -> k.name != Keys.onboarding.name }
+            .filter { (k, _) -> k.name !in DEVICE_KEYS }
             .associate { (k, v) -> k.name to v.toString() }
         // "Follow the language" is stored as an absent key; export it explicitly so a restore
         // resets an override instead of keeping it.
@@ -134,6 +149,7 @@ class UserPreferencesDataSource @Inject constructor(
 
     private companion object {
         const val AUTO = "AUTO"
+        val DEVICE_KEYS = setOf(Keys.onboarding.name, Keys.searchIndexVersion.name)
     }
 
     /** Known sections in saved order; sections added in newer versions are appended. */

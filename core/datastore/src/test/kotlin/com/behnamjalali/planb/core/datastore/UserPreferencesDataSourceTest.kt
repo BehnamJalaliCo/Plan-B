@@ -93,6 +93,27 @@ class UserPreferencesDataSourceTest {
     }
 
     @Test
+    fun corruptFile_isReplacedWithDefaults_andStaysWritable() = runTest {
+        val dir = Files.createTempDirectory("corrupt").toFile()
+        val file = File(dir, "test.preferences_pb")
+        file.writeBytes(byteArrayOf(0x0A, 0x7F, 0x00, 0x13, 0x37, 0xFF.toByte(), 0x42) + "not a protobuf".toByteArray())
+        val source = UserPreferencesDataSource(createPreferencesDataStore(backgroundScope) { file })
+        assertThat(source.current()).isEqualTo(UserSettings())
+        source.update { it.copy(language = AppLanguage.ENGLISH) }
+        assertThat(source.current().language).isEqualTo(AppLanguage.ENGLISH)
+        assertThat(source.export()["language"]).isEqualTo("en")
+    }
+
+    @Test
+    fun searchIndexVersion_isDeviceStateAndNotExported() = runTest {
+        val source = UserPreferencesDataSource(newStore(Files.createTempDirectory("f").toFile(), backgroundScope))
+        assertThat(source.searchIndexVersion()).isEqualTo(0)
+        source.setSearchIndexVersion(2)
+        assertThat(source.searchIndexVersion()).isEqualTo(2)
+        assertThat(source.export()).doesNotContainKey("search_index_version")
+    }
+
+    @Test
     fun import_autoCalendarAndFirstDay_resetOverrides() = runTest {
         val source = UserPreferencesDataSource(newStore(Files.createTempDirectory("d").toFile(), backgroundScope))
         val exported = source.export() // follows the language: no overrides
