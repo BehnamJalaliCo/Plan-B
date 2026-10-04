@@ -3,7 +3,7 @@
  "description": "برنامهٔ یک روز: اولویت‌ها، زمان‌بندی و مرور پایان روز.",
  "type": "note",
  "payload": {
-  "noteTitle": "برنامهٔ روز · {{date}}",
+  "noteTitle": "برنامهٔ روز، {{date}}",
   "blocks": [
    {
     "id": "b0",

@@ -35,7 +35,7 @@ fun CalendarDestination(
                         actionLabel = resources.getString(R.string.calendar_undo),
                         duration = SnackbarDuration.Short,
                     )
-                    if (result == SnackbarResult.ActionPerformed) viewModel.undoComplete(message.taskId, message.nextOccurrenceId)
+                    if (result == SnackbarResult.ActionPerformed) viewModel.undoComplete(message.taskId)
                 }
             }
         }

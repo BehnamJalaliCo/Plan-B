@@ -158,19 +158,14 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    /** Undoes a completion; also removes the occurrence a recurring completion created. */
-    fun undoComplete(id: EntityId, nextOccurrenceId: EntityId?) {
+    /**
+     * Undoes a completion. Reopening a recurring occurrence also removes the untouched occurrence
+     * its completion created and moves the series back (see TaskRepository.setCompleted).
+     */
+    fun undoComplete(id: EntityId) {
         viewModelScope.launch {
-            runCatchingSafely {
-                val next = nextOccurrenceId?.let { tasks.getTask(it) }
-                if (nextOccurrenceId != null) tasks.delete(listOf(nextOccurrenceId))
-                // Reopen first, so restoring the series below saves an open task, not a done one.
-                tasks.setCompleted(id, false)
-                val reopened = tasks.getTask(id)
-                if (reopened != null && next != null) {
-                    tasks.save(reopened.copy(recurrence = next.recurrence, recurrenceAnchor = next.recurrenceAnchor))
-                }
-            }.onFailure { _messages.tryEmit(CalendarMessage.Failed) }
+            runCatchingSafely { tasks.setCompleted(id, false) }
+                .onFailure { _messages.tryEmit(CalendarMessage.Failed) }
         }
     }
 

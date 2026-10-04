@@ -3,7 +3,7 @@
  "description": "یادداشت روزانهٔ آرام با قدردانی و حال‌وهوا.",
  "type": "note",
  "payload": {
-  "noteTitle": "خاطرات · {{date}}",
+  "noteTitle": "خاطرات، {{date}}",
   "blocks": [
    {
     "id": "b0",

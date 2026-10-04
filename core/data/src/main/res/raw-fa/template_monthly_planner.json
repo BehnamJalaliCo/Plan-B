@@ -3,7 +3,7 @@
  "description": "موضوع ماه، تاریخ‌های مهم و هدف‌ها.",
  "type": "note",
  "payload": {
-  "noteTitle": "برنامهٔ ماه · {{date}}",
+  "noteTitle": "برنامهٔ ماه، {{date}}",
   "blocks": [
    {
     "id": "b0",

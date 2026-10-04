@@ -133,8 +133,8 @@ class HabitDetailViewModel @Inject constructor(
                 item = item,
                 today = today,
                 streak = HabitStats.currentStreak(item.habit, item.amounts, today, s.firstDayOfWeek),
-                bestStreak = HabitStats.bestStreakDays(item.habit, item.amounts, today),
-                rate30 = HabitStats.completionRate(item.habit, item.amounts, maxOf(item.habit.startDate, today.minusDays(29)), today),
+                bestStreak = HabitStats.bestStreakDays(item.habit, item.amounts, today, s.firstDayOfWeek),
+                rate30 = HabitStats.completionRate(item.habit, item.amounts, maxOf(item.habit.startDate, today.minusDays(29)), today, today),
                 firstDayOfWeek = s.firstDayOfWeek,
             )
         }

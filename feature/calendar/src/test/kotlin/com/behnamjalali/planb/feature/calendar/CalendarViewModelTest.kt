@@ -72,7 +72,7 @@ class CalendarViewModelTest {
         assertThat(completed.taskId).isEqualTo(id)
         assertThat(completed.nextOccurrenceId).isNotNull()
 
-        vm.undoComplete(completed.taskId, completed.nextOccurrenceId)
+        vm.undoComplete(completed.taskId)
         withTimeout(20_000) { graph.tasks.observeTask(completed.nextOccurrenceId!!).first { it == null } }
         val restored = withTimeout(20_000) { graph.tasks.observeTask(id).first { it != null && !it.isCompleted && it.recurrence != null } }
         assertThat(restored!!.recurrence).isEqualTo(RecurrenceRule(RecurrenceFrequency.DAILY))

@@ -3,7 +3,7 @@
  "description": "حاضران، دستور جلسه، تصمیم‌ها و اقدام‌ها.",
  "type": "note",
  "payload": {
-  "noteTitle": "جلسه · {{date}}",
+  "noteTitle": "جلسه، {{date}}",
   "blocks": [
    {
     "id": "b0",

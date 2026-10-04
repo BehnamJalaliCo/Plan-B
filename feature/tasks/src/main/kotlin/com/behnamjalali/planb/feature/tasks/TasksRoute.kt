@@ -54,7 +54,7 @@ fun TasksDestination(
                             actionLabel = resources.getString(R.string.tasks_undo),
                             duration = SnackbarDuration.Short,
                         )
-                        if (result == SnackbarResult.ActionPerformed) viewModel.undoComplete(message.taskId, message.nextOccurrenceId)
+                        if (result == SnackbarResult.ActionPerformed) viewModel.undoComplete(message.taskId)
                     }
                     TasksMessage.Failed -> snackbarHostState.showSnackbar(resources.getString(R.string.tasks_error))
                 }

@@ -202,17 +202,12 @@ class TasksViewModel @Inject constructor(
         if (completed) _messages.tryEmit(TasksMessage.Completed(id, next))
     }
 
-    /** Undo a completion; also removes the occurrence a recurring completion created. */
-    fun undoComplete(id: EntityId, nextOccurrenceId: EntityId?) = launchSafely {
-        val next = nextOccurrenceId?.let { tasks.getTask(it) }
-        if (nextOccurrenceId != null) tasks.delete(listOf(nextOccurrenceId))
-        // Reopen first, so restoring the series below saves an open task, not a done one
-        // (saving a done recurring task would spawn yet another occurrence).
+    /**
+     * Undo a completion. Reopening a recurring occurrence also removes the untouched occurrence
+     * its completion created and moves the series back (see TaskRepository.setCompleted).
+     */
+    fun undoComplete(id: EntityId) = launchSafely {
         tasks.setCompleted(id, false)
-        val reopened = tasks.getTask(id)
-        if (reopened != null && next != null) {
-            tasks.save(reopened.copy(recurrence = next.recurrence, recurrenceAnchor = next.recurrenceAnchor))
-        }
     }
 
     /** The selected tasks that are actually on screen; never a task a filter has since hidden. */
