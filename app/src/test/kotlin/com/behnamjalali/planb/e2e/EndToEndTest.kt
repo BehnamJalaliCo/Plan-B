@@ -8,10 +8,14 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
@@ -118,6 +122,15 @@ class EndToEndTest {
     private fun click(text: String) {
         // Prefer the clickable ancestor (merged tree) so dialogs and rows receive the click.
         val clickable = hasText(text, substring = true) and hasClickAction()
+        // The screen may still be loading; and lazy lists compose only rows near the viewport, so
+        // after a moment scroll the list towards the text (scroll actions, no touches).
+        val present = { compose.onAllNodes(hasText(text, substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        if (!runCatching { compose.waitUntil(3_000) { present() } }.isSuccess) {
+            val lists = compose.onAllNodes(hasScrollToNodeAction())
+            for (i in lists.fetchSemanticsNodes().indices) {
+                if (runCatching { lists[i].performScrollToNode(hasText(text, substring = true)) }.isSuccess) break
+            }
+        }
         val node = if (compose.onAllNodes(clickable).fetchSemanticsNodes().isNotEmpty()) {
             compose.onAllNodes(clickable).onFirst()
         } else {
@@ -125,7 +138,13 @@ class EndToEndTest {
         }
         // Items in scrollable rows (tabs, chips) may be off-screen; bring them into view first.
         runCatching { node.performScrollTo() }
-        node.performClick()
+        // Invoke the click action when there is one: a row scrolled to the bottom edge of a list
+        // can lie under the navigation bar, where a touch would land on the bar instead.
+        if (SemanticsActions.OnClick in node.fetchSemanticsNode().config) {
+            node.performSemanticsAction(SemanticsActions.OnClick)
+        } else {
+            node.performClick()
+        }
     }
     private fun clickDescription(description: String) = waitFor(hasContentDescription(description)).performClick()
 

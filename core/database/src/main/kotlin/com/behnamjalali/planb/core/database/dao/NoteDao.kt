@@ -79,19 +79,19 @@ interface NoteDao {
     @Transaction
     @Query(
         "SELECT * FROM notes WHERE archived = 0 AND deleted_at IS NULL AND (pinned = 1 OR favorite = 1) AND $IN_ACTIVE_NOTEBOOK " +
-            "ORDER BY pinned DESC, updated_at DESC LIMIT :limit",
+            "ORDER BY pinned DESC, updated_at DESC, id DESC LIMIT :limit",
     )
     fun observePinnedOrFavorite(limit: Int): Flow<List<NoteWithTags>>
 
     @Transaction
     @Query(
         "SELECT * FROM notes WHERE archived = 0 AND deleted_at IS NULL AND $IN_ACTIVE_NOTEBOOK " +
-            "ORDER BY updated_at DESC LIMIT :limit",
+            "ORDER BY updated_at DESC, id DESC LIMIT :limit",
     )
     fun observeRecent(limit: Int): Flow<List<NoteWithTags>>
 
     @Transaction
-    @Query("SELECT * FROM notes WHERE archived = 1 AND deleted_at IS NULL ORDER BY updated_at DESC")
+    @Query("SELECT * FROM notes WHERE archived = 1 AND deleted_at IS NULL ORDER BY updated_at DESC, id DESC")
     fun observeArchived(): Flow<List<NoteWithTags>>
 
     @Transaction
