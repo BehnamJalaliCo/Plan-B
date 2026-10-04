@@ -4,6 +4,9 @@ import android.net.Uri
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -80,7 +83,6 @@ fun PlanBNavHost(
     onCustomizeToday: () -> Unit,
 ) {
     val motion = PlanBTheme.motion
-    val back: () -> Unit = { navController.popBackStack() }
     NavHost(
         navController = navController,
         startDestination = TodayRoute,
@@ -89,22 +91,23 @@ fun PlanBNavHost(
         popEnterTransition = { navEnter(motion.enabled) },
         popExitTransition = { navExit(motion.enabled) },
     ) {
-        composable<TodayRoute> {
+        composable<TodayRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
             TodayDestination(
                 actions = TodayActions(
-                    onOpenTask = { navController.navigate(TaskEditorRoute(taskId = it)) },
-                    onOpenEvent = { navController.navigate(EventEditorRoute(eventId = it)) },
-                    onOpenHabit = { navController.navigate(HabitDetailRoute(it)) },
-                    onOpenProject = { navController.navigate(ProjectDetailRoute(it)) },
-                    onOpenNote = { navController.navigate(NoteEditorRoute(noteId = it)) },
-                    onOpenFocus = { navController.navigate(FocusRoute) },
-                    onOpenTasks = { navController.navigateTopLevel(TopLevelDestination.TASKS) },
-                    onOpenCalendar = { navController.navigateTopLevel(TopLevelDestination.CALENDAR) },
-                    onOpenHabits = { navController.navigate(HabitsRoute) },
-                    onOpenProjects = { navController.navigate(ProjectsRoute) },
-                    onOpenNotebooks = { navController.navigateTopLevel(TopLevelDestination.NOTEBOOKS) },
-                    onOpenSearch = { navController.navigate(SearchRoute) },
-                    onNewNote = { navController.navigate(NoteEditorRoute()) },
+                    onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) },
+                    onOpenEvent = { nav.navigate(EventEditorRoute(eventId = it)) },
+                    onOpenHabit = { nav.navigate(HabitDetailRoute(it)) },
+                    onOpenProject = { nav.navigate(ProjectDetailRoute(it)) },
+                    onOpenNote = { nav.navigate(NoteEditorRoute(noteId = it)) },
+                    onOpenFocus = { nav.navigate(FocusRoute) },
+                    onOpenTasks = { nav.go { navigateTopLevel(TopLevelDestination.TASKS) } },
+                    onOpenCalendar = { nav.go { navigateTopLevel(TopLevelDestination.CALENDAR) } },
+                    onOpenHabits = { nav.navigate(HabitsRoute) },
+                    onOpenProjects = { nav.navigate(ProjectsRoute) },
+                    onOpenNotebooks = { nav.go { navigateTopLevel(TopLevelDestination.NOTEBOOKS) } },
+                    onOpenSearch = { nav.navigate(SearchRoute) },
+                    onNewNote = { nav.navigate(NoteEditorRoute()) },
                 ),
                 snackbarHostState = snackbarHostState,
                 contentPadding = contentPadding,
@@ -112,111 +115,175 @@ fun PlanBNavHost(
                 onCustomizerOpened = onTodayCustomizerOpened,
             )
         }
-        composable<TasksRoute> {
+        composable<TasksRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
             TasksDestination(
-                onOpenTask = { navController.navigate(TaskEditorRoute(taskId = it)) },
-                onNewTask = { navController.navigate(TaskEditorRoute()) },
+                onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) },
+                onNewTask = { nav.navigate(TaskEditorRoute()) },
                 snackbarHostState = snackbarHostState,
                 contentPadding = contentPadding,
             )
         }
-        composable<CalendarRoute> {
+        composable<CalendarRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
             CalendarDestination(
-                onOpenEvent = { navController.navigate(EventEditorRoute(eventId = it)) },
-                onOpenTask = { navController.navigate(TaskEditorRoute(taskId = it)) },
-                onNewEvent = { navController.navigate(EventEditorRoute(dateEpochDay = it.toEpochDay())) },
+                onOpenEvent = { nav.navigate(EventEditorRoute(eventId = it)) },
+                onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) },
+                onNewEvent = { nav.navigate(EventEditorRoute(dateEpochDay = it.toEpochDay())) },
                 snackbarHostState = snackbarHostState,
                 contentPadding = contentPadding,
             )
         }
-        composable<NotebooksRoute> {
+        composable<NotebooksRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
             NotebooksDestination(
-                onOpenNotebook = { navController.navigate(NotebookDetailRoute(it)) },
-                onOpenNote = { navController.navigate(NoteEditorRoute(noteId = it)) },
-                onNewNote = { navController.navigate(NoteEditorRoute()) },
+                onOpenNotebook = { nav.navigate(NotebookDetailRoute(it)) },
+                onOpenNote = { nav.navigate(NoteEditorRoute(noteId = it)) },
+                onNewNote = { nav.navigate(NoteEditorRoute()) },
                 snackbarHostState = snackbarHostState,
                 contentPadding = contentPadding,
             )
         }
-        composable<MoreRoute> {
-            MoreScreen(onNavigate = { navController.navigate(it) }, contentPadding = contentPadding)
+        composable<MoreRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            MoreScreen(onNavigate = { nav.navigate(it) }, contentPadding = contentPadding)
         }
-        composable<TaskEditorRoute> {
-            TaskEditorDestination(onClose = back, onOpenSubtask = { navController.navigate(TaskEditorRoute(taskId = it)) })
+        composable<TaskEditorRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            TaskEditorDestination(onClose = nav.back, onOpenSubtask = { nav.navigate(TaskEditorRoute(taskId = it)) })
         }
-        composable<EventEditorRoute> { EventEditorDestination(onClose = back) }
-        composable<NotebookDetailRoute> {
+        composable<EventEditorRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            EventEditorDestination(onClose = nav.back)
+        }
+        composable<NotebookDetailRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
             NotebookDetailDestination(
-                onBack = back,
-                onOpenNote = { navController.navigate(NoteEditorRoute(noteId = it)) },
-                onNewNote = { notebook, section -> navController.navigate(NoteEditorRoute(notebookId = notebook, sectionId = section)) },
+                onBack = nav.back,
+                onOpenNote = { nav.navigate(NoteEditorRoute(noteId = it)) },
+                onNewNote = { notebook, section -> nav.navigate(NoteEditorRoute(notebookId = notebook, sectionId = section)) },
                 snackbarHostState = snackbarHostState,
             )
         }
-        composable<NoteEditorRoute> {
-            NoteEditorDestination(onClose = back, onOpenNote = {
-                navController.navigate(NoteEditorRoute(noteId = it)) { popUpTo<NoteEditorRoute> { inclusive = true } }
+        composable<NoteEditorRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            NoteEditorDestination(onClose = nav.back, onOpenNote = {
+                nav.go { navigate(NoteEditorRoute(noteId = it)) { popUpTo<NoteEditorRoute> { inclusive = true } } }
             })
         }
-        composable<ProjectsRoute> {
+        composable<ProjectsRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
             ProjectsDestination(
-                onBack = back,
-                onOpenProject = { navController.navigate(ProjectDetailRoute(it)) },
-                onNewProject = { navController.navigate(ProjectEditorRoute()) },
+                onBack = nav.back,
+                onOpenProject = { nav.navigate(ProjectDetailRoute(it)) },
+                onNewProject = { nav.navigate(ProjectEditorRoute()) },
             )
         }
-        composable<ProjectDetailRoute> {
+        composable<ProjectDetailRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
             ProjectDetailDestination(
-                onBack = back,
-                onEdit = { navController.navigate(ProjectEditorRoute(it)) },
-                onOpenTask = { navController.navigate(TaskEditorRoute(taskId = it)) },
+                onBack = nav.back,
+                onEdit = { nav.navigate(ProjectEditorRoute(it)) },
+                onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) },
                 snackbarHostState = snackbarHostState,
             )
         }
-        composable<ProjectEditorRoute> {
-            ProjectEditorDestination(onClose = back, onSaved = { id, isNew ->
-                navController.popBackStack()
-                if (isNew) navController.navigate(ProjectDetailRoute(id))
+        composable<ProjectEditorRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            ProjectEditorDestination(onClose = nav.back, onSaved = { id, isNew ->
+                nav.go {
+                    popBackStack()
+                    if (isNew) navigate(ProjectDetailRoute(id))
+                }
             })
         }
-        composable<HabitsRoute> {
+        composable<HabitsRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
             HabitsDestination(
-                onBack = back,
-                onOpenHabit = { navController.navigate(HabitDetailRoute(it)) },
-                onNewHabit = { navController.navigate(HabitEditorRoute()) },
+                onBack = nav.back,
+                onOpenHabit = { nav.navigate(HabitDetailRoute(it)) },
+                onNewHabit = { nav.navigate(HabitEditorRoute()) },
                 snackbarHostState = snackbarHostState,
             )
         }
-        composable<HabitDetailRoute> {
-            HabitDetailDestination(onBack = back, onEdit = { navController.navigate(HabitEditorRoute(it)) }, snackbarHostState = snackbarHostState)
+        composable<HabitDetailRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            HabitDetailDestination(onBack = nav.back, onEdit = { nav.navigate(HabitEditorRoute(it)) }, snackbarHostState = snackbarHostState)
         }
-        composable<HabitEditorRoute> { HabitEditorDestination(onClose = back) }
-        composable<GoalsRoute> {
+        composable<HabitEditorRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            HabitEditorDestination(onClose = nav.back)
+        }
+        composable<GoalsRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
             GoalsDestination(
-                onBack = back,
-                onOpenGoal = { navController.navigate(GoalDetailRoute(it)) },
-                onNewGoal = { navController.navigate(GoalEditorRoute()) },
+                onBack = nav.back,
+                onOpenGoal = { nav.navigate(GoalDetailRoute(it)) },
+                onNewGoal = { nav.navigate(GoalEditorRoute()) },
             )
         }
-        composable<GoalDetailRoute> {
-            GoalDetailDestination(onBack = back, onEdit = { navController.navigate(GoalEditorRoute(it)) }, snackbarHostState = snackbarHostState)
+        composable<GoalDetailRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            GoalDetailDestination(onBack = nav.back, onEdit = { nav.navigate(GoalEditorRoute(it)) }, snackbarHostState = snackbarHostState)
         }
-        composable<GoalEditorRoute> { GoalEditorDestination(onClose = back) }
-        composable<FocusRoute> { FocusDestination(onBack = back, snackbarHostState = snackbarHostState) }
-        composable<SearchRoute> { SearchDestination(onBack = back, onOpen = { navController.openSearchResult(it) }) }
-        composable<TemplatesRoute> {
-            TemplatesDestination(onBack = back, onOpenResult = { navController.openTemplateResult(it) }, snackbarHostState = snackbarHostState)
+        composable<GoalEditorRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            GoalEditorDestination(onClose = nav.back)
         }
-        composable<ReviewRoute> { ReviewDestination(onBack = back, onOpenTask = { navController.navigate(TaskEditorRoute(taskId = it)) }) }
-        composable<SettingsRoute> {
-            SettingsDestination(onBack = back, onOpen = { navController.navigate(it) }, onCustomizeToday = onCustomizeToday)
+        composable<FocusRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            FocusDestination(onBack = nav.back, snackbarHostState = snackbarHostState)
         }
-        composable<BackupRoute> { BackupDestination(onBack = back, snackbarHostState = snackbarHostState) }
-        composable<PrivacyRoute> { PrivacyDestination(onBack = back) }
-        composable<AboutRoute> { AboutDestination(onBack = back) }
-        composable<LicensesRoute> { LicensesDestination(onBack = back) }
+        composable<SearchRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            SearchDestination(onBack = nav.back, onOpen = { result -> nav.go { openSearchResult(result) } })
+        }
+        composable<TemplatesRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            TemplatesDestination(onBack = nav.back, onOpenResult = { result -> nav.go { openTemplateResult(result) } }, snackbarHostState = snackbarHostState)
+        }
+        composable<ReviewRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            ReviewDestination(onBack = nav.back, onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) })
+        }
+        composable<SettingsRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            SettingsDestination(onBack = nav.back, onOpen = { nav.navigate(it) }, onCustomizeToday = onCustomizeToday)
+        }
+        composable<BackupRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            BackupDestination(onBack = nav.back, snackbarHostState = snackbarHostState)
+        }
+        composable<PrivacyRoute> { entry -> PrivacyDestination(onBack = rememberScreenNavigator(navController, entry).back) }
+        composable<AboutRoute> { entry -> AboutDestination(onBack = rememberScreenNavigator(navController, entry).back) }
+        composable<LicensesRoute> { entry -> LicensesDestination(onBack = rememberScreenNavigator(navController, entry).back) }
     }
 }
+
+/**
+ * Navigation started from one screen ([entry]). Every action runs only while that screen is
+ * the current destination: a fast double tap cannot push the same screen twice, and a double
+ * back cannot pop the screen below it. Back never pops the start destination, which would
+ * leave an empty window. Feature screens only get these callbacks, so the guard lives here.
+ */
+@Stable
+class ScreenNavigator(private val navController: NavHostController, private val entry: NavBackStackEntry) {
+    private val isCurrent: Boolean get() = navController.currentBackStackEntry?.id == entry.id
+
+    fun go(action: NavHostController.() -> Unit) {
+        if (isCurrent) navController.action()
+    }
+
+    fun navigate(route: Any) = go { navigate(route) }
+
+    val back: () -> Unit = {
+        if (isCurrent && navController.previousBackStackEntry != null) navController.popBackStack()
+    }
+}
+
+@Composable
+private fun rememberScreenNavigator(navController: NavHostController, entry: NavBackStackEntry): ScreenNavigator =
+    remember(navController, entry) { ScreenNavigator(navController, entry) }
 
 fun NavHostController.navigateTopLevel(destination: TopLevelDestination) {
     navigate(destination.route) {
