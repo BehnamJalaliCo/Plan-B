@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Locked notes passphrase (Plan-B Pro #36) -->
+    <string name="ui_passphrase">Passphrase</string>
+    <string name="ui_passphrase_repeat">Repeat the passphrase</string>
+    <string name="ui_passphrase_show">Show passphrase</string>
+    <string name="ui_passphrase_hide">Hide passphrase</string>
+    <string name="ui_passphrase_min">At least %1$s characters</string>
+    <string name="ui_passphrase_mismatch">The passphrases do not match</string>
+    <string name="ui_passphrase_setup_title">Passphrase for locked notes</string>
+    <string name="ui_passphrase_setup_confirm">Set passphrase</string>
+    <string name="ui_passphrase_warning">Locked notes are encrypted with this passphrase. If you forget it, nobody can open them again, not even Plan-B. Write it down somewhere safe.</string>
+    <string name="ui_passphrase_unlock_title">Unlock locked notes</string>
+    <string name="ui_passphrase_unlock">Unlock</string>
+    <string name="ui_passphrase_wrong">Wrong passphrase</string>
+    <string name="ui_passphrase_fingerprint">Use fingerprint</string>
+</resources>

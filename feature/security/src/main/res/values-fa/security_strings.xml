@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- صفحهٔ قفل -->
+    <string name="lock_title">Plan-B قفل است</string>
+    <string name="lock_message">با اثر انگشت، چهره یا قفل صفحهٔ گوشی باز کنید.</string>
+    <string name="lock_unlock">باز کردن قفل</string>
+    <string name="lock_prompt_title">باز کردن Plan-B</string>
+    <string name="lock_prompt_subtitle">تأیید کنید که خودتان هستید</string>
+
+    <!-- تنظیمات امنیت -->
+    <string name="security_title">امنیت</string>
+    <string name="security_ok">باشه</string>
+    <string name="security_app_lock">قفل برنامه</string>
+    <string name="security_app_lock_summary">هنگام باز کردن Plan-B اثر انگشت، چهره یا قفل صفحه خواسته شود</string>
+    <string name="security_lock_confirm_title">برای روشن کردن قفل برنامه تأیید کنید</string>
+    <string name="security_no_device_lock">ابتدا در تنظیمات گوشی یک قفل صفحه (پین، الگو، گذرواژه یا اثر انگشت) تعیین کنید. قفل برنامه با همان هویت شما را تأیید می‌کند.</string>
+    <string name="security_timeout">قفل شدن پس از</string>
+    <string name="security_timeout_now">بلافاصله</string>
+    <plurals name="security_timeout_minutes">
+        <item quantity="one">%1$s دقیقه در پس‌زمینه</item>
+        <item quantity="other">%1$s دقیقه در پس‌زمینه</item>
+    </plurals>
+    <string name="security_hide_recents">پنهان در برنامه‌های اخیر</string>
+    <string name="security_hide_recents_summary">پیش‌نمایش برنامه در فهرست برنامه‌های اخیر خالی نشان داده شود</string>
+    <string name="security_notes">یادداشت‌های قفل‌شده</string>
+    <string name="security_notes_summary">یادداشت قفل‌شده با رمز شما رمزنگاری می‌شود و فقط عنوانش خوانا می‌ماند: با عنوان در جست‌وجو پیدا می‌شود، ولی متنش هرگز در جست‌وجو، برون‌بری یا تاریخچه نمی‌آید. پشتیبان‌ها آن را رمزنگاری‌شده نگه می‌دارند، پس روی گوشی دیگر هم با همان رمز باز می‌شود.</string>
+    <string name="security_set_passphrase">تعیین رمز</string>
+    <string name="security_set_passphrase_summary">پیش از قفل کردن اولین یادداشت لازم است</string>
+    <string name="security_passphrase">رمز عبور</string>
+    <string name="security_notes_open">یادداشت‌های قفل‌شده تا قفل شدن دوبارهٔ Plan-B باز هستند</string>
+    <string name="security_notes_closed">یادداشت‌های قفل‌شده بسته‌اند</string>
+    <string name="security_fingerprint">باز کردن یادداشت‌های قفل‌شده با اثر انگشت</string>
+    <string name="security_fingerprint_summary">کلید در سخت‌افزار امن همین گوشی می‌ماند؛ رمز عبور همه‌جا کار می‌کند</string>
+    <string name="security_fingerprint_prompt">استفاده از اثر انگشت برای یادداشت‌های قفل‌شده</string>
+    <string name="security_no_fingerprint">روی این گوشی اثر انگشت یا تشخیص چهرهٔ امن تنظیم نشده است؛ یادداشت‌های قفل‌شده فقط با رمز باز می‌شوند.</string>
+    <string name="security_lock_notes_now">بستن یادداشت‌های قفل‌شده</string>
+    <string name="security_lock_notes_now_summary">دوباره رمز خواسته می‌شود</string>
+    <string name="security_passphrase_set">رمز تعیین شد. حالا می‌توانید یادداشت‌ها را قفل کنید.</string>
+    <string name="security_notes_locked">یادداشت‌های قفل‌شده بسته شدند</string>
+    <string name="security_fingerprint_on">حالا اثر انگشت یادداشت‌های قفل‌شده را باز می‌کند</string>
+
+    <!-- سطل زباله -->
+    <string name="trash_title">سطل زباله</string>
+    <string name="trash_hint">کارها و یادداشت‌های حذف‌شده %1$s روز اینجا می‌مانند و سپس برای همیشه حذف می‌شوند.</string>
+    <string name="trash_empty">خالی کردن سطل زباله</string>
+    <string name="trash_empty_confirm">همهٔ موارد سطل زباله برای همیشه حذف می‌شوند. این کار برگشت‌پذیر نیست.</string>
+    <string name="trash_empty_title">سطل زباله خالی است</string>
+    <string name="trash_empty_message">کارها و یادداشت‌هایی که حذف می‌کنید اینجا نمایش داده می‌شوند.</string>
+    <string name="trash_restore">بازگرداندن</string>
+    <string name="trash_delete_forever">حذف برای همیشه</string>
+    <string name="trash_delete_confirm">این مورد برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست.</string>
+    <string name="trash_deleted_on">حذف‌شده %1$s</string>
+    <plurals name="trash_subtasks">
+        <item quantity="one">%1$s زیرکار</item>
+        <item quantity="other">%1$s زیرکار</item>
+    </plurals>
+    <plurals name="trash_days_left">
+        <item quantity="one">%1$s روز باقی‌مانده</item>
+        <item quantity="other">%1$s روز باقی‌مانده</item>
+    </plurals>
+    <string name="trash_restored">بازگردانده شد</string>
+    <string name="trash_deleted">برای همیشه حذف شد</string>
+    <plurals name="trash_emptied">
+        <item quantity="one">%1$s مورد برای همیشه حذف شد</item>
+        <item quantity="other">%1$s مورد برای همیشه حذف شد</item>
+    </plurals>
+    <string name="untitled">بدون عنوان</string>
+
+    <!-- فعالیت‌ها -->
+    <string name="activity_title">فعالیت‌ها</string>
+    <string name="activity_item_title">تاریخچه</string>
+    <string name="activity_empty_title">هنوز فعالیتی ثبت نشده</string>
+    <string name="activity_empty_message">تغییرات کارها، یادداشت‌ها، پروژه‌ها، رویدادها، عادت‌ها و هدف‌ها اینجا نمایش داده می‌شوند.</string>
+    <string name="activity_line">%1$s · %2$s</string>
+    <string name="activity_created">ایجاد شد</string>
+    <string name="activity_updated">ویرایش شد</string>
+    <string name="activity_completed">انجام شد</string>
+    <string name="activity_reopened">دوباره باز شد</string>
+    <string name="activity_deleted">حذف شد</string>
+    <string name="activity_restored">بازگردانده شد</string>
+    <string name="activity_archived">بایگانی شد</string>
+    <string name="filter_all">همه</string>
+    <string name="filter_tasks">کارها</string>
+    <string name="filter_notes">یادداشت‌ها</string>
+    <string name="type_task">کار</string>
+    <string name="type_project">پروژه</string>
+    <string name="type_note">یادداشت</string>
+    <string name="type_notebook">دفترچه</string>
+    <string name="type_habit">عادت</string>
+    <string name="type_goal">هدف</string>
+    <string name="type_event">رویداد</string>
+</resources>
