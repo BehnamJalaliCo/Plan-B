@@ -34,7 +34,7 @@ release-signing/
 /release/cafebazaar/*.apk
 /release/cafebazaar/*.aab
 /release/cafebazaar/*.bin
-/release/cafebazaar/mapping*.txt
+/release/cafebazaar/*mapping*.txt
 /release/cafebazaar/SHA256SUMS.txt
 /tools/bundle-signer/
 
