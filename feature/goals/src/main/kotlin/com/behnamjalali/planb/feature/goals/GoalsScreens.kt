@@ -84,6 +84,7 @@ import com.behnamjalali.planb.core.ui.EditorRow
 import com.behnamjalali.planb.core.ui.PlannerDatePickerDialog
 import com.behnamjalali.planb.core.ui.PlannerGoalCard
 import com.behnamjalali.planb.core.ui.PlannerLocals
+import com.behnamjalali.planb.core.ui.rememberOnce
 import java.time.LocalDate
 
 @Composable
@@ -158,15 +159,17 @@ private fun PaceBar(progress: Float, expected: Float, description: String) {
 fun GoalDetailDestination(onBack: () -> Unit, onEdit: (EntityId) -> Unit, snackbarHostState: SnackbarHostState, viewModel: GoalDetailViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val resources = LocalResources.current
+    // Deleting emits Deleted and also makes the goal missing; leave the screen only once.
+    val leaveOnce = rememberOnce(onBack)
     LaunchedEffect(viewModel) {
         viewModel.events.collect { e ->
             when (e) {
-                GoalEvent.Deleted -> onBack()
+                GoalEvent.Deleted -> leaveOnce()
                 GoalEvent.Failed -> snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
             }
         }
     }
-    LaunchedEffect(state.missing) { if (state.missing) onBack() }
+    LaunchedEffect(state.missing) { if (state.missing) leaveOnce() }
     GoalDetailScreen(state, onBack, { onEdit(viewModel.goalId) }, viewModel)
 }
 
