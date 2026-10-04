@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ردیف امنیت (Plan-B Pro #36) -->
+    <string name="settings_security">امنیت</string>
+    <string name="settings_security_summary">قفل برنامه و یادداشت‌های قفل‌شده</string>
+
+    <!-- پشتیبان‌گیری خودکار (Plan-B Pro #37) -->
+    <string name="auto_backup_section">پشتیبان‌گیری خودکار</string>
+    <string name="auto_backup">پشتیبان‌گیری خودکار</string>
+    <string name="auto_backup_summary">ذخیرهٔ پشتیبان در پوشه‌ای که انتخاب می‌کنید، حتی در گوگل‌درایو</string>
+    <string name="auto_backup_folder">پوشهٔ پشتیبان</string>
+    <string name="auto_backup_folder_none">انتخاب پوشه</string>
+    <string name="auto_backup_frequency">هر چند وقت</string>
+    <string name="auto_backup_daily">هر روز</string>
+    <string name="auto_backup_weekly">هر هفته</string>
+    <string name="auto_backup_charging">فقط هنگام شارژ</string>
+    <string name="auto_backup_charging_summary">صبر کند تا گوشی در حال شارژ باشد</string>
+    <string name="auto_backup_now">پشتیبان‌گیری همین حالا</string>
+    <string name="auto_backup_now_summary">همین الان یک پشتیبان در پوشه ذخیره شود</string>
+    <string name="auto_backup_running">در حال پشتیبان‌گیری…</string>
+    <string name="auto_backup_done">پشتیبان در پوشه ذخیره شد</string>
+    <string name="auto_backup_last">آخرین پشتیبان: %1$s</string>
+    <string name="auto_backup_never">هنوز پشتیبان خودکاری گرفته نشده</string>
+    <string name="auto_backup_last_failed">پشتیبان‌گیری %1$s انجام نشد: %2$s</string>
+    <string name="auto_backup_keeps">%1$s پشتیبان خودکار تازه‌تر نگه داشته و قدیمی‌ترها حذف می‌شوند. به فایل‌های دیگر پوشه هرگز دست زده نمی‌شود.</string>
+    <string name="auto_backup_error_folder">پوشه دیگر در دسترس نیست. دوباره انتخابش کنید.</string>
+    <string name="auto_backup_error_write">فایل نوشته نشد. فضای خالی یا اتصال پوشه را بررسی کنید.</string>
+</resources>

@@ -107,6 +107,7 @@ fun BackupDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, 
                 SettingsRow(stringResource(R.string.backup_restore), icon = Icons.Rounded.Restore, subtitle = stringResource(R.string.backup_restore_summary),
                     onClick = { if (!state.busy) openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) })
             }
+            item { AutoBackupSection(snackbarHostState) }
             item { PlannerSectionHeader(stringResource(R.string.backup_section_export)) }
             item { SettingsRow(stringResource(R.string.export_tasks_csv), icon = Icons.Rounded.TableChart, onClick = { csv.launch("Plan-B-tasks-$stamp.csv") }) }
             item {

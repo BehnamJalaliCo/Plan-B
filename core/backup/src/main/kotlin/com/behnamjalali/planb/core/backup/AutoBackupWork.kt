@@ -75,8 +75,24 @@ internal class SafBackupFolder(private val context: Context, private val tree: U
     }
 }
 
+/**
+ * Takes a lasting permission to the folder the user picked (ACTION_OPEN_DOCUMENT_TREE) and
+ * returns its display name; the permission to [previous] is released.
+ */
+fun adoptBackupFolder(context: Context, uri: Uri, previous: String?): String? {
+    val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+    context.contentResolver.takePersistableUriPermission(uri, flags)
+    previous?.toUri()?.takeIf { it != uri }?.let { old -> runCatching { context.contentResolver.releasePersistableUriPermission(old, flags) } }
+    return runCatching {
+        val document = DocumentsContract.buildDocumentUriUsingTree(uri, DocumentsContract.getTreeDocumentId(uri))
+        context.contentResolver.query(document, arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        }
+    }.getOrNull()
+}
+
 /** Schedules (or cancels) the periodic automatic backup. */
-interface AutoBackupScheduler {
+fun interface AutoBackupScheduler {
     fun apply(settings: AutoBackupSettings)
 }
 

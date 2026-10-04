@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Security row (Plan-B Pro #36) -->
+    <string name="settings_security">Security</string>
+    <string name="settings_security_summary">App lock and locked notes</string>
+
+    <!-- Automatic backups (Plan-B Pro #37) -->
+    <string name="auto_backup_section">Automatic backup</string>
+    <string name="auto_backup">Automatic backups</string>
+    <string name="auto_backup_summary">Save a backup to a folder you choose, also on Google Drive</string>
+    <string name="auto_backup_folder">Backup folder</string>
+    <string name="auto_backup_folder_none">Choose a folder</string>
+    <string name="auto_backup_frequency">How often</string>
+    <string name="auto_backup_daily">Every day</string>
+    <string name="auto_backup_weekly">Every week</string>
+    <string name="auto_backup_charging">Only while charging</string>
+    <string name="auto_backup_charging_summary">Wait until the phone is charging</string>
+    <string name="auto_backup_now">Back up now</string>
+    <string name="auto_backup_now_summary">Save a backup to the folder right away</string>
+    <string name="auto_backup_running">Backing up…</string>
+    <string name="auto_backup_done">Backup saved to the folder</string>
+    <string name="auto_backup_last">Last backup: %1$s</string>
+    <string name="auto_backup_never">No automatic backup yet</string>
+    <string name="auto_backup_last_failed">The backup on %1$s failed: %2$s</string>
+    <string name="auto_backup_keeps">The newest %1$s automatic backups are kept; older ones are deleted. Other files in the folder are never touched.</string>
+    <string name="auto_backup_error_folder">the folder is no longer available. Choose it again.</string>
+    <string name="auto_backup_error_write">the file could not be written. Check the free space or the connection of the folder.</string>
+</resources>
