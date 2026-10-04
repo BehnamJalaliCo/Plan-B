@@ -1,0 +1,1 @@
+First release of Plan-B: an offline planner and notebook with Jalali calendar, tasks, notes, habits, goals, focus sessions and a weekly review. No Internet, no account, no ads.
