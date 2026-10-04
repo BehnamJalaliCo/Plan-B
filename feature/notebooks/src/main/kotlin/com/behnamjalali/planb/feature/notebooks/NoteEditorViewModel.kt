@@ -44,6 +44,12 @@ data class EditorBlock(
     val type: BlockType,
     val value: TextFieldValue = TextFieldValue(""),
     val checked: Boolean = false,
+    /**
+     * Bumped whenever the ViewModel itself changes [value] (a split, merge, cursor move or restored
+     * draft). The block's text field keeps its own value while typing and only takes [value] over
+     * when this changes, so a value that is a frame behind never overwrites fresh keystrokes.
+     */
+    val revision: Int = 0,
 )
 
 enum class SaveStatus { SAVED, SAVING, FAILED }
@@ -55,6 +61,8 @@ data class NoteEditorState(
     val notebookId: EntityId = 0,
     val sectionId: EntityId? = null,
     val title: TextFieldValue = TextFieldValue(""),
+    /** Like [EditorBlock.revision], for the title field. */
+    val titleRevision: Int = 0,
     val blocks: List<EditorBlock> = emptyList(),
     val pinned: Boolean = false,
     val favorite: Boolean = false,
@@ -82,31 +90,81 @@ object BlockEditing {
     data class Result(val blocks: List<EditorBlock>, val focusId: String?, val cursor: Int)
 
     /**
-     * Applies an edit to block [id]. Newlines (typed Enter or pasted text) split
-     * the block, except in code blocks where newlines are content.
+     * Applies an edit to block [id]. A newline this edit inserted (typed Enter or pasted text)
+     * splits the block; newlines already in the text (e.g. an imported multi-line paragraph) are
+     * content, and code blocks never split.
      */
     fun change(blocks: List<EditorBlock>, id: String, value: TextFieldValue, newId: () -> String): Result {
         val index = blocks.indexOfFirst { it.id == id }
         if (index < 0) return Result(blocks, null, 0)
         val block = blocks[index]
-        if (block.type == BlockType.CODE || '\n' !in value.text) {
-            return Result(blocks.toMutableList().also { it[index] = block.copy(value = value) }, null, 0)
-        }
-        val parts = value.text.split('\n')
-        val first = parts.first()
-        // Enter on an empty list item ends the list instead of adding another empty item.
-        if (parts.size == 2 && first.isEmpty() && parts[1].isEmpty() && block.type in continuing) {
-            val converted = block.copy(type = BlockType.TEXT, value = TextFieldValue(""))
-            return Result(blocks.toMutableList().also { it[index] = converted }, block.id, 0)
-        }
-        val nextType = if (block.type in continuing) block.type else BlockType.TEXT
+        val plain = Result(blocks.toMutableList().also { it[index] = block.copy(value = value) }, null, 0)
+        if (block.type == BlockType.CODE || '\n' !in value.text) return plain
+        val old = block.value.text
+        val new = value.text
+        val (start, end) = insertedRange(old, value)
+        val inserted = new.substring(start, end)
+        if ('\n' !in inserted) return plain
+        val prefix = new.substring(0, start)
+        val suffix = new.substring(end)
         val updated = blocks.toMutableList()
+        // Enter on an empty list item ends the list instead of adding another empty item.
+        if (old.isEmpty() && inserted == "\n" && block.type in continuing) {
+            updated[index] = block.copy(type = BlockType.TEXT, value = TextFieldValue(""))
+            return Result(updated, block.id, 0)
+        }
+        // Enter at the very start of a block opens an empty block of the same kind above it; this
+        // block keeps its text, type and check mark, and keeps the caret.
+        if (prefix.isEmpty() && inserted == "\n" && suffix.isNotEmpty()) {
+            updated[index] = block.copy(value = TextFieldValue(suffix, TextRange(0)))
+            updated.add(index, EditorBlock(newId(), block.type))
+            return Result(updated, block.id, 0)
+        }
+        val parts = inserted.split('\n')
+        val nextType = if (block.type in continuing) block.type else BlockType.TEXT
+        val first = prefix + parts.first()
         updated[index] = block.copy(value = TextFieldValue(first, TextRange(first.length)))
-        val inserted = parts.drop(1).map { EditorBlock(newId(), nextType, TextFieldValue(it)) }
-        updated.addAll(index + 1, inserted)
-        val focus = inserted.last()
-        // Cursor goes to the start of the text that followed the caret.
-        return Result(updated, focus.id, 0)
+        val rest = parts.drop(1)
+        val added = rest.mapIndexed { i, part -> EditorBlock(newId(), nextType, TextFieldValue(if (i == rest.lastIndex) part + suffix else part)) }
+        updated.addAll(index + 1, added)
+        // The caret goes right after the inserted text, i.e. before what followed the old caret.
+        return Result(updated, added.last().id, rest.last().length)
+    }
+
+    /** Start and end (exclusive) in the new text of what this edit inserted. */
+    internal fun insertedRange(old: String, value: TextFieldValue): Pair<Int, Int> {
+        val new = value.text
+        val delta = new.length - old.length
+        val caret = value.selection.end
+        if (delta > 0 && value.selection.collapsed && caret in delta..new.length) {
+            val start = caret - delta
+            if (new.regionMatches(0, old, 0, start) && new.regionMatches(caret, old, start, new.length - caret)) return start to caret
+        }
+        var prefix = 0
+        while (prefix < old.length && prefix < new.length && old[prefix] == new[prefix]) prefix++
+        var suffix = 0
+        while (suffix < old.length - prefix && suffix < new.length - prefix && old[old.length - 1 - suffix] == new[new.length - 1 - suffix]) suffix++
+        return prefix to new.length - suffix
+    }
+
+    /**
+     * Joins block [id] onto the end of the previous block (which keeps its type), or removes a
+     * divider right above it. Used by the toolbar's merge action, which works on any keyboard.
+     */
+    fun mergeWithPrevious(blocks: List<EditorBlock>, id: String): Result {
+        val index = blocks.indexOfFirst { it.id == id }
+        if (index <= 0) return Result(blocks, null, 0)
+        val block = blocks[index]
+        val previous = blocks[index - 1]
+        val updated = blocks.toMutableList()
+        if (previous.type == BlockType.DIVIDER) {
+            updated.removeAt(index - 1)
+            return Result(updated, block.id, 0)
+        }
+        val joinAt = previous.value.text.length
+        updated[index - 1] = previous.copy(value = TextFieldValue(previous.value.text + block.value.text))
+        updated.removeAt(index)
+        return Result(updated, previous.id, joinAt)
     }
 
     /** Backspace at the start of a block: merge with the previous text block or remove an empty one. */
@@ -137,7 +195,7 @@ object BlockEditing {
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class NoteEditorViewModel @Inject constructor(
-    savedState: SavedStateHandle,
+    private val savedState: SavedStateHandle,
     private val notes: NoteRepository,
     private val templates: TemplateRepository,
     private val files: DocumentFiles,
@@ -181,8 +239,15 @@ class NoteEditorViewModel @Inject constructor(
         runCatchingSafely {
             var id = route.noteId
             if (id == 0L) {
-                val notebookId = route.notebookId ?: notes.ensureDefaultNotebook(defaultNotebookTitle)
-                id = notes.saveNote(Note(notebookId = notebookId, sectionId = route.sectionId, title = ""))
+                // After process death the route still says "new note": reuse the one already created.
+                val created = savedState.get<Long>(KEY_CREATED_ID)
+                if (created != null) {
+                    id = created
+                } else {
+                    val notebookId = route.notebookId ?: notes.ensureDefaultNotebook(defaultNotebookTitle)
+                    id = notes.saveNote(Note(notebookId = notebookId, sectionId = route.sectionId, title = ""))
+                    savedState[KEY_CREATED_ID] = id
+                }
                 createdNew = true
             }
             val note = notes.getNote(id)
@@ -215,20 +280,42 @@ class NoteEditorViewModel @Inject constructor(
     private fun document(s: NoteEditorState = _state.value) =
         NoteDocument(blocks = s.blocks.map { NoteBlock(it.id, it.type, it.value.text, it.checked) })
 
-    private fun edited(transform: (NoteEditorState) -> NoteEditorState) {
-        _state.update { transform(it).copy(saveStatus = SaveStatus.SAVING) }
+    /**
+     * Applies [transform] and bumps the revision of every block whose value the ViewModel changed,
+     * except a plain edit of [ownId] that just takes the field's own [ownValue].
+     */
+    private fun edited(ownId: String? = null, ownValue: TextFieldValue? = null, transform: (NoteEditorState) -> NoteEditorState) {
+        _state.update { old ->
+            val new = transform(old)
+            new.copy(blocks = withRevisions(old.blocks, new.blocks, ownId, ownValue), saveStatus = SaveStatus.SAVING)
+        }
         dirty = true
         edits.tryEmit(Unit)
     }
 
+    private fun withRevisions(old: List<EditorBlock>, new: List<EditorBlock>, ownId: String?, ownValue: TextFieldValue?): List<EditorBlock> {
+        if (old === new) return new
+        val before = old.associateBy { it.id }
+        return new.map { block ->
+            val previous = before[block.id] ?: return@map block
+            when {
+                block.value == previous.value && block.revision == previous.revision -> block
+                block.id == ownId && block.value == ownValue -> block.copy(revision = previous.revision)
+                else -> block.copy(revision = previous.revision + 1)
+            }
+        }
+    }
+
     fun onTitleChange(value: TextFieldValue) {
         val text = value.text.replace('\n', ' ')
+        // A pasted newline is replaced, so the field must take this value over.
+        val revision = if (text != value.text) 1 else 0
         val changed = text != _state.value.title.text
         if (!changed) {
-            _state.update { it.copy(title = value.copy(text = text)) }
+            _state.update { it.copy(title = value.copy(text = text), titleRevision = it.titleRevision + revision) }
             return
         }
-        edited { it.copy(title = value.copy(text = text)) }
+        edited { it.copy(title = value.copy(text = text), titleRevision = it.titleRevision + revision) }
     }
 
     fun onBlockChange(id: String, value: TextFieldValue) {
@@ -239,7 +326,7 @@ class NoteEditorViewModel @Inject constructor(
             return
         }
         val result = BlockEditing.change(_state.value.blocks, id, value, ::newId)
-        edited { s ->
+        edited(ownId = id, ownValue = value) { s ->
             s.copy(
                 blocks = result.blocks,
                 focusId = result.focusId ?: s.focusId,
@@ -250,11 +337,21 @@ class NoteEditorViewModel @Inject constructor(
     }
 
     private fun setCursor(id: String, cursor: Int) {
-        _state.update { s -> s.copy(blocks = s.blocks.map { if (it.id == id) it.copy(value = it.value.copy(selection = TextRange(cursor))) else it }) }
+        _state.update { s ->
+            s.copy(
+                blocks = s.blocks.map {
+                    if (it.id == id) it.copy(value = it.value.copy(selection = TextRange(cursor)), revision = it.revision + 1) else it
+                },
+            )
+        }
     }
 
-    fun onBackspaceAtStart(id: String) {
-        val result = BlockEditing.backspaceAtStart(_state.value.blocks, id)
+    fun onBackspaceAtStart(id: String) = applyJoin(BlockEditing.backspaceAtStart(_state.value.blocks, id))
+
+    /** Toolbar action: joins the focused block onto the previous one (works with any keyboard). */
+    fun mergeWithPrevious(id: String) = applyJoin(BlockEditing.mergeWithPrevious(_state.value.blocks, id))
+
+    private fun applyJoin(result: BlockEditing.Result) {
         if (result.blocks == _state.value.blocks) return
         edited { s ->
             s.copy(
@@ -316,6 +413,7 @@ class NoteEditorViewModel @Inject constructor(
         edited { s ->
             s.copy(
                 title = TextFieldValue(draft.title),
+                titleRevision = s.titleRevision + 1,
                 blocks = BlockEditing.ensureNotEmpty(draft.document.blocks.map { it.toEditor() }, ::newId),
                 draft = null,
             )
@@ -371,8 +469,11 @@ class NoteEditorViewModel @Inject constructor(
 
     fun setArchived(archived: Boolean) = launchSafely {
         save()
-        notes.setArchived(_state.value.noteId, archived)
-        _state.update { it.copy(archived = archived) }
+        val id = _state.value.noteId
+        notes.setArchived(id, archived)
+        // Archiving also unpins the note in the repository; keep the pin icon in step.
+        val stored = notes.getNote(id)
+        _state.update { it.copy(archived = archived, pinned = stored?.pinned ?: (it.pinned && !archived)) }
     }
 
     fun setTags(raw: String) = launchSafely {
@@ -432,6 +533,7 @@ class NoteEditorViewModel @Inject constructor(
 
     companion object {
         const val TITLE_FOCUS = "title"
+        private const val KEY_CREATED_ID = "note_editor_created_id"
         private const val AUTOSAVE_DELAY_MS = 700L
         private const val DRAFT_DELAY_MS = 250L
     }

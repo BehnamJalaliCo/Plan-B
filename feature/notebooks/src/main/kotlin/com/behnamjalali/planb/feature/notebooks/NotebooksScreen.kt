@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import com.behnamjalali.planb.core.designsystem.component.PlannerCard
 import com.behnamjalali.planb.core.designsystem.component.PlannerChip
 import com.behnamjalali.planb.core.designsystem.component.PlannerDialog
@@ -104,7 +105,8 @@ fun NotebooksDestination(
         viewModel.events.collect { event ->
             when (event) {
                 is NotebooksEvent.OpenNote -> onOpenNote(event.id)
-                NotebooksEvent.Imported -> snackbarHostState.showSnackbar(resources.getString(R.string.notebook_imported))
+                // Not awaited: a suspended collector would delay the events behind it.
+                NotebooksEvent.Imported -> launch { snackbarHostState.showSnackbar(resources.getString(R.string.notebook_imported)) }
                 NotebooksEvent.ImportFailed -> snackbarHostState.showSnackbar(resources.getString(R.string.notebook_import_failed))
                 NotebooksEvent.Failed -> snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
             }
