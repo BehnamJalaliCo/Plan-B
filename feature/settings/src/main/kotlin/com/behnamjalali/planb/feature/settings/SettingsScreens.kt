@@ -553,6 +553,8 @@ fun LicensesDestination(onBack: () -> Unit) = TextScreen(
         stringResource(R.string.licenses_androidx),
         stringResource(R.string.licenses_kotlin),
         stringResource(R.string.licenses_dagger),
+        stringResource(R.string.licenses_poolakey),
+        stringResource(R.string.licenses_okhttp),
         stringResource(R.string.licenses_icons),
     ),
     onBack,

@@ -42,7 +42,7 @@ by build only · ⏳ needs an external step (credentials, device lab).
 | Macrobenchmarks and baseline-profile generator | ☑️ | Modules build in CI; running them needs a KVM device (not available in the dev container) |
 | Instrumentation tests | ✅ | Run on an API 34 emulator in CI |
 | App icon (adaptive + themed), splash screen | ✅ | Rendered by `AppIconTest` |
-| Privacy: no INTERNET permission, no tracking | ✅ | CI checks the merged release manifest |
+| Privacy: no tracking; network only for the opt-in AI assistant; permission allowlist | ✅ | CI checks the merged release manifest against `tools/allowed-permissions.txt` |
 | Security review | ✅ | [SECURITY_REVIEW.md](SECURITY_REVIEW.md) |
 
 ## Release

@@ -62,15 +62,10 @@ jobs:
           ./gradlew assembleDebug :app:assembleRelease :app:bundleRelease
           :app:assembleDebugAndroidTest :baselineprofile:assemble :benchmark:assemble
 
-      - name: Release manifest has no Internet permission
-        run: |
-          manifest=app/build/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml
-          test -f "$manifest"
-          if grep -q 'android.permission.INTERNET' "$manifest"; then
-            echo "::error::The release manifest requests the INTERNET permission"
-            exit 1
-          fi
-          grep -o 'uses-permission android:name="[^"]*"' "$manifest"
+      - name: Release manifest requests only allowlisted permissions
+        # tools/allowed-permissions.txt is the complete list; any other permission (for example
+        # one added by a new library) fails the build.
+        run: tools/check_permissions.sh app/build/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml
 
       - name: Screenshots were verified
         # Only fork pull requests (which never receive secrets) may skip the comparison.

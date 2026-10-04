@@ -73,6 +73,7 @@ the `release` environment to require approval:
 | `PLANB_KEY_PASSWORD` | key password |
 | `PLANB_FONTS_PASSPHRASE` | passphrase of the encrypted licensed fonts (see [docs/FONTS.md](docs/FONTS.md)); also needed by CI to verify screenshots |
 | `CAFEBAZAAR_PISHKHAN_API_SECRET` | optional: Pishkhan API secret for automated upload |
+| `PLANB_BAZAAR_RSA_KEY` | optional: the Cafe Bazaar RSA public key of the app (Pishkhan → in-app billing), used to verify Plan-B Pro purchases on the device. Without it the release builds normally but cannot sell Pro (see [docs/PRO.md](docs/PRO.md)). For local builds export it or put `PLANB_BAZAAR_RSA_KEY=…` in `~/.gradle/gradle.properties`. |
 
 The workflow decodes the keystore into the runner's temporary directory with mode 600, passes
 passwords only through environment variables (never on a command line or in logs) and deletes
@@ -114,7 +115,7 @@ are git-ignored). See [docs/CAFE_BAZAAR_RELEASE.md](docs/CAFE_BAZAAR_RELEASE.md)
 
 - **Tests, screenshots, lint and builds**: all JVM tests with Roborazzi verification, Android
   Lint for every module, debug/release/test/benchmark builds, and a check that the release
-  manifest has no `INTERNET` permission. Reports and screenshot diffs are uploaded on failure.
+  manifest requests only the permissions listed in `tools/allowed-permissions.txt` (`tools/check_permissions.sh`; the release script runs the same check). Reports and screenshot diffs are uploaded on failure.
 - **Device tests**: instrumentation tests on an Android 14 (API 34) emulator.
 
 ## Checklist for a new version

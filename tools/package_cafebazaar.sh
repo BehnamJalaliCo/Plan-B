@@ -19,6 +19,8 @@
 #   PLANB_KEY_PASSWORD        key password
 #
 # Optional:
+#   PLANB_BAZAAR_RSA_KEY      Cafe Bazaar RSA public key for Plan-B Pro purchases (docs/PRO.md);
+#                             without it the build cannot sell Pro
 #   PLANB_RELEASE_DIR         output directory (default: release/cafebazaar)
 #   PLANB_SKIP_GRADLE=1       reuse already-built outputs in app/build/outputs
 set -euo pipefail
@@ -67,6 +69,11 @@ MAPPING="app/build/outputs/mapping/release/mapping.txt"
 [[ -f "$APK" ]] || fail "signed APK not found at $APK (was the release signed?)"
 [[ -f "$AAB" ]] || fail "AAB not found at $AAB"
 [[ -f "$MAPPING" ]] || fail "R8 mapping not found at $MAPPING"
+
+# Only the permissions in tools/allowed-permissions.txt may ship.
+"$ROOT/tools/check_permissions.sh" \
+  "app/build/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml" ||
+  fail "the release manifest requests a permission that is not allowlisted"
 
 # Locate apksigner from the newest installed build-tools.
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"

@@ -1,0 +1,18 @@
+# Every permission the merged RELEASE manifest may request. CI and the release script fail if
+# the manifest asks for anything else (tools/check_permissions.sh). Adding a line here is a
+# product decision: update PRIVACY.md, docs/SECURITY_REVIEW.md and the store listings too.
+
+# Optional AI assistant only (core:ai): sends the text the user chooses to the provider the
+# user configured with their own key. Nothing else in the app uses the network.
+android.permission.INTERNET
+
+# Reminders (core:notifications).
+android.permission.POST_NOTIFICATIONS
+android.permission.RECEIVE_BOOT_COMPLETED
+android.permission.SCHEDULE_EXACT_ALARM
+
+# Plan-B Pro purchases through the installed Cafe Bazaar app (Poolakey).
+com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR
+
+# Added by AndroidX core: protects the app's own non-exported dynamic receivers.
+com.behnamjalali.planb.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION

@@ -92,7 +92,7 @@
     <string name="data_archived_hint">Archived items can be restored or permanently deleted from each section\'s archive.</string>
     <!-- Privacy & about -->
     <string name="privacy_title">Privacy</string>
-    <string name="privacy_body">Plan-B is local-first.\n\n• Your tasks, notes, projects, habits, goals, events and focus sessions are stored only on this device.\n• The app has no account, no servers, no analytics, no ads and no tracking. It does not even request internet access.\n• Backups and exports are written only to files you choose. You decide where they go.\n• Reminders are shown by this device. On the lock screen they show a generic message unless you allow private content in Android settings.\n• Android cloud backup is disabled for app data so your plans are never copied automatically.\n\nYou can delete all data at any time from Settings › Backup &amp; data.</string>
+    <string name="privacy_body">Plan-B is local-first.\n\n• Your tasks, notes, projects, habits, goals, events and focus sessions are stored only on this device.\n• The app has no account, no servers, no analytics, no ads and no tracking. Nothing is sent anywhere unless you turn on the optional AI assistant with your own provider key; then only the text you choose to send goes directly to the provider you chose. Your key is stored encrypted on this device and is never backed up.\n• Plan-B Pro is bought through the Cafe Bazaar app. Payment happens in Cafe Bazaar; your notes and plans are never shared with it.\n• Backups and exports are written only to files you choose. You decide where they go.\n• Reminders are shown by this device. On the lock screen they show a generic message unless you allow private content in Android settings.\n• Android cloud backup is disabled for app data so your plans are never copied automatically.\n\nYou can delete all data at any time from Settings › Backup &amp; data.</string>
     <string name="about_title">About</string>
     <string name="about_body">Plan-B is a personal planner and notebook: daily, weekly and monthly planning, calendar, tasks, projects, notes, habits, goals and focus — in Persian and English, with Jalali and Gregorian calendars.</string>
     <string name="about_made_with">Built with Kotlin and Jetpack Compose.</string>
@@ -121,4 +121,6 @@
     <string name="settings_pro_lifetime">Active · lifetime</string>
     <string name="settings_developer_title">Developer: Plan-B Pro (debug builds only)</string>
     <string name="settings_developer_none">Not Pro</string>
+    <string name="licenses_poolakey">Poolakey (Cafe Bazaar in-app billing) — Apache License 2.0, © Cafe Bazaar</string>
+    <string name="licenses_okhttp">OkHttp and Okio — Apache License 2.0, © Square, Inc.</string>
 </resources>

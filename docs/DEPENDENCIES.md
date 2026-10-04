@@ -1,8 +1,10 @@
 # Dependencies
 
 All versions are pinned in [`gradle/libs.versions.toml`](../gradle/libs.versions.toml). Only
-stable releases are used (no alpha, beta or RC artifacts). Nothing in the app talks to the
-network; no library adds the `INTERNET` permission to the merged release manifest.
+stable releases are used (no alpha, beta or RC artifacts). The only network code is the
+optional AI assistant in `core:ai` (OkHttp); `INTERNET` is declared there and nowhere else.
+The merged release manifest must request only the permissions in
+[`tools/allowed-permissions.txt`](../tools/allowed-permissions.txt) (checked by CI).
 
 ## Build tooling
 
@@ -35,6 +37,8 @@ network; no library adds the `INTERNET` permission to the merged release manifes
 | androidx.hilt:hilt-lifecycle-viewmodel-compose | 1.4.0 | Apache 2.0 | `hiltViewModel()` |
 | androidx.profileinstaller | 1.4.1 | Apache 2.0 | Installs the baseline profile |
 | Dagger Hilt | 2.60.1 | Apache 2.0 | Dependency injection |
+| Poolakey (`com.github.cafebazaar.Poolakey:poolakey`) | 2.2.0 | Apache 2.0 | Cafe Bazaar in-app billing (Plan-B Pro). From JitPack, restricted to this group by an `exclusiveContent` filter in `settings.gradle.kts`; brings `androidx.fragment` and adds only `PAY_THROUGH_BAZAAR` |
+| OkHttp (+ Okio) | 5.5.0 | Apache 2.0 | HTTP client of the optional AI assistant (`core:ai`) |
 | Anjoman Max font (Regular, Medium, SemiBold, Bold) | 3.000 | Proprietary, fontiran.com — used under the owner's license | App typeface (supplied at build time, see [FONTS.md](FONTS.md)) |
 | Vazirmatn font (build fallback only) | 33.003 | SIL OFL 1.1 | Used only when the licensed fonts are absent; never in releases (`licenses/Vazirmatn-OFL.txt`) |
 
@@ -49,6 +53,7 @@ library is bundled.
 | Robolectric | 4.17 | MIT |
 | Roborazzi (core, compose, junit rule) | 1.76.0 | Apache 2.0 |
 | Google Truth | 1.4.5 | Apache 2.0 |
+| OkHttp MockWebServer (`mockwebserver3`) | 5.5.0 | Apache 2.0 |
 | Turbine | 1.2.1 | Apache 2.0 |
 | kotlinx-coroutines-test | 1.11.0 | Apache 2.0 |
 | androidx.test (core, runner, rules, ext-junit) | 1.7.0 / 1.3.0 | Apache 2.0 |
@@ -68,5 +73,6 @@ library is bundled.
 
 1. Change the version in `gradle/libs.versions.toml` (stable versions only).
 2. Run `./gradlew testDebugUnitTest verifyRoborazziDebug lintDebug assembleRelease`.
-3. Check the merged release manifest still has no `INTERNET` permission.
+3. Run `tools/check_permissions.sh` after `:app:assembleRelease`: the merged release manifest
+   may request only the permissions in `tools/allowed-permissions.txt`.
 4. Update this file.

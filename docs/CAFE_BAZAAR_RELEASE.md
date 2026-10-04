@@ -18,8 +18,24 @@ Plan-B is published on [Cafe Bazaar](https://cafebazaar.ir) as `com.behnamjalali
 | Screenshots | `store/cafebazaar/graphics/screenshots/{fa,en}/` | Eight real screenshots per language, in listing order |
 | Privacy policy | https://github.com/BehnamJalaliCo/Plan-B/blob/main/PRIVACY.md | Persian and English |
 
-Permissions to declare in the listing: notifications, exact alarms and start at boot — all for
-reminders. The app has no Internet access, ads, analytics or in-app purchases.
+Permissions to declare in the listing: notifications, exact alarms and start at boot (all for
+reminders); Internet (used only by the optional AI assistant, off until the user turns it on
+with their own provider key); and paying through Cafe Bazaar (Plan-B Pro). The app has no
+ads, analytics or tracking. The complete list is `tools/allowed-permissions.txt`.
+
+## In-app products (Plan-B Pro)
+
+Create both products in Pishkhan → your app → **In-app products** before the release that
+sells Pro (details in [PRO.md](PRO.md)):
+
+| Product id | Type | Price |
+|---|---|---|
+| `planb_pro_monthly` | Subscription, monthly | 399,000 toman |
+| `planb_pro_lifetime` | In-app product (managed, never consumed) | 1,999,000 toman |
+
+Copy the app's **RSA public key** from Pishkhan (in-app billing / Poolakey section) into the
+GitHub secret `PLANB_BAZAAR_RSA_KEY`. Without it the release still builds, but its Pro screen
+says purchases are not available in this version.
 
 ## Producing the files
 
@@ -81,3 +97,6 @@ fall back to the manual upload if Cafe Bazaar changes the API.
 - [ ] APK installs and starts on a real device; language switch, a reminder and backup/restore
       work.
 - [ ] Listing, what's new and screenshots are up to date in both languages.
+- [ ] `PLANB_BAZAAR_RSA_KEY` is set and both Pro products exist in Pishkhan; a test purchase
+      and "Restore purchases" work with the release build (see [PRO.md](PRO.md)).
+- [ ] The release workflow's permission check passed (only allowlisted permissions).
