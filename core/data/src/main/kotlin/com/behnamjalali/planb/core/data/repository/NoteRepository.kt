@@ -77,8 +77,11 @@ interface NoteRepository {
      */
     suspend fun deleteNote(id: EntityId)
 
-    /** Deletes a note permanently (e.g. an empty note the editor discards). */
+    /** Deletes a note permanently ("Delete forever", the trash purge). */
     suspend fun deleteNotePermanently(id: EntityId)
+
+    /** Drops a note that never really existed (left empty in the editor), with its history. */
+    suspend fun discardNote(id: EntityId)
 
     /**
      * Locked notes (Plan-B Pro #36). [lockNote] encrypts the stored body with the unlocked
@@ -327,6 +330,11 @@ class OfflineNoteRepository @Inject constructor(
             dao.deleteNote(id)
             db.attachmentDao().deleteOrphans()
         }
+    }
+
+    override suspend fun discardNote(id: EntityId) {
+        deleteNotePermanently(id)
+        history?.forget(ActivityEntityType.NOTE, id)
     }
 
     /** Brings a note back from the trash; it is searchable again. */

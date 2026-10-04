@@ -30,7 +30,7 @@ class VaultLockedException : IllegalStateException("The note vault is locked")
  * device carry their own salt; their key is derived on demand from the same passphrase.
  */
 @Singleton
-class NoteVault internal constructor(
+class NoteVault(
     private val preferences: SecurityPreferences,
     private val iterations: Int,
     private val dispatcher: CoroutineDispatcher,

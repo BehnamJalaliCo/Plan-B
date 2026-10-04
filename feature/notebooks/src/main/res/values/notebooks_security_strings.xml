@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Locked notes and history (Plan-B Pro #36, #38) -->
+    <string name="note_lock">Lock note</string>
+    <string name="note_remove_lock">Remove lock</string>
+    <string name="note_activity">Activity</string>
+    <string name="note_locked_title">Locked note</string>
+    <string name="note_locked_message">This note is encrypted. Enter your passphrase to read and edit it.</string>
+    <string name="note_unlock">Unlock</string>
+    <string name="note_locked_done">Note locked and encrypted</string>
+    <string name="note_lock_removed">Lock removed</string>
+</resources>

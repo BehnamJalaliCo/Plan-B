@@ -179,6 +179,8 @@ class TaskEditorViewModel @Inject constructor(
 
     val isNew: Boolean get() = route.taskId == NEW_ID
 
+    val taskId: EntityId get() = route.taskId
+
     init {
         if (needsLoad) {
             viewModelScope.launch {
