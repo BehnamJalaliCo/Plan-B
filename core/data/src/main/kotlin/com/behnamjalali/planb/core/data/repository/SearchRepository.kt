@@ -20,7 +20,7 @@ interface SearchRepository {
 }
 
 @Singleton
-internal class FtsSearchRepository @Inject constructor(
+class FtsSearchRepository @Inject constructor(
     private val searchDao: SearchDao,
     private val taskDao: TaskDao,
     private val projectDao: ProjectDao,

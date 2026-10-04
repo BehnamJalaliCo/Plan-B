@@ -35,7 +35,7 @@ interface FocusRepository {
 }
 
 @Singleton
-internal class OfflineFocusRepository @Inject constructor(
+class OfflineFocusRepository @Inject constructor(
     private val db: PlanBDatabase,
     private val dao: FocusDao,
     private val time: TimeProvider,

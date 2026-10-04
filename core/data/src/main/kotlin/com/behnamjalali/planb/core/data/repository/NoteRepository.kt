@@ -71,7 +71,7 @@ interface NoteRepository {
 data class NoteDraft(val noteId: EntityId, val title: String, val document: NoteDocument, val updatedAt: java.time.Instant)
 
 @Singleton
-internal class OfflineNoteRepository @Inject constructor(
+class OfflineNoteRepository @Inject constructor(
     private val db: PlanBDatabase,
     private val dao: NoteDao,
     private val draftDao: NoteDraftDao,

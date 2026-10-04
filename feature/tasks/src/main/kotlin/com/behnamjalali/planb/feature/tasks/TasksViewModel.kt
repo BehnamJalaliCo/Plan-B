@@ -98,7 +98,8 @@ class TasksViewModel @Inject constructor(
         if (!savedState.contains(KEY_VIEW)) {
             viewModelScope.launch {
                 val defaultView = settings.current().defaultTaskView
-                filter.update { it.copy(view = defaultView) }
+                // A view the user picked while settings were loading wins over the default.
+                if (!savedState.contains(KEY_VIEW)) filter.update { it.copy(view = defaultView) }
             }
         }
     }

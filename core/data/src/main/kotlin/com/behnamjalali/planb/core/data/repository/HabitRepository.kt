@@ -36,7 +36,7 @@ interface HabitRepository {
 }
 
 @Singleton
-internal class OfflineHabitRepository @Inject constructor(
+class OfflineHabitRepository @Inject constructor(
     private val db: PlanBDatabase,
     private val dao: HabitDao,
     private val searchDao: SearchDao,

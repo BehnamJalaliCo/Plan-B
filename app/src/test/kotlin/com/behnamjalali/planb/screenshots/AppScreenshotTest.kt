@@ -68,6 +68,7 @@ import com.behnamjalali.planb.R as AppR
 import com.behnamjalali.planb.feature.calendar.R as CalendarR
 import com.behnamjalali.planb.feature.notebooks.R as NotesR
 import com.behnamjalali.planb.feature.focus.R as FocusR
+import com.behnamjalali.planb.feature.habits.R as HabitsR
 import com.behnamjalali.planb.feature.projects.R as ProjectsR
 import com.behnamjalali.planb.feature.review.R as ReviewR
 import com.behnamjalali.planb.feature.settings.R as SettingsR
@@ -313,6 +314,7 @@ class AppScreenshotTest(private val variant: Variant) {
         selectTab(s(CalendarR.string.calendar_view_day))
         click(fixtures.events.first().title)
         waitFor(hasText(s(CalendarR.string.event_editor_edit)))
+        waitFor(hasSetTextAction() and hasText(fixtures.events.first().title))
         capture("calendar", "event_editor")
     }
 
@@ -324,6 +326,7 @@ class AppScreenshotTest(private val variant: Variant) {
         capture("notebooks", "notebooks")
         click(fixtures.notes.first().title)
         waitFor(hasContentDescription(s(NotesR.string.note_title_hint)))
+        waitFor(hasText(fixtures.notes.first().title))
         capture("notebooks", "note_editor")
     }
 
@@ -343,6 +346,7 @@ class AppScreenshotTest(private val variant: Variant) {
         capture("projects", "projects")
         click(fixtures.projects.first().title)
         waitFor(hasText(s(ProjectsR.string.project_tab_overview)))
+        waitFor(hasText(if (variant.language == AppLanguage.PERSIAN) "نسخهٔ بتا" else "Beta release"))
         capture("projects", "project_overview")
         selectTab(s(ProjectsR.string.project_tab_board))
         waitFor(hasText(s(ProjectsR.string.project_board_in_progress)))
@@ -356,6 +360,7 @@ class AppScreenshotTest(private val variant: Variant) {
         waitFor(hasText(fixtures.habits.first().habit.title, substring = true))
         capture("habits", "habits")
         click(fixtures.habits.first().habit.title)
+        waitFor(hasText(s(HabitsR.string.habit_best_streak)))
         capture("habits", "habit_detail")
     }
 

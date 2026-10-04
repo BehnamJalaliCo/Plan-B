@@ -36,7 +36,7 @@ interface EventRepository {
 class EventValidationException(message: String) : IllegalArgumentException(message)
 
 @Singleton
-internal class OfflineEventRepository @Inject constructor(
+class OfflineEventRepository @Inject constructor(
     private val db: PlanBDatabase,
     private val dao: EventDao,
     private val searchDao: SearchDao,

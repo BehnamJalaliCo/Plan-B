@@ -13,7 +13,7 @@ interface SettingsRepository {
 }
 
 @Singleton
-internal class DataStoreSettingsRepository @Inject constructor(
+class DataStoreSettingsRepository @Inject constructor(
     private val source: UserPreferencesDataSource,
 ) : SettingsRepository {
     override val settings: Flow<UserSettings> = source.settings
