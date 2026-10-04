@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **170**.
+Total screenshots: **194**.
 
 
 ## Today
@@ -223,3 +223,29 @@ Total screenshots: **170**.
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/pro/paywall_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_en_light.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_en_light_font150.png" width="220"/> |
+
+## Security
+
+### `activity`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/security/activity_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/security/activity_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/security/activity_en_light.png" width="220"/> | <img src="../artifacts/screenshots/security/activity_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/security/activity_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/security/activity_en_light_font150.png" width="220"/> |
+
+### `lock_screen`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/security/lock_screen_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/security/lock_screen_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/security/lock_screen_en_light.png" width="220"/> | <img src="../artifacts/screenshots/security/lock_screen_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/security/lock_screen_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/security/lock_screen_en_light_font150.png" width="220"/> |
+
+### `security_settings`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/security/security_settings_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/security/security_settings_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/security/security_settings_en_light.png" width="220"/> | <img src="../artifacts/screenshots/security/security_settings_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/security/security_settings_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/security/security_settings_en_light_font150.png" width="220"/> |
+
+### `trash`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/security/trash_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/security/trash_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/security/trash_en_light.png" width="220"/> | <img src="../artifacts/screenshots/security/trash_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/security/trash_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/security/trash_en_light_font150.png" width="220"/> |

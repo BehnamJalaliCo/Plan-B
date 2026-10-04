@@ -3,6 +3,9 @@ package com.behnamjalali.planb.core.data.repository
 import androidx.room.withTransaction
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.data.SearchIndexer
+import com.behnamjalali.planb.core.data.DataHistory
+import com.behnamjalali.planb.core.model.ActivityAction
+import com.behnamjalali.planb.core.model.ActivityEntityType
 import com.behnamjalali.planb.core.data.toEntity
 import com.behnamjalali.planb.core.data.toModel
 import com.behnamjalali.planb.core.database.PlanBDatabase
@@ -38,6 +41,8 @@ internal class OfflineGoalRepository @Inject constructor(
     private val dao: GoalDao,
     private val searchDao: SearchDao,
     private val time: TimeProvider,
+    /** Activity history (Plan-B Pro); null logs nothing. */
+    private val history: DataHistory? = null,
 ) : GoalRepository {
     override fun observeGoals(archived: Boolean) = dao.observeGoals(archived).map { l -> l.map { it.toModel() } }
     override fun observeGoal(id: EntityId) = dao.observeGoal(id).map { it?.toModel() }
@@ -48,6 +53,7 @@ internal class OfflineGoalRepository @Inject constructor(
         require(goal.title.isNotBlank()) { "Goal title must not be blank" }
         require(goal.target > 0) { "Goal target must be positive" }
         val now = time.now()
+        val log = history?.active() == true
         return db.withTransaction {
             val existing = if (goal.id != NEW_ID) dao.getGoal(goal.id) else null
             val entity = goal.copy(
@@ -57,6 +63,7 @@ internal class OfflineGoalRepository @Inject constructor(
             ).toEntity()
             val id = if (existing == null) dao.insert(entity.copy(id = 0)) else entity.id.also { dao.update(entity) }
             searchDao.upsert(SearchIndexer.goal(entity.copy(id = id)))
+            if (log) history?.record(ActivityEntityType.GOAL, id, if (existing == null) ActivityAction.CREATED else ActivityAction.UPDATED, goal.title)
             id
         }
     }
@@ -68,13 +75,20 @@ internal class OfflineGoalRepository @Inject constructor(
 
     override suspend fun setArchived(id: EntityId, archived: Boolean) {
         val goal = dao.getGoal(id) ?: return
-        dao.update(goal.copy(archived = archived, updatedAt = time.now()))
+        val log = history?.active() == true
+        db.withTransaction {
+            dao.update(goal.copy(archived = archived, updatedAt = time.now()))
+            if (log) history?.record(ActivityEntityType.GOAL, id, if (archived) ActivityAction.ARCHIVED else ActivityAction.RESTORED, goal.title)
+        }
     }
 
     override suspend fun delete(id: EntityId) {
+        val log = history?.active() == true
         db.withTransaction {
+            val title = dao.getGoal(id)?.title
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.GOAL, id))
             dao.delete(id)
+            if (log && title != null) history?.record(ActivityEntityType.GOAL, id, ActivityAction.DELETED, title)
         }
     }
 

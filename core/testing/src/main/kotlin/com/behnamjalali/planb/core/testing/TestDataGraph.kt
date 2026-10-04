@@ -4,7 +4,10 @@ import android.content.Context
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.behnamjalali.planb.core.data.DataHistory
 import com.behnamjalali.planb.core.data.ReminderScheduler
+import com.behnamjalali.planb.core.data.repository.OfflineActivityRepository
+import com.behnamjalali.planb.core.data.repository.OfflineTrashRepository
 import com.behnamjalali.planb.core.data.repository.DataStoreSettingsRepository
 import com.behnamjalali.planb.core.data.repository.FtsSearchRepository
 import com.behnamjalali.planb.core.data.repository.OfflineEventRepository
@@ -78,11 +81,17 @@ class TestDataGraph(
         PreferenceDataStoreFactory.create(scope = dataStoreScope) { File(prefsDir, "test.preferences_pb") },
     )
 
-    val tasks = OfflineTaskRepository(db, db.taskDao(), db.tagDao(), db.searchDao(), time, reminders)
-    val projects = OfflineProjectRepository(db, db.projectDao(), db.tagDao(), db.searchDao(), time)
-    val notes = OfflineNoteRepository(db, db.noteDao(), db.noteDraftDao(), db.tagDao(), db.searchDao(), time)
-    val habits = OfflineHabitRepository(db, db.habitDao(), db.searchDao(), time, reminders)
-    val events = OfflineEventRepository(db, db.eventDao(), db.searchDao(), time, reminders)
+    /** Plan-B Pro for the trash and activity history; off like a free user unless a test sets it. */
+    @Volatile var pro: Boolean = false
+    val history = DataHistory(db, time) { pro }
+
+    val tasks = OfflineTaskRepository(db, db.taskDao(), db.tagDao(), db.searchDao(), time, reminders, history)
+    val projects = OfflineProjectRepository(db, db.projectDao(), db.tagDao(), db.searchDao(), time, history)
+    val notes = OfflineNoteRepository(db, db.noteDao(), db.noteDraftDao(), db.tagDao(), db.searchDao(), time, history)
+    val habits = OfflineHabitRepository(db, db.habitDao(), db.searchDao(), time, reminders, history)
+    val events = OfflineEventRepository(db, db.eventDao(), db.searchDao(), time, reminders, history)
+    val trash = OfflineTrashRepository(tasks, notes, db.taskDao(), db.noteDao(), time)
+    val activity = OfflineActivityRepository(db.activityLogDao())
     val focus = OfflineFocusRepository(db, db.focusDao(), time)
     val search = FtsSearchRepository(
         db.searchDao(), db.taskDao(), db.projectDao(), db.noteDao(), db.habitDao(), db.goalDao(), db.eventDao(),

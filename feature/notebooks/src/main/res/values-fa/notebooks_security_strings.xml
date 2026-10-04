@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- یادداشت‌های قفل‌شده و تاریخچه (Plan-B Pro #36، #38) -->
+    <string name="note_lock">قفل کردن یادداشت</string>
+    <string name="note_remove_lock">برداشتن قفل</string>
+    <string name="note_activity">فعالیت‌ها</string>
+    <string name="note_locked_title">یادداشت قفل‌شده</string>
+    <string name="note_locked_message">این یادداشت رمزنگاری شده است. برای خواندن و ویرایش، رمز عبور را وارد کنید.</string>
+    <string name="note_unlock">باز کردن</string>
+    <string name="note_locked_done">یادداشت قفل و رمزنگاری شد</string>
+    <string name="note_lock_removed">قفل برداشته شد</string>
+</resources>

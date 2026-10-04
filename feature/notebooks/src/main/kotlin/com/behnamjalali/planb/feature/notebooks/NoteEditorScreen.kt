@@ -106,7 +106,18 @@ import com.behnamjalali.planb.core.model.BlockType
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.Notebook
 import com.behnamjalali.planb.core.ui.ConfirmDeleteDialog
+import com.behnamjalali.planb.core.ui.DeviceAuth
+import com.behnamjalali.planb.core.ui.PassphraseSetupDialog
+import com.behnamjalali.planb.core.ui.PassphraseUnlockDialog
 import com.behnamjalali.planb.core.ui.PlannerLocals
+import com.behnamjalali.planb.core.ui.ProFeature
+import com.behnamjalali.planb.core.ui.findFragmentActivity
+import com.behnamjalali.planb.core.ui.rememberProGuard
+import com.behnamjalali.planb.core.designsystem.component.PlannerEmptyState
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
 @Composable
 fun blockTypeLabel(type: BlockType): String = stringResource(
@@ -139,6 +150,8 @@ fun NoteEditorDestination(
     onClose: () -> Unit,
     onOpenNote: (EntityId) -> Unit,
     viewModel: NoteEditorViewModel = hiltViewModel(),
+    /** Opens the note's activity history (Plan-B Pro); null hides the menu item. */
+    onOpenActivity: ((EntityId) -> Unit)? = null,
 ) {
     val defaultNotebook = stringResource(com.behnamjalali.planb.core.data.R.string.data_default_notebook)
     LaunchedEffect(viewModel) { viewModel.start(defaultNotebook) }
@@ -162,6 +175,8 @@ fun NoteEditorDestination(
                 NoteEditorEvent.Exported -> snackbar.showSnackbar(resources.getString(R.string.note_exported))
                 NoteEditorEvent.ExportFailed -> snackbar.showSnackbar(resources.getString(R.string.note_export_failed))
                 NoteEditorEvent.TemplateSaved -> snackbar.showSnackbar(resources.getString(R.string.note_template_saved))
+                NoteEditorEvent.Locked -> snackbar.showSnackbar(resources.getString(R.string.note_locked_done))
+                NoteEditorEvent.LockRemoved -> snackbar.showSnackbar(resources.getString(R.string.note_lock_removed))
                 NoteEditorEvent.Failed -> snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
             }
         }
@@ -181,6 +196,11 @@ fun NoteEditorDestination(
     val copySuffix by rememberUpdatedState(stringResource(R.string.note_copy_suffix))
     val fallbackName by rememberUpdatedState(stringResource(R.string.note_file_name_fallback))
     val currentOnClose by rememberUpdatedState(onClose)
+    val currentOnActivity by rememberUpdatedState(onOpenActivity)
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val fingerprintTitle = stringResource(com.behnamjalali.planb.core.ui.R.string.ui_passphrase_unlock_title)
+    val cancelLabel = stringResource(com.behnamjalali.planb.core.ui.R.string.ui_cancel)
     // One actions object for the screen's lifetime: rebuilding it on every keystroke would make
     // every block row recompose.
     val actions = remember(viewModel) {
@@ -211,7 +231,33 @@ fun NoteEditorDestination(
             onDelete = viewModel::delete,
             onExportMarkdown = { markdownExport.launch(fileName(viewModel.state.value.title.text, "md", fallbackName)) },
             onExportText = { textExport.launch(fileName(viewModel.state.value.title.text, "txt", fallbackName)) },
+            onLock = viewModel::lockNote,
+            onRemoveLock = viewModel::removeLock,
+            onRequestUnlock = viewModel::requestUnlock,
+            onActivity = if (onOpenActivity != null) ({ currentOnActivity?.invoke(viewModel.state.value.noteId) }) else null,
         )
+    }
+    val passphraseDialog = state.passphraseDialog
+    when (passphraseDialog) {
+        PassphraseDialog.SETUP -> PassphraseSetupDialog(onConfirm = viewModel::setUpPassphrase, onDismiss = viewModel::dismissPassphrase, busy = state.busy)
+        PassphraseDialog.UNLOCK -> PassphraseUnlockDialog(
+            onUnlock = viewModel::unlock,
+            onDismiss = viewModel::dismissPassphrase,
+            wrong = state.wrongPassphrase,
+            busy = state.busy,
+            onFingerprint = if (state.fingerprint && DeviceAuth.canUseStrongBiometric(context)) {
+                {
+                    scope.launch {
+                        val activity = context.findFragmentActivity() ?: return@launch
+                        val cipher = viewModel.fingerprintCipher() ?: return@launch
+                        DeviceAuth.authenticate(activity, fingerprintTitle, cancelLabel, cipher) { it?.let(viewModel::unlockWithFingerprint) }
+                    }
+                }
+            } else {
+                null
+            },
+        )
+        null -> Unit
     }
     NoteEditorScreen(
         state = state,
@@ -251,6 +297,10 @@ data class NoteEditorActions(
     val onDelete: () -> Unit = {},
     val onExportMarkdown: () -> Unit = {},
     val onExportText: () -> Unit = {},
+    val onLock: () -> Unit = {},
+    val onRemoveLock: () -> Unit = {},
+    val onRequestUnlock: () -> Unit = {},
+    val onActivity: (() -> Unit)? = null,
 )
 
 @Composable
@@ -262,6 +312,7 @@ fun NoteEditorScreen(
 ) {
     var menu by remember { mutableStateOf(false) }
     var dialog by rememberSaveable { mutableStateOf<String?>(null) }
+    val guard = rememberProGuard()
     val focusRequesters = remember { mutableStateMapOf<String, FocusRequester>() }
     fun requester(id: String) = focusRequesters.getOrPut(id) { FocusRequester() }
     val listState = rememberLazyListState()
@@ -325,16 +376,23 @@ fun NoteEditorScreen(
                     Box {
                         PlannerIconButton(Icons.Rounded.MoreVert, stringResource(com.behnamjalali.planb.core.ui.R.string.ui_more), { menu = true })
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                            listOf(
-                                R.string.note_tags to { dialog = "tags" },
-                                R.string.note_move to { dialog = "move" },
-                                R.string.note_duplicate to actions.onDuplicate,
-                                R.string.note_export_markdown to actions.onExportMarkdown,
-                                R.string.note_export_text to actions.onExportText,
-                                R.string.note_save_template to actions.onSaveTemplate,
-                                (if (state.archived) R.string.note_unarchive else R.string.note_archive) to { actions.onArchive(!state.archived) },
-                                R.string.note_delete to { dialog = "delete" },
-                            ).forEach { (label, action) ->
+                            buildList {
+                                add(R.string.note_tags to { dialog = "tags" })
+                                add(R.string.note_move to { dialog = "move" })
+                                add(R.string.note_duplicate to actions.onDuplicate)
+                                // A locked note's body is never exported or copied into a template.
+                                if (!state.locked) {
+                                    add(R.string.note_export_markdown to actions.onExportMarkdown)
+                                    add(R.string.note_export_text to actions.onExportText)
+                                    add(R.string.note_save_template to actions.onSaveTemplate)
+                                    add(R.string.note_lock to { guard.run(ProFeature.APP_LOCK, actions.onLock) })
+                                } else if (!state.needsUnlock) {
+                                    add(R.string.note_remove_lock to actions.onRemoveLock)
+                                }
+                                actions.onActivity?.let { open -> add(R.string.note_activity to { guard.run(ProFeature.TRASH_HISTORY, open) }) }
+                                add((if (state.archived) R.string.note_unarchive else R.string.note_archive) to { actions.onArchive(!state.archived) })
+                                add(R.string.note_delete to { dialog = "delete" })
+                            }.forEach { (label, action) ->
                                 DropdownMenuItem(text = { Text(stringResource(label)) }, onClick = {
                                     menu = false
                                     action()
@@ -350,7 +408,7 @@ fun NoteEditorScreen(
             BlockToolbar(
                 focused = state.blocks.getOrNull(focusedIndex),
                 canMerge = focusedIndex > 0,
-                enabled = !titleFocused,
+                enabled = !titleFocused && !state.needsUnlock,
                 actions = actions,
                 modifier = Modifier.navigationBarsPadding().imePadding(),
             )
@@ -379,6 +437,18 @@ fun NoteEditorScreen(
                         }
                     }
                 }
+            }
+            if (state.needsUnlock) {
+                item(key = "locked") {
+                    PlannerEmptyState(
+                        icon = Icons.Rounded.Lock,
+                        title = state.title.text.ifBlank { stringResource(R.string.note_locked_title) },
+                        message = stringResource(R.string.note_locked_message),
+                        actionLabel = stringResource(R.string.note_unlock),
+                        onAction = actions.onRequestUnlock,
+                    )
+                }
+                return@LazyColumn
             }
             item(key = NoteEditorViewModel.TITLE_FOCUS) {
                 val titleHint = stringResource(R.string.note_title_hint)

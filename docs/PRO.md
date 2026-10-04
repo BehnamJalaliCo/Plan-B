@@ -172,6 +172,49 @@ the schema.
 Preferences-only features (themes, widgets configuration, app lock settings, backup schedule)
 use DataStore; secrets never go into the exported preferences file.
 
+## Implemented: Security & data (#36–#38)
+
+All three are built (module `feature:security`, data layer in `core:data` and `core:backup`).
+Things set up while Pro was active stay manageable if Pro ends: App lock and locked notes can
+still be opened and switched off, the trash can still be restored or emptied (and is purged
+after 30 days), automatic backups can be switched off.
+
+**#36 App lock and locked notes** — Settings › Security.
+- *App lock* (`AppLockController`, `AppLockGate`): BiometricPrompt with the device's own
+  fingerprint/face or screen lock (`BIOMETRIC_WEAK | DEVICE_CREDENTIAL`); turning it on asks
+  once to confirm. Locks on a cold start and after the chosen time in the background
+  (immediately, 1, 5 or 15 minutes; `AppLockPolicy`, wall and monotonic clocks, rotation and the
+  prompt itself don't count). "Hide in recent apps" (default on) uses
+  `setRecentsScreenshotEnabled(false)` on Android 13+, `FLAG_SECURE` before. Settings live in
+  the device-only `planb_security` DataStore.
+- *Locked notes* (`NoteCrypto`, `NoteVault`, `NoteRepository.lockNote/removeLock`): the user
+  sets a passphrase once (confirmed, with a warning that it cannot be recovered). The key is
+  PBKDF2-HMAC-SHA256 (600,000 iterations, random salt kept in DataStore with a check value);
+  bodies are AES-256-GCM envelopes in `notes.encrypted_payload` that carry their own salt, so a
+  restored backup opens on another device with the same passphrase (that device adopts the
+  salt). The key stays in memory until the vault locks (App lock, 5 minutes in the background,
+  "Close locked notes now"). Optional fingerprint unlock wraps the key with a biometric-bound
+  Keystore key (`BiometricKeyStore`). Locked bodies never reach search (title only), drafts,
+  versions, exports, templates or logs.
+
+**#37 Automatic backups** — Settings › Backup & restore › Automatic backup. `AutoBackupWorker`
+(WorkManager, daily/weekly, optionally charging only) runs `AutoBackupRunner`: the regular
+backup ZIP into a SAF folder picked with `ACTION_OPEN_DOCUMENT_TREE` (persisted permission,
+works with Google Drive), named `Plan-B-auto-yyyyMMdd-HHmmss.zip`, then only our own files
+beyond the newest 21 are deleted (`AutoBackupNaming`). Last run, last success and a plain-words
+error are shown; "Back up now"; a notification only on failure. See
+[BACKUP_FORMAT.md](BACKUP_FORMAT.md) §2.
+
+**#38 Trash and activity history** — More › Trash, More › Activity, and History from the task
+and note editors. For Pro users task/note deletions set `deleted_at` (subtasks share the
+parent's time); free users keep today's undo-then-permanent delete. Restore re-indexes search
+and reschedules reminders; "Delete forever", "Empty trash" and the 30-day purge
+(`MaintenanceWorker`, daily, and at start) delete permanently. `DataHistory` writes
+`activity_log` rows (created, edited, completed, reopened, deleted, restored, archived; title
+only) inside the repositories' transactions for tasks, notes, notebooks, projects, events,
+habits and goals, merges edits within 10 minutes and caps the table at 5,000 rows. The data
+layer learns about Pro through `ProStatusSource` (bound to the entitlement in `app`).
+
 ## AI assistant (#39) infrastructure
 
 `core:ai` holds the provider catalog (`AiProviders`: generic Iranian OpenAI-compatible gateway,

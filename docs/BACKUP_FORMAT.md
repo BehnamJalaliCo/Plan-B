@@ -177,6 +177,19 @@ empty, current preferences are left alone.
 > the restored `language` with `AppCompatDelegate.setApplicationLocales`, so the app switches
 > to it immediately and `MainActivity` keeps it on the next start.
 
+## 2. Automatic backups (Plan-B Pro #37)
+
+`AutoBackupRunner` (`core/backup/.../AutoBackup.kt`) writes the same archive as a manual backup
+(`BackupManager.snapshot` + `BackupCodec.write`) into a folder picked with
+`ACTION_OPEN_DOCUMENT_TREE` (persisted read/write permission; Google Drive and other providers
+work). Files are named `Plan-B-auto-yyyyMMdd-HHmmss.zip` (local time, Latin digits). After a
+successful write, `AutoBackupNaming.toPrune` deletes our files beyond the newest 21; files that
+do not match the exact pattern are never listed for deletion. A failed write deletes its partial
+file. `AutoBackupWorker` runs it daily or weekly (optionally only while charging, never on low
+storage) and notifies only on failure; settings and the last result live in the device-only
+`planb_auto_backup` DataStore, which is not part of any backup. Locked notes stay encrypted in
+every backup and open after a restore with their passphrase.
+
 ## 3. Limits and reading safeguards (`BackupCodec.read`)
 
 | Rule | Constant or behaviour |

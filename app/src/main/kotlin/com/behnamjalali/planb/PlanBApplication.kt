@@ -24,6 +24,7 @@ class PlanBApplication : Application() {
     @Inject lateinit var searchIndex: SearchIndexUpgrade
     @Inject lateinit var attachments: AttachmentMaintenance
     @Inject lateinit var entitlements: EntitlementRepository
+    @Inject lateinit var trash: com.behnamjalali.planb.core.data.repository.TrashRepository
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
 
     override fun onCreate() {
@@ -44,7 +45,10 @@ class PlanBApplication : Application() {
             runCatching { entitlements.refresh() }
             // Attachment rows of deleted owners and files without a row are removed.
             runCatching { attachments.sweep() }.onFailure { Log.w(TAG, "Attachment sweep failed (${it.javaClass.simpleName})") }
+            // Trash items older than 30 days go for good (also done daily in the background).
+            runCatching { trash.purgeExpired() }
         }
+        MaintenanceWorker.schedule(this)
     }
 
     private companion object {

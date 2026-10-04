@@ -14,6 +14,14 @@ import com.behnamjalali.planb.core.database.model.NoteWithTags
 import com.behnamjalali.planb.core.database.model.NotebookWithCount
 import kotlinx.coroutines.flow.Flow
 
+/** A row of the note trash list; never carries the body. */
+data class NoteTrashRow(
+    val id: Long,
+    val title: String,
+    @androidx.room.ColumnInfo(name = "deleted_at") val deletedAt: Long,
+    val locked: Boolean,
+)
+
 @Dao
 interface NoteDao {
     @Query(
@@ -146,6 +154,14 @@ interface NoteDao {
     /** Lock state and encrypted body only; never rewrites (or undoes) a concurrent content save. */
     @Query("UPDATE notes SET locked = :locked, encrypted_payload = :payload, content = :content, updated_at = :now WHERE id = :id")
     suspend fun setLocked(id: Long, locked: Boolean, payload: ByteArray?, content: String, now: Long)
+
+    /** The note trash as shown to the user (no bodies), newest first. */
+    @Query("SELECT id, title, deleted_at, locked FROM notes WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC, id DESC")
+    fun observeTrashRows(): Flow<List<NoteTrashRow>>
+
+    /** Any stored encrypted body, to check a passphrase on a device that has no vault yet. */
+    @Query("SELECT encrypted_payload FROM notes WHERE encrypted_payload IS NOT NULL ORDER BY id LIMIT 1")
+    suspend fun anyEncryptedPayload(): ByteArray?
 
     @Query("SELECT COALESCE(MAX(sort_order), 0) FROM notes WHERE notebook_id = :notebookId")
     suspend fun maxNoteOrder(notebookId: Long): Long

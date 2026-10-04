@@ -30,6 +30,13 @@ import androidx.compose.ui.test.printToString
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import com.behnamjalali.planb.MainActivity
+import com.behnamjalali.planb.core.billing.DeveloperBilling
+import com.behnamjalali.planb.core.billing.EntitlementRepository
+import com.behnamjalali.planb.core.billing.ProProduct
+import com.behnamjalali.planb.core.data.security.SecurityPreferences
+import com.behnamjalali.planb.feature.security.R as SecurityR
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeout
 import com.behnamjalali.planb.core.data.repository.FocusRepository
 import com.behnamjalali.planb.core.data.repository.GoalRepository
 import com.behnamjalali.planb.core.data.repository.HabitRepository
@@ -101,6 +108,9 @@ class AppScreenshotTest(private val variant: Variant) {
     @Inject lateinit var events: EventRepository
     @Inject lateinit var focus: FocusRepository
     @Inject lateinit var clock: FakeTimeProvider
+    @Inject lateinit var developerBilling: DeveloperBilling
+    @Inject lateinit var entitlements: EntitlementRepository
+    @Inject lateinit var security: SecurityPreferences
 
     private var scenario: ActivityScenario<MainActivity>? = null
     private val context: Context get() = ApplicationProvider.getApplicationContext()
@@ -120,8 +130,14 @@ class AppScreenshotTest(private val variant: Variant) {
         scenario?.close()
     }
 
-    private fun launch(seed: Boolean = true, onboarded: Boolean = true) {
+    private fun launch(seed: Boolean = true, onboarded: Boolean = true, pro: Boolean = false, beforeLaunch: suspend () -> Unit = {}) {
         runBlocking {
+            if (pro) {
+                developerBilling.setOwned(ProProduct.LIFETIME)
+                // Ask the (fake) store directly so the cached entitlement is written before launch.
+                entitlements.refresh()
+                withTimeout(30_000) { entitlements.isPro.first { it } }
+            }
             settings.update {
                 it.copy(
                     language = variant.language,
@@ -131,6 +147,7 @@ class AppScreenshotTest(private val variant: Variant) {
                 )
             }
             if (seed) seed()
+            beforeLaunch()
         }
         scenario = ActivityScenario.launch(MainActivity::class.java)
         compose.waitForIdle()
@@ -414,6 +431,8 @@ class AppScreenshotTest(private val variant: Variant) {
         capture("settings", "settings")
         click(s(SettingsR.string.settings_backup_restore))
         waitFor(hasText(s(SettingsR.string.backup_create)))
+        // The automatic-backup section appears once its device-only settings are read.
+        waitFor(hasText(s(SettingsR.string.auto_backup_summary)))
         capture("settings", "backup")
     }
 
@@ -437,6 +456,54 @@ class AppScreenshotTest(private val variant: Variant) {
         compose.waitUntil(10_000) { compose.onAllNodes(hasText(s(ProR.string.pro_state_loading))).fetchSemanticsNodes().isEmpty() }
         capture("pro", "paywall")
     }
+
+    // region Plan-B Pro security and data (#36–#38)
+
+    @Test
+    fun trash() {
+        launch(pro = true) {
+            tasks.delete(listOf(tasks.observeTasks(com.behnamjalali.planb.core.data.repository.TaskFilter(today = fixtures.today)).first().first { it.title == fixtures.tasks[5].title }.id))
+            val notebook = notes.observeNotebooks().first().first().id
+            notes.deleteNote(notes.observeNotes(notebook).first().first().id)
+            clock.advance(Duration.ofDays(3))
+            tasks.delete(listOf(tasks.observeTasks(com.behnamjalali.planb.core.data.repository.TaskFilter(today = fixtures.today)).first().first { it.title == fixtures.tasks[0].title }.id))
+            clock.instant = com.behnamjalali.planb.e2e.TestClockModule.START.plus(Duration.ofDays(3))
+        }
+        openMore(AppR.string.more_trash)
+        waitFor(hasText(fixtures.tasks[0].title, substring = true))
+        capture("security", "trash")
+    }
+
+    @Test
+    fun activity() {
+        launch(pro = true) {
+            val id = tasks.observeTasks(com.behnamjalali.planb.core.data.repository.TaskFilter(today = fixtures.today)).first().first { it.title == fixtures.tasks[2].title }.id
+            clock.advance(Duration.ofMinutes(40))
+            tasks.setCompleted(id, true)
+            clock.instant = com.behnamjalali.planb.e2e.TestClockModule.START
+        }
+        openMore(AppR.string.more_activity)
+        waitFor(hasText(s(SecurityR.string.activity_completed), substring = true))
+        capture("security", "activity")
+    }
+
+    @Test
+    fun securitySettings() {
+        launch(pro = true)
+        openMore(AppR.string.more_settings)
+        click(s(SettingsR.string.settings_security_summary))
+        waitFor(hasText(s(SecurityR.string.security_set_passphrase)))
+        capture("security", "security_settings")
+    }
+
+    @Test
+    fun lockScreen() {
+        launch { security.updateAppLock { it.copy(enabled = true) } }
+        waitFor(hasText(s(SecurityR.string.lock_title)))
+        capture("security", "lock_screen")
+    }
+
+    // endregion
 
     @Test
     fun onboarding() {

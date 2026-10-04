@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_auto_channel">Automatic backups</string>
+    <string name="backup_auto_failed_title">Automatic backup failed</string>
+    <string name="backup_auto_failed_text">Open Settings › Backup &amp; restore to check the backup folder.</string>
+</resources>

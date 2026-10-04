@@ -13,6 +13,9 @@ import com.behnamjalali.planb.core.data.DocumentFiles
 import com.behnamjalali.planb.core.data.repository.NoteDraft
 import com.behnamjalali.planb.core.data.repository.NoteRepository
 import com.behnamjalali.planb.core.data.repository.TemplateRepository
+import com.behnamjalali.planb.core.data.security.BiometricKeyStore
+import com.behnamjalali.planb.core.data.security.NoteVault
+import javax.crypto.Cipher
 import com.behnamjalali.planb.core.model.BlockType
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.Markdown
@@ -72,7 +75,18 @@ data class NoteEditorState(
     val draft: NoteDraft? = null,
     val focusId: String? = null,
     val focusVersion: Int = 0,
+    /** A locked note (Plan-B Pro #36): its body is encrypted with the note passphrase. */
+    val locked: Boolean = false,
+    /** Locked and the vault is closed: the body is not loaded until the user unlocks. */
+    val needsUnlock: Boolean = false,
+    val passphraseDialog: PassphraseDialog? = null,
+    val wrongPassphrase: Boolean = false,
+    val busy: Boolean = false,
+    /** Fingerprint can open locked notes on this device. */
+    val fingerprint: Boolean = false,
 )
+
+enum class PassphraseDialog { SETUP, UNLOCK }
 
 sealed interface NoteEditorEvent {
     data object Deleted : NoteEditorEvent
@@ -80,6 +94,8 @@ sealed interface NoteEditorEvent {
     data object Exported : NoteEditorEvent
     data object ExportFailed : NoteEditorEvent
     data object TemplateSaved : NoteEditorEvent
+    data object Locked : NoteEditorEvent
+    data object LockRemoved : NoteEditorEvent
     data object Failed : NoteEditorEvent
 }
 
@@ -200,6 +216,8 @@ class NoteEditorViewModel @Inject constructor(
     private val templates: TemplateRepository,
     private val files: DocumentFiles,
     @ApplicationScope private val appScope: CoroutineScope,
+    private val vault: NoteVault? = null,
+    private val keyStore: BiometricKeyStore? = null,
 ) : ViewModel() {
     private val route = runCatching { savedState.toRoute<NoteEditorRoute>() }.getOrDefault(NoteEditorRoute())
     private val _state = MutableStateFlow(NoteEditorState())
@@ -233,6 +251,19 @@ class NoteEditorViewModel @Inject constructor(
     init {
         viewModelScope.launch { edits.debounce(DRAFT_DELAY_MS).collect { saveDraft() } }
         viewModelScope.launch { edits.debounce(AUTOSAVE_DELAY_MS).collect { save() } }
+        vault?.let { v ->
+            // The vault closed (App lock, long in the background): hide the body of a locked note.
+            viewModelScope.launch {
+                v.unlocked.collect { open ->
+                    val s = _state.value
+                    if (!open && s.locked && !s.needsUnlock && !s.loading) {
+                        dirty = false
+                        _state.update { it.copy(blocks = emptyList(), needsUnlock = true, draft = null, saveStatus = SaveStatus.SAVED) }
+                    }
+                }
+            }
+            viewModelScope.launch { v.biometricEnabled.collect { on -> _state.update { it.copy(fingerprint = on) } } }
+        }
     }
 
     private suspend fun load(defaultNotebookTitle: String) {
@@ -256,7 +287,15 @@ class NoteEditorViewModel @Inject constructor(
                 return@runCatchingSafely
             }
             val draft = notes.getDraft(id)?.takeIf { it.updatedAt > note.updatedAt }
-            val blocks = BlockEditing.ensureNotEmpty(note.document.blocks.map { it.toEditor() }, ::newId)
+            val locked = note.locked
+            val payload = if (locked) notes.encryptedPayload(id) else null
+            val canOpen = !locked || (vault != null && (payload == null || vault.canDecrypt(payload)) && vault.unlocked.value)
+            val document = when {
+                !canOpen -> null
+                locked -> notes.lockedContent(id)
+                else -> note.document
+            }
+            val blocks = document?.let { d -> BlockEditing.ensureNotEmpty(d.blocks.map { it.toEditor() }, ::newId) }.orEmpty()
             _state.value = NoteEditorState(
                 loading = false,
                 noteId = note.id,
@@ -271,6 +310,9 @@ class NoteEditorViewModel @Inject constructor(
                 draft = draft,
                 focusId = if (createdNew) TITLE_FOCUS else null,
                 focusVersion = 1,
+                locked = locked,
+                needsUnlock = !canOpen,
+                fingerprint = _state.value.fingerprint,
             )
         }.onFailure { _state.value = NoteEditorState(loading = false, missing = true) }
     }
@@ -435,7 +477,7 @@ class NoteEditorViewModel @Inject constructor(
     /** Commits the current content. Safe to call repeatedly (e.g. on ON_STOP). */
     suspend fun save() = saveMutex.withLock {
         val s = _state.value
-        if (s.loading || s.missing || !dirty) return@withLock
+        if (s.loading || s.missing || s.needsUnlock || !dirty) return@withLock
         dirty = false
         runCatchingSafely { notes.updateContent(s.noteId, s.title.text.trim(), document(s)) }
             .onSuccess { if (!dirty) _state.update { it.copy(saveStatus = SaveStatus.SAVED) } }
@@ -493,6 +535,8 @@ class NoteEditorViewModel @Inject constructor(
     }
 
     fun saveAsTemplate() = launchSafely {
+        // A locked note's body never leaves it (no templates, no exports).
+        if (_state.value.locked) return@launchSafely
         save()
         val note = notes.getNote(_state.value.noteId) ?: return@launchSafely
         templates.saveNoteAsTemplate(note)
@@ -506,6 +550,7 @@ class NoteEditorViewModel @Inject constructor(
     }
 
     fun export(uri: Uri, markdown: Boolean) {
+        if (_state.value.locked) return
         viewModelScope.launch {
             save()
             val s = _state.value
@@ -519,14 +564,104 @@ class NoteEditorViewModel @Inject constructor(
 
     fun sectionsFor(notebookId: EntityId) = notes.observeSections(notebookId)
 
+    // region Locked notes (Plan-B Pro #36)
+
+    /** "Lock note": asks for a passphrase first when none is set up or the vault is closed. */
+    fun lockNote() = launchSafely {
+        val v = vault ?: return@launchSafely
+        when {
+            !v.setUpDone() -> _state.update { it.copy(passphraseDialog = PassphraseDialog.SETUP) }
+            !v.unlocked.value -> _state.update { it.copy(passphraseDialog = PassphraseDialog.UNLOCK, wrongPassphrase = false) }
+            else -> {
+                save()
+                notes.lockNote(_state.value.noteId)
+                _state.update { it.copy(locked = true, draft = null) }
+                _events.tryEmit(NoteEditorEvent.Locked)
+            }
+        }
+    }
+
+    fun removeLock() = launchSafely {
+        if (_state.value.needsUnlock) return@launchSafely
+        save()
+        notes.removeLock(_state.value.noteId)
+        _state.update { it.copy(locked = false) }
+        _events.tryEmit(NoteEditorEvent.LockRemoved)
+    }
+
+    fun requestUnlock() = _state.update { it.copy(passphraseDialog = PassphraseDialog.UNLOCK, wrongPassphrase = false) }
+
+    fun dismissPassphrase() = _state.update { it.copy(passphraseDialog = null, wrongPassphrase = false) }
+
+    fun setUpPassphrase(passphrase: CharArray) = busy {
+        try {
+            vault?.setUp(passphrase)
+        } finally {
+            passphrase.fill(' ')
+        }
+        _state.update { it.copy(passphraseDialog = null) }
+        lockNote()
+    }
+
+    fun unlock(passphrase: CharArray) = busy {
+        val v = vault ?: return@busy
+        val sample = notes.encryptedPayload(_state.value.noteId)
+        val ok = try {
+            v.unlock(passphrase, sample)
+        } finally {
+            passphrase.fill(' ')
+        }
+        if (ok && (sample == null || v.canDecrypt(sample))) afterUnlock() else _state.update { it.copy(wrongPassphrase = true) }
+    }
+
+    /** A Keystore cipher for the fingerprint prompt; null when fingerprint unlock is not set up. */
+    suspend fun fingerprintCipher(): Cipher? {
+        val iv = vault?.biometricKey()?.iv ?: return null
+        return keyStore?.decryptCipher(iv)
+    }
+
+    fun unlockWithFingerprint(cipher: Cipher) = busy {
+        val v = vault ?: return@busy
+        val sample = notes.encryptedPayload(_state.value.noteId)
+        if (v.unlockWithBiometric(cipher) && (sample == null || v.canDecrypt(sample))) afterUnlock() else requestUnlock()
+    }
+
+    private suspend fun afterUnlock() {
+        val s = _state.value
+        _state.update { it.copy(passphraseDialog = null, wrongPassphrase = false) }
+        if (s.locked && s.needsUnlock) {
+            val document = notes.lockedContent(s.noteId)
+            _state.update {
+                it.copy(
+                    needsUnlock = false,
+                    blocks = BlockEditing.ensureNotEmpty(document.blocks.map { b -> b.toEditor() }, ::newId),
+                    focusVersion = it.focusVersion + 1,
+                )
+            }
+        } else if (!s.locked) {
+            lockNote()
+        }
+    }
+
+    private fun busy(block: suspend () -> Unit) = viewModelScope.launch {
+        _state.update { it.copy(busy = true) }
+        try {
+            runCatchingSafely { block() }.onFailure { _events.tryEmit(NoteEditorEvent.Failed) }
+        } finally {
+            _state.update { it.copy(busy = false) }
+        }
+    }
+
+    // endregion
+
     override fun onCleared() {
         val s = _state.value
         val pendingDirty = dirty
         appScope.launch {
             runCatchingSafely {
-                if (pendingDirty) notes.updateContent(s.noteId, s.title.text.trim(), document(s))
+                if (pendingDirty && !s.needsUnlock) notes.updateContent(s.noteId, s.title.text.trim(), document(s))
                 // A note created by opening the editor and left completely empty is discarded.
-                if (createdNew && s.title.text.isBlank() && document(s).isBlank() && !s.missing) notes.deleteNote(s.noteId)
+                if (createdNew && s.title.text.isBlank() && document(s).isBlank() && !s.missing && !s.locked) notes.discardNote(s.noteId)
             }
         }
     }

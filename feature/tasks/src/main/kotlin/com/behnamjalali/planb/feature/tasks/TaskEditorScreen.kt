@@ -30,6 +30,7 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Event
 import androidx.compose.material.icons.rounded.EventAvailable
 import androidx.compose.material.icons.rounded.Flag
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Repeat
@@ -80,6 +81,7 @@ import com.behnamjalali.planb.core.model.Task
 import com.behnamjalali.planb.core.model.TaskStatus
 import com.behnamjalali.planb.core.ui.CustomRecurrenceDialog
 import com.behnamjalali.planb.core.ui.EditorRow
+import com.behnamjalali.planb.core.ui.LocalProAccess
 import com.behnamjalali.planb.core.ui.PlannerDatePickerDialog
 import com.behnamjalali.planb.core.ui.PlannerLocals
 import com.behnamjalali.planb.core.ui.PlannerTimePickerDialog
@@ -98,6 +100,8 @@ fun TaskEditorDestination(
     onClose: () -> Unit,
     onOpenSubtask: (EntityId) -> Unit,
     viewModel: TaskEditorViewModel = hiltViewModel(),
+    /** Opens the task's activity history (Plan-B Pro); null hides the action. */
+    onOpenActivity: ((EntityId) -> Unit)? = null,
 ) {
     val form by viewModel.form.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
@@ -144,6 +148,7 @@ fun TaskEditorDestination(
         onOpenSubtask = onOpenSubtask,
         onSave = { pendingTag -> viewModel.save(pendingTag) },
         onDelete = viewModel::delete,
+        onActivity = onOpenActivity?.let { open -> { open(viewModel.taskId) } },
     )
 
     if (confirmDiscard) {
@@ -185,6 +190,7 @@ fun TaskEditorScreen(
     onOpenSubtask: (EntityId) -> Unit,
     onSave: (pendingTag: String) -> Unit,
     onDelete: () -> Unit,
+    onActivity: (() -> Unit)? = null,
 ) {
     val formatter = PlannerLocals.formatter
     val today = PlannerLocals.today
@@ -215,6 +221,10 @@ fun TaskEditorScreen(
             PlannerTopBar(
                 title = stringResource(if (isNew) R.string.task_editor_new else R.string.task_editor_edit),
                 actions = {
+                    // The history is a Pro feature; free users find it in More › Activity.
+                    if (!isNew && onActivity != null && LocalProAccess.current.isPro) {
+                        PlannerIconButton(Icons.Rounded.History, stringResource(R.string.task_editor_activity), onActivity)
+                    }
                     if (!isNew) {
                         PlannerIconButton(Icons.Rounded.Delete, stringResource(R.string.task_editor_delete), { confirmDelete = true })
                     }

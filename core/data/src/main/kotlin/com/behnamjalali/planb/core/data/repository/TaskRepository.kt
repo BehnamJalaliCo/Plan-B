@@ -3,6 +3,7 @@ package com.behnamjalali.planb.core.data.repository
 import androidx.room.withTransaction
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.behnamjalali.planb.core.common.TimeProvider
+import com.behnamjalali.planb.core.data.DataHistory
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.SearchIndexer
 import com.behnamjalali.planb.core.data.toEntity
@@ -15,6 +16,8 @@ import com.behnamjalali.planb.core.database.entity.TagEntity
 import com.behnamjalali.planb.core.database.entity.TaskEntity
 import com.behnamjalali.planb.core.database.entity.TaskTagCrossRef
 import com.behnamjalali.planb.core.datetime.RecurrenceEngine
+import com.behnamjalali.planb.core.model.ActivityAction
+import com.behnamjalali.planb.core.model.ActivityEntityType
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.NEW_ID
 import com.behnamjalali.planb.core.model.RecurrenceRule
@@ -81,6 +84,11 @@ interface TaskRepository {
 
     /** Board moves: DONE completes (spawning recurrences), others reopen if needed. */
     suspend fun setStatus(id: EntityId, status: TaskStatus)
+
+    /**
+     * Deletes tasks with their subtasks. For Plan-B Pro users they go to the trash (restorable
+     * for 30 days); otherwise they are deleted permanently, as always.
+     */
     suspend fun delete(ids: List<EntityId>)
 
     /** Archives (or restores) the tasks together with their subtasks. */
@@ -108,6 +116,8 @@ class OfflineTaskRepository @Inject constructor(
     private val searchDao: SearchDao,
     private val time: TimeProvider,
     private val reminders: ReminderScheduler,
+    /** The trash and activity history (Plan-B Pro); null keeps the free behaviour. */
+    private val history: DataHistory? = null,
 ) : TaskRepository {
 
     override fun observeTasks(filter: TaskFilter): Flow<List<Task>> =
@@ -135,6 +145,7 @@ class OfflineTaskRepository @Inject constructor(
         if (task.parentTaskId != null && task.parentTaskId == task.id) throw TaskValidationException("Task cannot be its own parent")
         val now = time.now()
         val changes = ReminderChanges()
+        val log = history?.active() == true
         val id = db.withTransaction {
             val existing = if (task.id != NEW_ID) taskDao.getEntity(task.id) else null
             val wasCompleted = existing?.completed == true
@@ -163,6 +174,15 @@ class OfflineTaskRepository @Inject constructor(
             when {
                 completesSeries -> complete(taskDao.getEntity(savedId)!!, now, changes)
                 wasCompleted && !task.isCompleted -> takeSeriesBack(existing!!, savedId, now, changes)
+            }
+            if (log) {
+                val action = when {
+                    existing == null -> ActivityAction.CREATED
+                    task.isCompleted && !wasCompleted -> ActivityAction.COMPLETED
+                    wasCompleted && !task.isCompleted -> ActivityAction.REOPENED
+                    else -> ActivityAction.UPDATED
+                }
+                history?.record(ActivityEntityType.TASK, savedId, action, task.title)
             }
             savedId
         }
@@ -214,6 +234,7 @@ class OfflineTaskRepository @Inject constructor(
         val now = time.now()
         val changes = ReminderChanges()
         var nextId: EntityId? = null
+        val log = history?.active() == true
         db.withTransaction {
             val entity = taskDao.getEntity(id) ?: return@withTransaction
             if (entity.completed == completed) return@withTransaction
@@ -223,6 +244,7 @@ class OfflineTaskRepository @Inject constructor(
                 taskDao.update(entity.copy(completed = false, status = TaskStatus.TODO.name, completedAt = null, updatedAt = now))
                 takeSeriesBack(entity, id, now, changes)
             }
+            if (log) history?.record(ActivityEntityType.TASK, id, if (completed) ActivityAction.COMPLETED else ActivityAction.REOPENED, entity.title)
         }
         reminders.syncTask(id)
         changes.apply()
@@ -335,10 +357,73 @@ class OfflineTaskRepository @Inject constructor(
         val entity = taskDao.getEntity(id) ?: return
         if (entity.completed) setCompleted(id, false)
         val current = taskDao.getEntity(id) ?: return
-        taskDao.update(current.copy(status = status.name, updatedAt = time.now()))
+        val log = history?.active() == true
+        db.withTransaction {
+            taskDao.update(current.copy(status = status.name, updatedAt = time.now()))
+            if (log) history?.record(ActivityEntityType.TASK, id, ActivityAction.UPDATED, current.title)
+        }
     }
 
     override suspend fun delete(ids: List<EntityId>) {
+        if (ids.isEmpty()) return
+        if (history?.active() == true) moveToTrash(ids) else deletePermanently(ids)
+    }
+
+    /** Tasks and their live subtasks get the same `deleted_at`, so they are restored together. */
+    private suspend fun moveToTrash(ids: List<EntityId>) {
+        val now = time.now().toEpochMilli()
+        val trashed = db.withTransaction {
+            val roots = ids.distinct().mapNotNull { taskDao.getEntity(it) }.filter { it.deletedAt == null }
+            val all = roots.map { it.id }.toMutableList()
+            var frontier = all.toList()
+            while (frontier.isNotEmpty()) {
+                frontier = frontier.chunked(QUERY_CHUNK).flatMap { taskDao.liveSubtaskIds(it) }.filter { it !in all }
+                all += frontier
+            }
+            all.chunked(QUERY_CHUNK).forEach { taskDao.setDeletedAt(it, now, now) }
+            all.forEach { searchDao.delete(SearchIndexer.rowId(SearchEntityType.TASK, it)) }
+            roots.forEach { history?.record(ActivityEntityType.TASK, it.id, ActivityAction.DELETED, it.title) }
+            all
+        }
+        trashed.forEach { reminders.cancelTask(it) }
+    }
+
+    /**
+     * Brings a task back from the trash with the subtasks that went there with it (and a
+     * trashed parent, without which it would stay hidden). It is searchable again and its
+     * reminders are scheduled again.
+     */
+    suspend fun restoreFromTrash(id: EntityId) {
+        val now = time.now().toEpochMilli()
+        val log = history?.active() == true
+        val restored = db.withTransaction {
+            val entity = taskDao.getEntity(id) ?: return@withTransaction emptyList()
+            val deletedAt = entity.deletedAt?.toEpochMilli() ?: return@withTransaction emptyList()
+            val all = mutableListOf(id)
+            var frontier = listOf(id)
+            while (frontier.isNotEmpty()) {
+                frontier = frontier.flatMap { taskDao.subtasksTrashedWith(it, deletedAt) }.filter { it !in all }
+                all += frontier
+            }
+            var parentId = entity.parentTaskId
+            while (parentId != null && parentId !in all) {
+                val parent = taskDao.getEntity(parentId) ?: break
+                if (parent.deletedAt != null) all += parent.id
+                parentId = parent.parentTaskId
+            }
+            all.chunked(QUERY_CHUNK).forEach { taskDao.setDeletedAt(it, null, now) }
+            all.forEach { taskId -> taskDao.getEntity(taskId)?.let { searchDao.upsert(SearchIndexer.task(it)) } }
+            if (log) history?.record(ActivityEntityType.TASK, id, ActivityAction.RESTORED, entity.title)
+            all
+        }
+        restored.forEach { reminders.syncTask(it) }
+    }
+
+    /** Ids of tasks that went to the trash before [before], for the 30-day purge. */
+    suspend fun trashedBefore(before: Instant): List<EntityId> = taskDao.trashedBefore(before.toEpochMilli())
+
+    /** Permanent delete (free users, "Delete forever" and the trash purge). */
+    suspend fun deletePermanently(ids: List<EntityId>) {
         if (ids.isEmpty()) return
         val allIds = db.withTransaction {
             // Subtasks are removed by cascade; their index rows must go too.
@@ -354,10 +439,17 @@ class OfflineTaskRepository @Inject constructor(
 
     override suspend fun setArchived(ids: List<EntityId>, archived: Boolean) {
         if (ids.isEmpty()) return
+        val log = history?.active() == true
         val all = db.withTransaction {
             // Subtasks share their parent's fate, so their reminders stop (and resume) with it.
             val withSubtasks = (ids + ids.chunked(QUERY_CHUNK).flatMap { taskDao.subtaskIds(it) }).distinct()
             withSubtasks.chunked(QUERY_CHUNK).forEach { taskDao.setArchived(it, archived, time.now().toEpochMilli()) }
+            if (log) {
+                ids.distinct().forEach { taskId ->
+                    val title = taskDao.getEntity(taskId)?.title ?: return@forEach
+                    history?.record(ActivityEntityType.TASK, taskId, if (archived) ActivityAction.ARCHIVED else ActivityAction.RESTORED, title)
+                }
+            }
             withSubtasks
         }
         all.forEach { reminders.syncTask(it) }
@@ -370,6 +462,7 @@ class OfflineTaskRepository @Inject constructor(
     override suspend fun duplicate(id: EntityId): EntityId {
         val now = time.now()
         val subtaskIds = mutableListOf<EntityId>()
+        val log = history?.active() == true
         val newId = db.withTransaction {
             val source = taskDao.getEntity(id) ?: throw TaskValidationException("Task $id not found")
             val copy = source.copy(id = 0, createdAt = now, updatedAt = now, sortOrder = taskDao.maxSortOrder() + SORT_STEP, deletedAt = null)
@@ -382,6 +475,7 @@ class OfflineTaskRepository @Inject constructor(
                 subtaskIds += subId
             }
             searchDao.upsert(SearchIndexer.task(copy.copy(id = newId)))
+            if (log) history?.record(ActivityEntityType.TASK, newId, ActivityAction.CREATED, copy.title)
             newId
         }
         reminders.syncTask(newId)

@@ -2,17 +2,23 @@ package com.behnamjalali.planb.core.data.repository
 
 import androidx.room.withTransaction
 import com.behnamjalali.planb.core.common.TimeProvider
+import com.behnamjalali.planb.core.data.DataHistory
 import com.behnamjalali.planb.core.data.SearchIndexer
+import com.behnamjalali.planb.core.data.security.NoteVault
+import com.behnamjalali.planb.core.data.security.VaultLockedException
 import com.behnamjalali.planb.core.data.toEntity
 import com.behnamjalali.planb.core.data.toModel
 import com.behnamjalali.planb.core.database.PlanBDatabase
 import com.behnamjalali.planb.core.database.dao.NoteDao
 import com.behnamjalali.planb.core.database.dao.NoteDraftDao
 import com.behnamjalali.planb.core.database.entity.NoteDraftEntity
+import com.behnamjalali.planb.core.database.entity.NoteEntity
 import com.behnamjalali.planb.core.database.dao.SearchDao
 import com.behnamjalali.planb.core.database.dao.TagDao
 import com.behnamjalali.planb.core.database.entity.NoteTagCrossRef
 import com.behnamjalali.planb.core.database.entity.TagEntity
+import com.behnamjalali.planb.core.model.ActivityAction
+import com.behnamjalali.planb.core.model.ActivityEntityType
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.NEW_ID
 import com.behnamjalali.planb.core.model.Note
@@ -64,7 +70,34 @@ interface NoteRepository {
     suspend fun setFavorite(id: EntityId, favorite: Boolean)
     suspend fun setArchived(id: EntityId, archived: Boolean)
     suspend fun setTags(id: EntityId, tags: List<Tag>)
+
+    /**
+     * Deletes a note. For Plan-B Pro users it goes to the trash (restorable for 30 days);
+     * otherwise it is deleted permanently, as always.
+     */
     suspend fun deleteNote(id: EntityId)
+
+    /** Deletes a note permanently ("Delete forever", the trash purge). */
+    suspend fun deleteNotePermanently(id: EntityId)
+
+    /** Drops a note that never really existed (left empty in the editor), with its history. */
+    suspend fun discardNote(id: EntityId)
+
+    /**
+     * Locked notes (Plan-B Pro #36). [lockNote] encrypts the stored body with the unlocked
+     * [NoteVault] and drops its plain-text copies (versions, drafts, the search body); the title
+     * stays plain text. All of them throw [VaultLockedException] while the vault is locked.
+     */
+    suspend fun lockNote(id: EntityId)
+
+    /** Decrypts the body back into the note and removes the lock. */
+    suspend fun removeLock(id: EntityId)
+
+    /** The decrypted body of a locked note (kept in memory only). */
+    suspend fun lockedContent(id: EntityId): NoteDocument
+
+    /** The encrypted body, used to check a passphrase for notes restored from another device. */
+    suspend fun encryptedPayload(id: EntityId): ByteArray?
 
     /** Draft recovery: latest unsaved editor state, if any. */
     suspend fun getDraft(noteId: EntityId): NoteDraft?
@@ -82,6 +115,10 @@ class OfflineNoteRepository @Inject constructor(
     private val tagDao: TagDao,
     private val searchDao: SearchDao,
     private val time: TimeProvider,
+    /** The trash and activity history (Plan-B Pro); null keeps the free behaviour. */
+    private val history: DataHistory? = null,
+    /** Keys of locked notes; without it, locked bodies cannot be changed. */
+    private val vault: NoteVault? = null,
 ) : NoteRepository {
     override fun observeNotebooks(archived: Boolean) = dao.observeNotebooks(archived).map { l -> l.map { it.toModel() } }
     override fun observeNotebook(id: EntityId) = dao.observeNotebook(id).map { it?.toModel() }
@@ -98,6 +135,7 @@ class OfflineNoteRepository @Inject constructor(
     override suspend fun saveNotebook(notebook: Notebook): EntityId {
         require(notebook.title.isNotBlank()) { "Notebook title must not be blank" }
         val now = time.now()
+        val log = history?.active() == true
         return db.withTransaction {
             val existing = if (notebook.id != NEW_ID) dao.getNotebook(notebook.id) else null
             val entity = notebook.copy(
@@ -107,6 +145,7 @@ class OfflineNoteRepository @Inject constructor(
             ).toEntity()
             val id = if (existing == null) dao.insertNotebook(entity.copy(id = 0)) else entity.id.also { dao.updateNotebook(entity) }
             searchDao.upsert(SearchIndexer.notebook(entity.copy(id = id)))
+            if (log) history?.record(ActivityEntityType.NOTEBOOK, id, if (existing == null) ActivityAction.CREATED else ActivityAction.UPDATED, notebook.title)
             id
         }
     }
@@ -117,11 +156,14 @@ class OfflineNoteRepository @Inject constructor(
     }
 
     override suspend fun deleteNotebook(id: EntityId) {
+        val log = history?.active() == true
         db.withTransaction {
+            val title = dao.getNotebook(id)?.title
             dao.notesInNotebook(id).forEach { searchDao.delete(SearchIndexer.rowId(SearchEntityType.NOTE, it.id)) }
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.NOTEBOOK, id))
             dao.deleteNotebook(id)
             db.attachmentDao().deleteOrphans()
+            if (log && title != null) history?.record(ActivityEntityType.NOTEBOOK, id, ActivityAction.DELETED, title)
         }
     }
 
@@ -154,38 +196,63 @@ class OfflineNoteRepository @Inject constructor(
 
     override suspend fun saveNote(note: Note): EntityId {
         val now = time.now()
+        val log = history?.active() == true
         return db.withTransaction {
             val existing = if (note.id != NEW_ID) dao.getNote(note.id) else null
-            val entity = note.copy(
+            val plain = note.copy(
                 createdAt = existing?.createdAt ?: now,
                 updatedAt = now,
                 sortOrder = existing?.sortOrder ?: (dao.maxNoteOrder(note.notebookId) + 1),
             ).toEntity(encryptedPayload = existing?.encryptedPayload)
+            // Only lockNote and removeLock change the lock; a locked body is stored encrypted.
+            val entity = if (existing != null && existing.isEncrypted) {
+                val payload = if (note.document.isBlank() && note.document.blocks.isEmpty()) existing.encryptedPayload else seal(note.document)
+                plain.copy(locked = true, encryptedPayload = payload, content = NoteDocument.EMPTY.encode())
+            } else {
+                plain.copy(locked = existing?.locked ?: false)
+            }
             val id = if (existing == null) dao.insertNote(entity.copy(id = 0)) else entity.id.also { dao.updateNote(entity) }
             writeTags(id, note.tags)
             searchDao.upsert(SearchIndexer.note(entity.copy(id = id)))
+            if (log) history?.record(ActivityEntityType.NOTE, id, if (existing == null) ActivityAction.CREATED else ActivityAction.UPDATED, note.title)
             id
         }
     }
+
+    private val NoteEntity.isEncrypted: Boolean get() = encryptedPayload != null
+
+    /** Encrypts a body with the vault (throws [VaultLockedException] while it is locked). */
+    private fun seal(document: NoteDocument): ByteArray =
+        (vault ?: throw VaultLockedException()).encrypt(document.encode().toByteArray(Charsets.UTF_8))
 
     override suspend fun updateContent(id: EntityId, title: String, document: NoteDocument, capturedAt: java.time.Instant?) {
         // Taken before waiting for the transaction: a draft written while this commit was
         // queued holds newer content than [document] and must survive.
         val captured = capturedAt ?: time.now()
+        val log = history?.active() == true
         db.withTransaction {
             val existing = dao.getNote(id) ?: throw IllegalStateException("Note $id no longer exists")
-            val updated = existing.copy(title = title, content = document.encode(), updatedAt = maxOf(captured, existing.updatedAt))
+            val updated = if (existing.isEncrypted) {
+                existing.copy(title = title, encryptedPayload = seal(document), updatedAt = maxOf(captured, existing.updatedAt))
+            } else {
+                existing.copy(title = title, content = document.encode(), updatedAt = maxOf(captured, existing.updatedAt))
+            }
             dao.updateNote(updated)
             searchDao.upsert(SearchIndexer.note(updated))
+            if (log) history?.record(ActivityEntityType.NOTE, id, ActivityAction.UPDATED, title)
             // The committed note now contains drafts up to the capture time; newer ones stay.
             draftDao.deleteIfNotNewer(id, captured.toEpochMilli())
         }
     }
 
-    override suspend fun getDraft(noteId: EntityId): NoteDraft? =
-        draftDao.get(noteId)?.let { NoteDraft(it.noteId, it.title, NoteDocument.decode(it.content), it.updatedAt) }
+    override suspend fun getDraft(noteId: EntityId): NoteDraft? {
+        // A locked note never keeps a plain-text draft.
+        if (dao.getNote(noteId)?.locked == true) return null
+        return draftDao.get(noteId)?.let { NoteDraft(it.noteId, it.title, NoteDocument.decode(it.content), it.updatedAt) }
+    }
 
     override suspend fun saveDraft(noteId: EntityId, title: String, document: NoteDocument) {
+        if (dao.getNote(noteId)?.locked == true) return
         draftDao.upsert(NoteDraftEntity(noteId, title, document.encode(), time.now()))
     }
 
@@ -197,6 +264,7 @@ class OfflineNoteRepository @Inject constructor(
 
     override suspend fun duplicateNote(id: EntityId, copySuffix: String): EntityId {
         val now = time.now()
+        val log = history?.active() == true
         return db.withTransaction {
             val source = dao.getNote(id) ?: throw IllegalStateException("Note $id not found")
             val copy = source.copy(
@@ -211,6 +279,7 @@ class OfflineNoteRepository @Inject constructor(
             val newId = dao.insertNote(copy)
             dao.insertTagRefs(dao.tagIds(id).map { NoteTagCrossRef(newId, it) })
             searchDao.upsert(SearchIndexer.note(copy.copy(id = newId)))
+            if (log) history?.record(ActivityEntityType.NOTE, newId, ActivityAction.CREATED, copy.title)
             newId
         }
     }
@@ -219,7 +288,13 @@ class OfflineNoteRepository @Inject constructor(
 
     override suspend fun setFavorite(id: EntityId, favorite: Boolean) = dao.setFavorite(id, favorite)
 
-    override suspend fun setArchived(id: EntityId, archived: Boolean) = dao.setArchived(id, archived)
+    override suspend fun setArchived(id: EntityId, archived: Boolean) {
+        val log = history?.active() == true
+        db.withTransaction {
+            dao.setArchived(id, archived)
+            if (log) dao.getNote(id)?.let { history?.record(ActivityEntityType.NOTE, id, if (archived) ActivityAction.ARCHIVED else ActivityAction.RESTORED, it.title) }
+        }
+    }
 
     override suspend fun setTags(id: EntityId, tags: List<Tag>) {
         db.withTransaction { writeTags(id, tags) }
@@ -235,10 +310,80 @@ class OfflineNoteRepository @Inject constructor(
     }
 
     override suspend fun deleteNote(id: EntityId) {
+        if (history?.active() != true) {
+            deleteNotePermanently(id)
+            return
+        }
+        db.withTransaction {
+            val note = dao.getNote(id) ?: return@withTransaction
+            if (note.deletedAt != null) return@withTransaction
+            dao.setDeletedAt(id, time.now().toEpochMilli())
+            searchDao.delete(SearchIndexer.rowId(SearchEntityType.NOTE, id))
+            draftDao.delete(id)
+            history?.record(ActivityEntityType.NOTE, id, ActivityAction.DELETED, note.title)
+        }
+    }
+
+    override suspend fun deleteNotePermanently(id: EntityId) {
         db.withTransaction {
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.NOTE, id))
             dao.deleteNote(id)
             db.attachmentDao().deleteOrphans()
         }
     }
+
+    override suspend fun discardNote(id: EntityId) {
+        deleteNotePermanently(id)
+        history?.forget(ActivityEntityType.NOTE, id)
+    }
+
+    /** Brings a note back from the trash; it is searchable again. */
+    suspend fun restoreFromTrash(id: EntityId) {
+        val log = history?.active() == true
+        db.withTransaction {
+            val note = dao.getNote(id) ?: return@withTransaction
+            if (note.deletedAt == null) return@withTransaction
+            dao.setDeletedAt(id, null)
+            searchDao.upsert(SearchIndexer.note(note.copy(deletedAt = null)))
+            if (log) history?.record(ActivityEntityType.NOTE, id, ActivityAction.RESTORED, note.title)
+        }
+    }
+
+    /** Ids of notes that went to the trash before [before], for the 30-day purge. */
+    suspend fun trashedBefore(before: java.time.Instant): List<EntityId> = dao.trashedBefore(before.toEpochMilli())
+
+    override suspend fun lockNote(id: EntityId) {
+        val now = time.now().toEpochMilli()
+        db.withTransaction {
+            val note = dao.getNote(id) ?: throw IllegalStateException("Note $id not found")
+            if (note.isEncrypted) return@withTransaction
+            val payload = seal(NoteDocument.decode(note.content))
+            val empty = NoteDocument.EMPTY.encode()
+            dao.setLocked(id, true, payload, empty, now)
+            // Plain-text copies of the body go: history versions, the draft and the search body.
+            db.noteVersionDao().deleteForNote(id)
+            draftDao.delete(id)
+            searchDao.upsert(SearchIndexer.note(note.copy(locked = true, encryptedPayload = payload, content = empty)))
+        }
+    }
+
+    override suspend fun removeLock(id: EntityId) {
+        val now = time.now().toEpochMilli()
+        db.withTransaction {
+            val note = dao.getNote(id) ?: throw IllegalStateException("Note $id not found")
+            val content = note.encryptedPayload?.let { open(it).encode() } ?: note.content
+            dao.setLocked(id, false, null, content, now)
+            searchDao.upsert(SearchIndexer.note(note.copy(locked = false, encryptedPayload = null, content = content)))
+        }
+    }
+
+    override suspend fun lockedContent(id: EntityId): NoteDocument {
+        val note = dao.getNote(id) ?: throw IllegalStateException("Note $id not found")
+        return note.encryptedPayload?.let(::open) ?: NoteDocument.decode(note.content)
+    }
+
+    override suspend fun encryptedPayload(id: EntityId): ByteArray? = dao.getNote(id)?.encryptedPayload
+
+    private fun open(payload: ByteArray): NoteDocument =
+        NoteDocument.decode((vault ?: throw VaultLockedException()).decrypt(payload).toString(Charsets.UTF_8))
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- رمز یادداشت‌های قفل‌شده (Plan-B Pro #36) -->
+    <string name="ui_passphrase">رمز عبور</string>
+    <string name="ui_passphrase_repeat">تکرار رمز عبور</string>
+    <string name="ui_passphrase_show">نمایش رمز عبور</string>
+    <string name="ui_passphrase_hide">پنهان کردن رمز عبور</string>
+    <string name="ui_passphrase_min">دست‌کم %1$s نویسه</string>
+    <string name="ui_passphrase_mismatch">دو رمز عبور یکسان نیستند</string>
+    <string name="ui_passphrase_setup_title">رمز یادداشت‌های قفل‌شده</string>
+    <string name="ui_passphrase_setup_confirm">تعیین رمز</string>
+    <string name="ui_passphrase_warning">یادداشت‌های قفل‌شده با این رمز رمزنگاری می‌شوند. اگر آن را فراموش کنید، هیچ‌کس، حتی Plan-B، نمی‌تواند دوباره بازشان کند. رمز را جای امنی یادداشت کنید.</string>
+    <string name="ui_passphrase_unlock_title">باز کردن یادداشت‌های قفل‌شده</string>
+    <string name="ui_passphrase_unlock">باز کردن</string>
+    <string name="ui_passphrase_wrong">رمز عبور درست نیست</string>
+    <string name="ui_passphrase_fingerprint">استفاده از اثر انگشت</string>
+</resources>

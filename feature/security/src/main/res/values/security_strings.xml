@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lock screen -->
+    <string name="lock_title">Plan-B is locked</string>
+    <string name="lock_message">Unlock with your fingerprint, face or screen lock.</string>
+    <string name="lock_unlock">Unlock</string>
+    <string name="lock_prompt_title">Unlock Plan-B</string>
+    <string name="lock_prompt_subtitle">Confirm it\'s you</string>
+
+    <!-- Security settings -->
+    <string name="security_title">Security</string>
+    <string name="security_ok">OK</string>
+    <string name="security_app_lock">App lock</string>
+    <string name="security_app_lock_summary">Ask for your fingerprint, face or screen lock when opening Plan-B</string>
+    <string name="security_lock_confirm_title">Confirm to turn on App lock</string>
+    <string name="security_no_device_lock">Set up a screen lock (PIN, pattern, password or fingerprint) in your device settings first. App lock uses it to confirm it\'s you.</string>
+    <string name="security_timeout">Lock after</string>
+    <string name="security_timeout_now">Immediately</string>
+    <plurals name="security_timeout_minutes">
+        <item quantity="one">%1$s minute in the background</item>
+        <item quantity="other">%1$s minutes in the background</item>
+    </plurals>
+    <string name="security_hide_recents">Hide in recent apps</string>
+    <string name="security_hide_recents_summary">Show a blank preview in the recent-apps overview</string>
+    <string name="security_notes">Locked notes</string>
+    <string name="security_notes_summary">A locked note is encrypted with your passphrase. Only its title stays readable: it can be found in search by title, while its text never appears in search, exports or history. Backups keep it encrypted, so it opens on another device with the same passphrase.</string>
+    <string name="security_set_passphrase">Set a passphrase</string>
+    <string name="security_set_passphrase_summary">Needed before you lock your first note</string>
+    <string name="security_passphrase">Passphrase</string>
+    <string name="security_notes_open">Locked notes are open until Plan-B locks again</string>
+    <string name="security_notes_closed">Locked notes are closed</string>
+    <string name="security_fingerprint">Open locked notes with fingerprint</string>
+    <string name="security_fingerprint_summary">The key stays in this device\'s secure hardware; the passphrase still works everywhere</string>
+    <string name="security_fingerprint_prompt">Use your fingerprint for locked notes</string>
+    <string name="security_no_fingerprint">This device has no strong fingerprint or face unlock set up, so locked notes open with the passphrase only.</string>
+    <string name="security_lock_notes_now">Close locked notes now</string>
+    <string name="security_lock_notes_now_summary">They ask for the passphrase again</string>
+    <string name="security_passphrase_set">Passphrase set. You can now lock notes.</string>
+    <string name="security_notes_locked">Locked notes are closed</string>
+    <string name="security_fingerprint_on">Fingerprint can now open locked notes</string>
+
+    <!-- Trash -->
+    <string name="trash_title">Trash</string>
+    <string name="trash_hint">Deleted tasks and notes stay here for %1$s days, then they are deleted permanently.</string>
+    <string name="trash_empty">Empty trash</string>
+    <string name="trash_empty_confirm">Everything in the trash will be deleted permanently. This cannot be undone.</string>
+    <string name="trash_empty_title">The trash is empty</string>
+    <string name="trash_empty_message">Tasks and notes you delete appear here.</string>
+    <string name="trash_restore">Restore</string>
+    <string name="trash_delete_forever">Delete forever</string>
+    <string name="trash_delete_confirm">This item will be deleted permanently. This cannot be undone.</string>
+    <string name="trash_deleted_on">Deleted %1$s</string>
+    <plurals name="trash_subtasks">
+        <item quantity="one">%1$s subtask</item>
+        <item quantity="other">%1$s subtasks</item>
+    </plurals>
+    <plurals name="trash_days_left">
+        <item quantity="one">%1$s day left</item>
+        <item quantity="other">%1$s days left</item>
+    </plurals>
+    <string name="trash_restored">Restored</string>
+    <string name="trash_deleted">Deleted permanently</string>
+    <plurals name="trash_emptied">
+        <item quantity="one">%1$s item deleted permanently</item>
+        <item quantity="other">%1$s items deleted permanently</item>
+    </plurals>
+    <string name="untitled">Untitled</string>
+
+    <!-- Activity -->
+    <string name="activity_title">Activity</string>
+    <string name="activity_item_title">History</string>
+    <string name="activity_empty_title">No activity yet</string>
+    <string name="activity_empty_message">Changes to your tasks, notes, projects, events, habits and goals appear here.</string>
+    <string name="activity_line">%1$s · %2$s</string>
+    <string name="activity_created">Created</string>
+    <string name="activity_updated">Edited</string>
+    <string name="activity_completed">Completed</string>
+    <string name="activity_reopened">Reopened</string>
+    <string name="activity_deleted">Deleted</string>
+    <string name="activity_restored">Restored</string>
+    <string name="activity_archived">Archived</string>
+    <string name="filter_all">All</string>
+    <string name="filter_tasks">Tasks</string>
+    <string name="filter_notes">Notes</string>
+    <string name="type_task">Task</string>
+    <string name="type_project">Project</string>
+    <string name="type_note">Note</string>
+    <string name="type_notebook">Notebook</string>
+    <string name="type_habit">Habit</string>
+    <string name="type_goal">Goal</string>
+    <string name="type_event">Event</string>
+</resources>

@@ -20,6 +20,18 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
 - Infrastructure for an optional AI assistant that uses the user's own provider key (off by
   default; the key is stored encrypted and never backed up).
 
+- Plan-B Pro **App lock and locked notes** (#36): lock Plan-B with the device's fingerprint,
+  face or screen lock (immediately or after 1, 5 or 15 minutes in the background, optionally
+  hidden in recent apps), and lock single notes with a passphrase (PBKDF2-HMAC-SHA256 +
+  AES-256-GCM, optional fingerprint unlock). Locked notes are searchable by title only and stay
+  encrypted in backups. Settings › Security.
+- Plan-B Pro **automatic backups** (#37): daily or weekly (optionally only while charging) into a
+  folder you choose, also on Google Drive, keeping the newest 21; last result and "Back up now"
+  in Settings › Backup & restore; a notification only when a backup fails.
+- Plan-B Pro **30-day trash and activity history** (#38): deleted tasks and notes can be restored
+  for 30 days (More › Trash); a history of changes to tasks, notes, projects, events, habits and
+  goals (More › Activity, and from the task and note editors). Free users' deletions stay as before.
+
 ### Changed
 - The app may now use the Internet, only for the optional AI assistant. The release build may
   request only the permissions listed in `tools/allowed-permissions.txt` (checked in CI).

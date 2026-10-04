@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_auto_channel">پشتیبان‌گیری خودکار</string>
+    <string name="backup_auto_failed_title">پشتیبان‌گیری خودکار انجام نشد</string>
+    <string name="backup_auto_failed_text">برای بررسی پوشهٔ پشتیبان، تنظیمات › پشتیبان‌گیری و بازیابی را باز کنید.</string>
+</resources>

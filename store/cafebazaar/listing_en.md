@@ -55,7 +55,9 @@ your own provider key. Monthly subscription or a one-time lifetime purchase thro
 **Permissions** — notifications, exact alarms and start at boot are used only for your
 reminders. Internet is used only by the optional AI assistant, which stays off until you turn it
 on with your own key; then only the text you choose is sent, directly to the provider you chose.
-Payment for Pro goes through Cafe Bazaar.
+Payment for Pro goes through Cafe Bazaar. Biometrics are used only for the Pro App lock and
+locked notes (your device's own fingerprint or screen lock), and "keep awake" only lets Pro
+automatic backups and the trash clean-up finish.
 
 ## Keywords
 

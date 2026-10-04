@@ -13,4 +13,6 @@ dependencies {
     api(projects.core.common)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
+    // App lock and locked notes (Plan-B Pro #36): the device's own lock through BiometricPrompt.
+    api(libs.androidx.biometric)
 }

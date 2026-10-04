@@ -44,6 +44,7 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Numbers
 import androidx.compose.material.icons.rounded.PrivacyTip
@@ -156,6 +157,7 @@ fun SettingsDestination(
     onOpenPro: () -> Unit,
     onCustomizeToday: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
+    onOpenSecurity: () -> Unit = {},
 ) {
     val settings by viewModel.state.collectAsStateWithLifecycle()
     val entitlement by viewModel.entitlement.collectAsStateWithLifecycle()
@@ -178,6 +180,7 @@ fun SettingsDestination(
             else -> ProStatus.MONTHLY
         },
         onOpenPro = onOpenPro,
+        onOpenSecurity = onOpenSecurity,
         onLanguage = { language ->
             viewModel.update { it.copy(language = language) }
             AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.tag))
@@ -197,6 +200,7 @@ fun SettingsScreen(
     onLanguage: (AppLanguage) -> Unit,
     proStatus: ProStatus = ProStatus.FREE,
     onOpenPro: () -> Unit = {},
+    onOpenSecurity: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -354,6 +358,11 @@ fun SettingsScreen(
                     settings.hapticsEnabled) { v -> onUpdate { it.copy(hapticsEnabled = v) } }
             }
             item { SettingsRow(stringResource(R.string.settings_dashboard), icon = Icons.Rounded.Dashboard, onClick = onCustomizeToday) }
+            item { PlannerSectionHeader(stringResource(R.string.settings_security)) }
+            item {
+                SettingsRow(stringResource(R.string.settings_security), icon = Icons.Rounded.Lock,
+                    subtitle = stringResource(R.string.settings_security_summary), onClick = onOpenSecurity)
+            }
             item { PlannerSectionHeader(stringResource(R.string.settings_data)) }
             item {
                 SettingsRow(stringResource(R.string.settings_backup_restore), icon = Icons.Rounded.Backup,

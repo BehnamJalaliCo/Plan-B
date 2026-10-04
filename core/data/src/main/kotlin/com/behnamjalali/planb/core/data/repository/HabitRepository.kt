@@ -4,6 +4,9 @@ import androidx.room.withTransaction
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.SearchIndexer
+import com.behnamjalali.planb.core.data.DataHistory
+import com.behnamjalali.planb.core.model.ActivityAction
+import com.behnamjalali.planb.core.model.ActivityEntityType
 import com.behnamjalali.planb.core.data.toEntity
 import com.behnamjalali.planb.core.data.toModel
 import com.behnamjalali.planb.core.database.PlanBDatabase
@@ -42,6 +45,8 @@ class OfflineHabitRepository @Inject constructor(
     private val searchDao: SearchDao,
     private val time: TimeProvider,
     private val reminders: ReminderScheduler,
+    /** Activity history (Plan-B Pro); null logs nothing. */
+    private val history: DataHistory? = null,
 ) : HabitRepository {
     override fun observeHabits(from: LocalDate, to: LocalDate, archived: Boolean): Flow<List<HabitWithHistory>> =
         combine(dao.observeHabits(archived), dao.observeCompletions(from.toEpochDay(), to.toEpochDay())) { habits, completions ->
@@ -63,11 +68,13 @@ class OfflineHabitRepository @Inject constructor(
     override suspend fun save(habit: Habit): EntityId {
         require(habit.title.isNotBlank()) { "Habit title must not be blank" }
         val now = time.now()
+        val log = history?.active() == true
         val id = db.withTransaction {
             val existing = if (habit.id != NEW_ID) dao.getHabit(habit.id) else null
             val entity = habit.copy(createdAt = existing?.createdAt ?: now, updatedAt = now).toEntity()
             val id = if (existing == null) dao.insert(entity.copy(id = 0)) else entity.id.also { dao.update(entity) }
             searchDao.upsert(SearchIndexer.habit(entity.copy(id = id)))
+            if (log) history?.record(ActivityEntityType.HABIT, id, if (existing == null) ActivityAction.CREATED else ActivityAction.UPDATED, habit.title)
             id
         }
         reminders.syncHabit(id)
@@ -80,14 +87,21 @@ class OfflineHabitRepository @Inject constructor(
 
     override suspend fun setArchived(id: EntityId, archived: Boolean) {
         val entity = dao.getHabit(id) ?: return
-        dao.update(entity.copy(archived = archived, updatedAt = time.now()))
+        val log = history?.active() == true
+        db.withTransaction {
+            dao.update(entity.copy(archived = archived, updatedAt = time.now()))
+            if (log) history?.record(ActivityEntityType.HABIT, id, if (archived) ActivityAction.ARCHIVED else ActivityAction.RESTORED, entity.title)
+        }
         reminders.syncHabit(id)
     }
 
     override suspend fun delete(id: EntityId) {
+        val log = history?.active() == true
         db.withTransaction {
+            val title = dao.getHabit(id)?.title
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.HABIT, id))
             dao.delete(id)
+            if (log && title != null) history?.record(ActivityEntityType.HABIT, id, ActivityAction.DELETED, title)
         }
         reminders.cancelHabit(id)
     }

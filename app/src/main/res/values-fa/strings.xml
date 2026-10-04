@@ -39,4 +39,8 @@
     <string name="more_section_pro">Plan-B Pro</string>
     <string name="more_pro">Plan-B Pro</string>
     <string name="more_pro_sub">ابزارهای تازه؛ امکانات فعلی رایگان می‌ماند</string>
+    <string name="more_trash">سطل زباله</string>
+    <string name="more_trash_sub">کارها و یادداشت‌های حذف‌شده، تا یک ماه</string>
+    <string name="more_activity">فعالیت‌ها</string>
+    <string name="more_activity_sub">چه چیزی و چه زمانی تغییر کرد</string>
 </resources>

@@ -273,7 +273,28 @@ interface ActivityLogDao {
     @Query("SELECT * FROM activity_log WHERE entity_type = :entityType AND entity_id = :entityId ORDER BY at DESC, id DESC")
     fun observeForEntity(entityType: String, entityId: Long): Flow<List<ActivityLogEntity>>
 
+    @Query("SELECT * FROM activity_log WHERE entity_type = :entityType ORDER BY at DESC, id DESC LIMIT :limit")
+    fun observeRecentOfType(entityType: String, limit: Int): Flow<List<ActivityLogEntity>>
+
+    /** The newest entry of one item (to merge a burst of edits into one entry). */
+    @Query("SELECT * FROM activity_log WHERE entity_type = :entityType AND entity_id = :entityId ORDER BY at DESC, id DESC LIMIT 1")
+    suspend fun latestFor(entityType: String, entityId: Long): ActivityLogEntity?
+
     @Insert suspend fun insert(entry: ActivityLogEntity): Long
+
+    /** Moves an entry to [at] with a new [summary] (a later edit of the same item). */
+    @Query("UPDATE activity_log SET at = :at, summary = :summary WHERE id = :id")
+    suspend fun touch(id: Long, at: Long, summary: String)
+
+    @Query("DELETE FROM activity_log WHERE entity_type = :entityType AND entity_id = :entityId")
+    suspend fun deleteForEntity(entityType: String, entityId: Long)
+
+    @Query("SELECT COUNT(*) FROM activity_log")
+    suspend fun count(): Int
+
+    /** Retention: keeps only the newest [keep] entries. */
+    @Query("DELETE FROM activity_log WHERE id IN (SELECT id FROM activity_log ORDER BY at DESC, id DESC LIMIT -1 OFFSET :keep)")
+    suspend fun pruneToNewest(keep: Int): Int
 
     /** Retention: drops entries older than [before] (epoch ms). */
     @Query("DELETE FROM activity_log WHERE at < :before")

@@ -74,6 +74,7 @@
     <string name="task_editor_subtask_hint">زیرکار جدید</string>
     <string name="task_editor_subtasks_after_save">برای افزودن زیرکار، ابتدا کار را ذخیره کنید.</string>
     <string name="task_editor_delete">حذف کار</string>
+    <string name="task_editor_activity">فعالیت‌ها</string>
     <string name="task_editor_delete_confirm">این کار و زیرکارهایش حذف شوند؟ این عمل برگشت‌پذیر نیست.</string>
     <string name="task_editor_title_required">عنوان الزامی است</string>
     <string name="task_editor_not_set">تعیین نشده</string>
