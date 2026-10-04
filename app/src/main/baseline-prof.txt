@@ -1,0 +1,36 @@
+# Curated baseline profile for Plan-B's own code (libraries such as Compose, Room and
+# Navigation ship their own profiles). Start-up and the main tabs are precompiled so the
+# first frames are smooth right after install.
+#
+# A measured profile can be regenerated on a device or Gradle-managed emulator with
+#   ./gradlew :app:generateBaselineProfile
+# which writes app/src/release/generated/baselineProfiles/ (merged with this file).
+
+# Application start-up, activity, navigation host and app chrome
+HSPLcom/behnamjalali/planb/PlanBApplication;->**(**)**
+HSPLcom/behnamjalali/planb/MainActivity**;->**(**)**
+HSPLcom/behnamjalali/planb/MainViewModel**;->**(**)**
+HSPLcom/behnamjalali/planb/AppLocales;->**(**)**
+HSPLcom/behnamjalali/planb/ui/**;->**(**)**
+HSPLcom/behnamjalali/planb/navigation/**;->**(**)**
+
+# Design system, shared UI, formatting and calendars (used on every screen)
+HSPLcom/behnamjalali/planb/core/designsystem/**;->**(**)**
+HSPLcom/behnamjalali/planb/core/ui/**;->**(**)**
+HSPLcom/behnamjalali/planb/core/datetime/**;->**(**)**
+HSPLcom/behnamjalali/planb/core/common/**;->**(**)**
+HSPLcom/behnamjalali/planb/core/model/**;->**(**)**
+
+# Data layer read paths for Today and the main tabs
+HSPLcom/behnamjalali/planb/core/data/**;->**(**)**
+HSPLcom/behnamjalali/planb/core/database/**;->**(**)**
+HSPLcom/behnamjalali/planb/core/datastore/**;->**(**)**
+
+# Top-level destinations
+HSPLcom/behnamjalali/planb/feature/today/**;->**(**)**
+HSPLcom/behnamjalali/planb/feature/tasks/**;->**(**)**
+HSPLcom/behnamjalali/planb/feature/calendar/**;->**(**)**
+HSPLcom/behnamjalali/planb/feature/notebooks/**;->**(**)**
+
+# Classes loaded during start-up
+Lcom/behnamjalali/planb/**;

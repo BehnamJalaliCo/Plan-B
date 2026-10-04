@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="planb_window_background">#FF14161F</color>
+    <color name="planb_splash_icon_background">#FF3A3178</color>
 </resources>
