@@ -42,4 +42,10 @@
     <string name="event_editor_not_set">تعیین نشده</string>
     <string name="event_editor_failed">ذخیرهٔ رویداد ممکن نشد.</string>
     <string name="event_editor_not_found">این رویداد دیگر وجود ندارد.</string>
+    <string name="calendar_task_completed">کار انجام شد</string>
+    <string name="calendar_undo">بازگردانی</string>
+    <string name="event_editor_series_notice">این رویداد تکرارشونده است. تغییرات روی همهٔ تکرارهای آن اعمال می‌شود.</string>
+    <string name="event_editor_delete_series_title">رویداد تکرارشونده حذف شود؟</string>
+    <string name="event_editor_delete_series_confirm">همهٔ تکرارهای این رویداد در همهٔ تاریخ‌ها حذف می‌شوند. این کار برگشت‌پذیر نیست.</string>
+    <string name="event_editor_delete_all">حذف همه</string>
 </resources>

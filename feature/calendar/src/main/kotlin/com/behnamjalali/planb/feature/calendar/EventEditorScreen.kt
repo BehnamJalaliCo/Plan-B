@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -51,6 +53,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.behnamjalali.planb.core.designsystem.component.PlannerButton
+import com.behnamjalali.planb.core.designsystem.component.PlannerDialog
 import com.behnamjalali.planb.core.designsystem.component.PlannerIconButton
 import com.behnamjalali.planb.core.designsystem.component.PlannerTextField
 import com.behnamjalali.planb.core.designsystem.component.PlannerTopBar
@@ -99,6 +102,7 @@ fun EventEditorDestination(onClose: () -> Unit, viewModel: EventEditorViewModel 
     EventEditorScreen(
         form = form,
         isNew = viewModel.isNew,
+        isSeries = viewModel.isSeries,
         calendarSystem = calendarSystem,
         snackbarHostState = snackbar,
         onClose = requestClose,
@@ -119,6 +123,8 @@ fun EventEditorDestination(onClose: () -> Unit, viewModel: EventEditorViewModel 
 fun EventEditorScreen(
     form: EventForm,
     isNew: Boolean,
+    /** Editing a saved repeating event: every change and a delete apply to the whole series. */
+    isSeries: Boolean,
     calendarSystem: CalendarSystem,
     snackbarHostState: SnackbarHostState,
     onClose: () -> Unit,
@@ -182,6 +188,23 @@ fun EventEditorScreen(
                 isError = titleTouched && form.title.isBlank(),
                 supportingText = if (titleTouched && form.title.isBlank()) stringResource(R.string.event_editor_title_required) else null,
             )
+            if (isSeries) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.medium)
+                        .padding(Spacing.md),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Rounded.Repeat, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Text(
+                        stringResource(R.string.event_editor_series_notice),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
+            }
             EditorRow(Icons.Rounded.Event, stringResource(R.string.event_editor_date), formatter.weekdayDate(form.localDate, today), { picker = "date" })
             Row(
                 Modifier
@@ -268,14 +291,28 @@ fun EventEditorScreen(
         })
     }
     if (confirmDelete) {
-        ConfirmDeleteDialog(
-            title = stringResource(R.string.event_editor_delete),
-            message = stringResource(R.string.event_editor_delete_confirm),
-            onDismiss = { confirmDelete = false },
-            onConfirm = {
-                confirmDelete = false
-                onDelete()
-            },
-        )
+        if (isSeries) {
+            PlannerDialog(
+                title = stringResource(R.string.event_editor_delete_series_title),
+                message = stringResource(R.string.event_editor_delete_series_confirm),
+                onDismiss = { confirmDelete = false },
+                confirmLabel = stringResource(R.string.event_editor_delete_all),
+                destructive = true,
+                onConfirm = {
+                    confirmDelete = false
+                    onDelete()
+                },
+            )
+        } else {
+            ConfirmDeleteDialog(
+                title = stringResource(R.string.event_editor_delete),
+                message = stringResource(R.string.event_editor_delete_confirm),
+                onDismiss = { confirmDelete = false },
+                onConfirm = {
+                    confirmDelete = false
+                    onDelete()
+                },
+            )
+        }
     }
 }

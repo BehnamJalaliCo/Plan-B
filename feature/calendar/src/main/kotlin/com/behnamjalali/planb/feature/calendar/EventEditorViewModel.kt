@@ -110,6 +110,12 @@ class EventEditorViewModel @Inject constructor(
     val isNew: Boolean get() = route.eventId == NEW_ID
     val isDirty: Boolean get() = original != null && original != form.value
 
+    /** A saved repeating event: edits and deletes apply to every occurrence (there are no per-date exceptions). */
+    val isSeries: Boolean get() = !isNew && original?.recurrence != null
+
+    /** True from the first Save until it fails; a second tap must not insert the event twice. */
+    private var saving = false
+
     init {
         if (needsLoad) {
             viewModelScope.launch {
@@ -147,14 +153,18 @@ class EventEditorViewModel @Inject constructor(
 
     fun save() {
         val current = form.value
-        if (!current.valid) return
+        if (saving || !current.valid) return
+        saving = true
         viewModelScope.launch {
             runCatchingSafely { events.save(current.toEvent()) }
                 .onSuccess {
                     original = form.value
                     _events.tryEmit(EventEditorEvent.Saved)
                 }
-                .onFailure { _events.tryEmit(EventEditorEvent.Failed) }
+                .onFailure {
+                    saving = false
+                    _events.tryEmit(EventEditorEvent.Failed)
+                }
         }
     }
 
