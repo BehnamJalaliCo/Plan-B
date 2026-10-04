@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_title">Calendar</string>
+    <string name="calendar_view_day">Day</string>
+    <string name="calendar_view_week">Week</string>
+    <string name="calendar_view_month">Month</string>
+    <string name="calendar_view_agenda">Agenda</string>
+    <string name="calendar_today">Today</string>
+    <string name="calendar_previous">Previous</string>
+    <string name="calendar_next">Next</string>
+    <string name="calendar_new_event">New event</string>
+    <string name="calendar_all_day">All day</string>
+    <string name="calendar_tasks_due">Tasks due</string>
+    <string name="calendar_events">Events</string>
+    <string name="calendar_nothing_day">Nothing planned for this day.</string>
+    <string name="calendar_nothing_agenda_title">A quiet stretch</string>
+    <string name="calendar_nothing_agenda">No events or tasks in the next 30 days.</string>
+    <string name="calendar_items_count">%1$s items</string>
+    <string name="calendar_error">Could not load the calendar.</string>
+    <string name="calendar_week_range">%1$s – %2$s</string>
+    <!-- Event editor -->
+    <string name="event_editor_new">New event</string>
+    <string name="event_editor_edit">Edit event</string>
+    <string name="event_editor_title">Title</string>
+    <string name="event_editor_description">Description</string>
+    <string name="event_editor_notes">Notes</string>
+    <string name="event_editor_date">Date</string>
+    <string name="event_editor_all_day">All day</string>
+    <string name="event_editor_start">Starts</string>
+    <string name="event_editor_end">Ends</string>
+    <string name="event_editor_reminder">Reminder</string>
+    <string name="event_editor_repeat">Repeat</string>
+    <string name="event_editor_color">Color</string>
+    <string name="event_editor_save">Save</string>
+    <string name="event_editor_delete">Delete event</string>
+    <string name="event_editor_delete_confirm">Delete this event? Repeating events are deleted for all dates.</string>
+    <string name="event_editor_delete_action">Delete</string>
+    <string name="event_editor_title_required">A title is required</string>
+    <string name="event_editor_end_before_start">End time must be after the start time</string>
+    <string name="event_editor_not_set">Not set</string>
+    <string name="event_editor_failed">Could not save the event.</string>
+    <string name="event_editor_not_found">This event no longer exists.</string>
+</resources>

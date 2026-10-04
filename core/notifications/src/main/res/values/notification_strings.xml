@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_reminders">Reminders</string>
+    <string name="notif_channel_reminders_desc">Task, event and habit reminders</string>
+    <string name="notif_channel_focus">Focus sessions</string>
+    <string name="notif_channel_focus_desc">Alerts when a focus session ends</string>
+    <string name="notif_public_text">You have a reminder</string>
+    <string name="notif_task_title">Task reminder</string>
+    <string name="notif_event_title">Upcoming event</string>
+    <string name="notif_habit_title">Habit reminder</string>
+    <string name="notif_habit_text">Time for: %1$s</string>
+    <string name="notif_focus_title">Focus session complete</string>
+    <string name="notif_focus_text">Nice work. Take a short break.</string>
+    <string name="app_label_fallback" translatable="false">Plan-B</string>
+</resources>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Reminder offsets -->
+    <string name="reminder_none">No reminder</string>
+    <string name="reminder_at_time">At due time</string>
+    <plurals name="reminder_minutes_before">
+        <item quantity="one">%1$s minute before</item>
+        <item quantity="other">%1$s minutes before</item>
+    </plurals>
+    <plurals name="reminder_hours_before">
+        <item quantity="one">%1$s hour before</item>
+        <item quantity="other">%1$s hours before</item>
+    </plurals>
+    <string name="reminder_day_before">1 day before</string>
+    <!-- Recurrence -->
+    <string name="repeat_none">Does not repeat</string>
+    <string name="repeat_daily">Every day</string>
+    <string name="repeat_weekdays">Every weekday</string>
+    <string name="repeat_weekly">Every week</string>
+    <string name="repeat_monthly">Every month</string>
+    <string name="repeat_yearly">Every year</string>
+    <string name="repeat_custom">Custom…</string>
+    <string name="repeat_custom_title">Custom repeat</string>
+    <string name="repeat_every">Repeat every</string>
+    <string name="repeat_unit_days">Days</string>
+    <string name="repeat_unit_weeks">Weeks</string>
+    <string name="repeat_unit_months">Months</string>
+    <string name="repeat_unit_years">Years</string>
+    <string name="repeat_on_days">On</string>
+    <string name="repeat_ends">Ends</string>
+    <string name="repeat_ends_never">Never</string>
+    <string name="repeat_ends_on">On date</string>
+    <string name="repeat_ends_after">After occurrences</string>
+    <string name="repeat_count">Occurrences</string>
+    <string name="repeat_interval">Interval</string>
+    <string name="repeat_summary_every_n_days">Every %1$s days</string>
+    <string name="repeat_summary_every_n_weeks">Every %1$s weeks</string>
+    <string name="repeat_summary_every_n_months">Every %1$s months</string>
+    <string name="repeat_summary_every_n_years">Every %1$s years</string>
+    <string name="repeat_summary_on">%1$s on %2$s</string>
+    <string name="repeat_summary_until">%1$s, until %2$s</string>
+    <string name="repeat_summary_count">%1$s, %2$s times</string>
+    <string name="repeat_calendar_hint">Months and years follow your calendar setting (%1$s).</string>
+    <string name="calendar_jalali">Jalali</string>
+    <string name="calendar_gregorian">Gregorian</string>
+</resources>

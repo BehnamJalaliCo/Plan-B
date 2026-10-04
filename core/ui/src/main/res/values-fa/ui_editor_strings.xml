@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reminder_none">بدون یادآور</string>
+    <string name="reminder_at_time">در زمان سررسید</string>
+    <plurals name="reminder_minutes_before">
+        <item quantity="one">%1$s دقیقه قبل</item>
+        <item quantity="other">%1$s دقیقه قبل</item>
+    </plurals>
+    <plurals name="reminder_hours_before">
+        <item quantity="one">%1$s ساعت قبل</item>
+        <item quantity="other">%1$s ساعت قبل</item>
+    </plurals>
+    <string name="reminder_day_before">۱ روز قبل</string>
+    <string name="repeat_none">بدون تکرار</string>
+    <string name="repeat_daily">هر روز</string>
+    <string name="repeat_weekdays">روزهای کاری</string>
+    <string name="repeat_weekly">هر هفته</string>
+    <string name="repeat_monthly">هر ماه</string>
+    <string name="repeat_yearly">هر سال</string>
+    <string name="repeat_custom">سفارشی…</string>
+    <string name="repeat_custom_title">تکرار سفارشی</string>
+    <string name="repeat_every">تکرار هر</string>
+    <string name="repeat_unit_days">روز</string>
+    <string name="repeat_unit_weeks">هفته</string>
+    <string name="repeat_unit_months">ماه</string>
+    <string name="repeat_unit_years">سال</string>
+    <string name="repeat_on_days">در روزهای</string>
+    <string name="repeat_ends">پایان</string>
+    <string name="repeat_ends_never">هرگز</string>
+    <string name="repeat_ends_on">در تاریخ</string>
+    <string name="repeat_ends_after">پس از چند بار</string>
+    <string name="repeat_count">تعداد دفعات</string>
+    <string name="repeat_interval">فاصله</string>
+    <string name="repeat_summary_every_n_days">هر %1$s روز</string>
+    <string name="repeat_summary_every_n_weeks">هر %1$s هفته</string>
+    <string name="repeat_summary_every_n_months">هر %1$s ماه</string>
+    <string name="repeat_summary_every_n_years">هر %1$s سال</string>
+    <string name="repeat_summary_on">%1$s در %2$s</string>
+    <string name="repeat_summary_until">%1$s، تا %2$s</string>
+    <string name="repeat_summary_count">%1$s، %2$s بار</string>
+    <string name="repeat_calendar_hint">ماه و سال بر اساس تقویم انتخابی شما محاسبه می‌شود (%1$s).</string>
+    <string name="calendar_jalali">شمسی</string>
+    <string name="calendar_gregorian">میلادی</string>
+</resources>

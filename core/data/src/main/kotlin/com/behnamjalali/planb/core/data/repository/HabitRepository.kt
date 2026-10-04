@@ -27,6 +27,8 @@ interface HabitRepository {
     fun observeHabits(from: LocalDate, to: LocalDate, archived: Boolean = false): Flow<List<HabitWithHistory>>
     fun observeHabit(id: EntityId): Flow<HabitWithHistory?>
     suspend fun getHabit(id: EntityId): Habit?
+    suspend fun habitsWithReminders(): List<Habit>
+    suspend fun amountOn(habitId: EntityId, date: LocalDate): Int
     suspend fun save(habit: Habit): EntityId
     suspend fun checkIn(habitId: EntityId, date: LocalDate, delta: Int = 1)
     suspend fun setArchived(id: EntityId, archived: Boolean)
@@ -55,6 +57,8 @@ internal class OfflineHabitRepository @Inject constructor(
         }
 
     override suspend fun getHabit(id: EntityId) = dao.getHabit(id)?.toModel()
+    override suspend fun habitsWithReminders() = dao.habitsWithReminders().map { it.toModel() }
+    override suspend fun amountOn(habitId: EntityId, date: LocalDate) = dao.completion(habitId, date.toEpochDay())?.amount ?: 0
 
     override suspend fun save(habit: Habit): EntityId {
         require(habit.title.isNotBlank()) { "Habit title must not be blank" }

@@ -67,4 +67,21 @@
     <string name="ui_icon_travel">Travel</string>
     <string name="ui_icon_money">Money</string>
     <string name="ui_icon_leaf">Nature</string>
+    <string name="ui_list_separator">", "</string>
+    <string name="ui_discard_title">Discard changes?</string>
+    <string name="ui_discard_message">Your unsaved changes will be lost.</string>
+    <string name="ui_discard">Discard</string>
+    <string name="ui_keep_editing">Keep editing</string>
+    <string name="ui_save">Save</string>
+    <string name="ui_delete">Delete</string>
+    <string name="ui_title">Title</string>
+    <string name="ui_title_required">A title is required</string>
+    <string name="ui_not_set">Not set</string>
+    <string name="ui_error_generic">Something went wrong. Your data was not changed.</string>
+    <string name="ui_not_found">This item no longer exists.</string>
+    <string name="ui_archive">Archive</string>
+    <string name="ui_unarchive">Restore from archive</string>
+    <string name="ui_rename">Rename</string>
+    <string name="ui_edit">Edit</string>
+    <string name="ui_more">More options</string>
 </resources>

@@ -1,0 +1,74 @@
+package com.behnamjalali.planb.feature.tasks
+
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.behnamjalali.planb.core.common.NumberFormatter
+import com.behnamjalali.planb.core.model.EntityId
+import com.behnamjalali.planb.core.ui.PlannerLocals
+
+@Composable
+fun TasksDestination(
+    onOpenTask: (EntityId) -> Unit,
+    onNewTask: () -> Unit,
+    snackbarHostState: SnackbarHostState,
+    contentPadding: PaddingValues,
+    viewModel: TasksViewModel = hiltViewModel(),
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val numbers: NumberFormatter = PlannerLocals.numbers
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { message ->
+            when (message) {
+                is TasksMessage.Deleted -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = context.getString(R.string.tasks_deleted, numbers.format(message.count)),
+                        actionLabel = context.getString(R.string.tasks_undo),
+                        duration = SnackbarDuration.Short,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) viewModel.undoDelete() else viewModel.commitDelete()
+                }
+                is TasksMessage.Completed -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = context.getString(R.string.tasks_completed_message),
+                        actionLabel = context.getString(R.string.tasks_undo),
+                        duration = SnackbarDuration.Short,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) viewModel.undoComplete(message.taskId, message.nextOccurrenceId)
+                }
+                TasksMessage.Failed -> snackbarHostState.showSnackbar(context.getString(R.string.tasks_error))
+            }
+        }
+    }
+    TasksScreen(
+        state = state,
+        contentPadding = contentPadding,
+        callbacks = TasksCallbacks(
+            onViewChange = viewModel::setView,
+            onProjectFilter = viewModel::setProject,
+            onTagFilter = viewModel::setTag,
+            onSortChange = viewModel::setSort,
+            onQueryChange = viewModel::setQuery,
+            onOpenTask = onOpenTask,
+            onNewTask = onNewTask,
+            onToggleComplete = viewModel::setCompleted,
+            onToggleSelection = viewModel::toggleSelection,
+            onClearSelection = viewModel::clearSelection,
+            onSelectAll = viewModel::selectAll,
+            onCompleteSelected = viewModel::completeSelected,
+            onArchiveSelected = viewModel::archiveSelected,
+            onMoveSelected = viewModel::moveSelected,
+            onDelete = viewModel::requestDelete,
+            onDuplicate = viewModel::duplicate,
+            onMove = viewModel::move,
+        ),
+    )
+}

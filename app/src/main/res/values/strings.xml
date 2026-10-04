@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">Plan-B</string>
+    <string name="nav_today">Today</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_notebooks">Notebooks</string>
+    <string name="nav_more">More</string>
+    <string name="quick_capture">Quick capture</string>
+    <string name="more_title">More</string>
+    <string name="more_section_plan">Plan</string>
+    <string name="more_section_grow">Grow</string>
+    <string name="more_section_app">App</string>
 </resources>

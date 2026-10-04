@@ -67,4 +67,21 @@
     <string name="ui_icon_travel">سفر</string>
     <string name="ui_icon_money">مالی</string>
     <string name="ui_icon_leaf">طبیعت</string>
+    <string name="ui_list_separator">"، "</string>
+    <string name="ui_discard_title">تغییرات نادیده گرفته شود؟</string>
+    <string name="ui_discard_message">تغییرات ذخیره‌نشدهٔ شما از بین می‌رود.</string>
+    <string name="ui_discard">نادیده گرفتن</string>
+    <string name="ui_keep_editing">ادامهٔ ویرایش</string>
+    <string name="ui_save">ذخیره</string>
+    <string name="ui_delete">حذف</string>
+    <string name="ui_title">عنوان</string>
+    <string name="ui_title_required">عنوان الزامی است</string>
+    <string name="ui_not_set">تعیین نشده</string>
+    <string name="ui_error_generic">مشکلی پیش آمد. اطلاعات شما تغییری نکرد.</string>
+    <string name="ui_not_found">این مورد دیگر وجود ندارد.</string>
+    <string name="ui_archive">بایگانی</string>
+    <string name="ui_unarchive">خروج از بایگانی</string>
+    <string name="ui_rename">تغییر نام</string>
+    <string name="ui_edit">ویرایش</string>
+    <string name="ui_more">گزینه‌های بیشتر</string>
 </resources>

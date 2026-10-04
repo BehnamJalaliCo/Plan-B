@@ -143,6 +143,7 @@ fun PlannerHeroSurface(
         modifier = modifier,
         shape = shape,
         color = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(Dp.Hairline, PlanBTheme.colors.cardBorder),
     ) {
         Column(

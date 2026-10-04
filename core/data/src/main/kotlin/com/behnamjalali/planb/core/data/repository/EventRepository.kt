@@ -27,6 +27,7 @@ interface EventRepository {
     fun observeOccurrences(from: LocalDate, to: LocalDate): Flow<List<EventOccurrence>>
     fun observeEvent(id: EntityId): Flow<CalendarEvent?>
     suspend fun getEvent(id: EntityId): CalendarEvent?
+    suspend fun eventsWithReminders(): List<CalendarEvent>
     suspend fun occurrences(from: LocalDate, to: LocalDate): List<EventOccurrence>
     suspend fun save(event: CalendarEvent): EntityId
     suspend fun delete(id: EntityId)
@@ -61,6 +62,7 @@ internal class OfflineEventRepository @Inject constructor(
 
     override fun observeEvent(id: EntityId) = dao.observeEvent(id).map { it?.toModel() }
     override suspend fun getEvent(id: EntityId) = dao.getEvent(id)?.toModel()
+    override suspend fun eventsWithReminders() = dao.eventsWithReminders().map { it.toModel() }
 
     override suspend fun save(event: CalendarEvent): EntityId {
         if (event.title.isBlank()) throw EventValidationException("Event title must not be blank")

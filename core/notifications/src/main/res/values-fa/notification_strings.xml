@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_reminders">یادآورها</string>
+    <string name="notif_channel_reminders_desc">یادآور کارها، رویدادها و عادت‌ها</string>
+    <string name="notif_channel_focus">جلسه‌های تمرکز</string>
+    <string name="notif_channel_focus_desc">اعلان پایان جلسهٔ تمرکز</string>
+    <string name="notif_public_text">یک یادآور دارید</string>
+    <string name="notif_task_title">یادآور کار</string>
+    <string name="notif_event_title">رویداد پیش رو</string>
+    <string name="notif_habit_title">یادآور عادت</string>
+    <string name="notif_habit_text">وقت %1$s است</string>
+    <string name="notif_focus_title">جلسهٔ تمرکز تمام شد</string>
+    <string name="notif_focus_text">آفرین! کمی استراحت کنید.</string>
+</resources>

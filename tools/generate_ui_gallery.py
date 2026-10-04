@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+"""Regenerates docs/UI_GALLERY.md from the PNGs Roborazzi wrote to artifacts/screenshots/."""
+import os
+from collections import defaultdict
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SHOTS = os.path.join(ROOT, "artifacts", "screenshots")
+OUT = os.path.join(ROOT, "docs", "UI_GALLERY.md")
+ORDER = ["today", "tasks", "calendar", "projects", "notebooks", "habits", "goals", "focus",
+         "search", "templates", "review", "settings", "backup", "capture", "onboarding"]
+
+def main():
+    groups = defaultdict(lambda: defaultdict(list))
+    for folder in sorted(os.listdir(SHOTS)):
+        path = os.path.join(SHOTS, folder)
+        if not os.path.isdir(path):
+            continue
+        for name in sorted(os.listdir(path)):
+            if name.endswith(".png") and not name.endswith("_compare.png") and not name.endswith("_actual.png"):
+                screen, _, variant = name[:-4].partition("_fa") if "_fa" in name else name[:-4].partition("_en")
+                lang = "fa" if "_fa" in name else "en"
+                groups[folder][screen].append((lang + variant, f"../artifacts/screenshots/{folder}/{name}"))
+    folders = sorted(groups, key=lambda f: ORDER.index(f) if f in ORDER else len(ORDER))
+    lines = ["# Plan-B UI Gallery", "",
+             "Real screenshots rendered by Roborazzi (Robolectric, native graphics) from the production",
+             "Compose screens. Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.",
+             "Verified in CI with `./gradlew verifyRoborazziDebug`.", ""]
+    total = 0
+    for folder in folders:
+        lines += [f"## {folder.capitalize()}", ""]
+        for screen, variants in sorted(groups[folder].items()):
+            lines += [f"### `{screen}`", "", "| " + " | ".join(v for v, _ in variants) + " |",
+                      "|" + "---|" * len(variants),
+                      "| " + " | ".join(f'<img src="{p}" width="220"/>' for _, p in variants) + " |", ""]
+            total += len(variants)
+    lines.insert(5, f"Total screenshots: **{total}**.\n")
+    with open(OUT, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    print(f"{total} screenshots -> {OUT}")
+
+if __name__ == "__main__":
+    main()

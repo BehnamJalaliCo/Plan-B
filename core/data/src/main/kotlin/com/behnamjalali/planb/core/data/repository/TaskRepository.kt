@@ -40,6 +40,9 @@ data class TaskFilter(
     val limit: Int? = null,
     /** Inclusive upper bound for UPCOMING (null = no bound). */
     val upcomingUntil: LocalDate? = null,
+    /** Optional inclusive due-date range applied on top of [view]. */
+    val dueFrom: LocalDate? = null,
+    val dueTo: LocalDate? = null,
 )
 
 class TaskValidationException(message: String) : IllegalArgumentException(message)
@@ -49,7 +52,9 @@ interface TaskRepository {
     fun observeTask(id: EntityId): Flow<Task?>
     fun observeSubtasks(parentId: EntityId): Flow<List<Task>>
     fun observeTags(): Flow<List<Tag>>
+    fun observeCompletedCount(from: java.time.Instant, to: java.time.Instant): Flow<Int>
     suspend fun getTask(id: EntityId): Task?
+    suspend fun tasksWithReminders(): List<Task>
 
     /** Inserts or updates; returns the id. Tags are replaced by [Task.tags]. */
     suspend fun save(task: Task): EntityId
@@ -84,7 +89,12 @@ internal class OfflineTaskRepository @Inject constructor(
 
     override fun observeTags(): Flow<List<Tag>> = tagDao.observeTags().map { tags -> tags.map { it.toModel() } }
 
+    override fun observeCompletedCount(from: java.time.Instant, to: java.time.Instant): Flow<Int> =
+        taskDao.observeCompletedBetween(from.toEpochMilli(), to.toEpochMilli())
+
     override suspend fun getTask(id: EntityId): Task? = taskDao.getTask(id)?.toModel()
+
+    override suspend fun tasksWithReminders(): List<Task> = taskDao.tasksWithReminders().map { it.toModel() }
 
     override suspend fun save(task: Task): EntityId {
         if (task.title.isBlank()) throw TaskValidationException("Task title must not be blank")
@@ -282,6 +292,11 @@ internal object TaskQueryBuilder {
             TaskView.COMPLETED -> where += "t.archived = 0 AND t.completed = 1"
             TaskView.ARCHIVED -> where += "t.archived = 1"
             TaskView.ALL -> where += "t.archived = 0 AND t.completed = 0"
+        }
+        if (filter.dueFrom != null && filter.dueTo != null) {
+            where += "t.due_date >= ? AND t.due_date <= ?"
+            args += filter.dueFrom.toEpochDay()
+            args += filter.dueTo.toEpochDay()
         }
         filter.projectId?.let {
             where += "t.project_id = ?"

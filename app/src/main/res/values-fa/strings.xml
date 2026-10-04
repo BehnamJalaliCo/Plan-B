@@ -1,3 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="nav_today">امروز</string>
+    <string name="nav_calendar">تقویم</string>
+    <string name="nav_tasks">کارها</string>
+    <string name="nav_notebooks">دفترچه‌ها</string>
+    <string name="nav_more">بیشتر</string>
+    <string name="quick_capture">ثبت سریع</string>
+    <string name="more_title">بیشتر</string>
+    <string name="more_section_plan">برنامه‌ریزی</string>
+    <string name="more_section_grow">رشد</string>
+    <string name="more_section_app">برنامه</string>
 </resources>
