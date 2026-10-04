@@ -44,17 +44,14 @@ jobs:
 
       - name: Unit, database, end-to-end and screenshot tests
         # Screenshots are compared with artifacts/screenshots (rendered with the licensed font);
-        # any difference fails the build. Pull requests from forks get no secrets, so they run
-        # every test but cannot compare screenshots.
+        # any difference fails the build. Without the fonts secret every test still runs and the
+        # "Screenshots were verified" step below fails the job (except for fork pull requests).
         run: |
           if [ "$HAS_FONTS" = "true" ]; then
             ./gradlew testDebugUnitTest -Proborazzi.test.verify=true -Pplanb.requirePrivateFonts=true --continue
-          elif [ "$FROM_FORK" = "true" ]; then
-            echo "::warning::Fork pull request: licensed fonts unavailable, screenshots not compared."
-            ./gradlew testDebugUnitTest --continue
           else
-            echo "::error::The PLANB_FONTS_PASSPHRASE secret is missing, so screenshots cannot be verified. See docs/FONTS.md."
-            exit 1
+            echo "::warning::Licensed fonts unavailable: running every test, but screenshots are not compared."
+            ./gradlew testDebugUnitTest --continue
           fi
 
       - name: Android Lint
@@ -74,6 +71,13 @@ jobs:
             exit 1
           fi
           grep -o 'uses-permission android:name="[^"]*"' "$manifest"
+
+      - name: Screenshots were verified
+        # Only fork pull requests (which never receive secrets) may skip the comparison.
+        if: env.HAS_FONTS != 'true' && env.FROM_FORK != 'true'
+        run: |
+          echo "::error::The PLANB_FONTS_PASSPHRASE secret is missing, so screenshots were not verified. See docs/FONTS.md."
+          exit 1
 
       - name: Upload test and lint reports
         if: failure()
