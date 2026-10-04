@@ -84,6 +84,7 @@ import com.behnamjalali.planb.core.ui.EditorRow
 import com.behnamjalali.planb.core.ui.PlannerDatePickerDialog
 import com.behnamjalali.planb.core.ui.PlannerGoalCard
 import com.behnamjalali.planb.core.ui.PlannerLocals
+import com.behnamjalali.planb.core.ui.metaSeparator
 import com.behnamjalali.planb.core.ui.rememberOnce
 import java.time.LocalDate
 
@@ -226,7 +227,7 @@ fun GoalDetailScreen(state: GoalDetailUiState, onBack: () -> Unit, onEdit: () ->
                 state.pace?.let { pace ->
                     Spacer(Modifier.height(Spacing.md))
                     val expectedText = stringResource(R.string.goal_expected, numbers.percent(pace.expectedProgress))
-                    PaceBar(goal.progress, pace.expectedProgress, "${numbers.percent(goal.progress)} · $expectedText")
+                    PaceBar(goal.progress, pace.expectedProgress, numbers.percent(goal.progress) + metaSeparator() + expectedText)
                     Text(expectedText, style = MaterialTheme.typography.bodySmall)
                     if (pace.neededPerWeek > 0) {
                         Text(stringResource(R.string.goal_needed_per_week, numbers.format(pace.neededPerWeek), goal.unit), style = MaterialTheme.typography.bodySmall)
@@ -235,9 +236,9 @@ fun GoalDetailScreen(state: GoalDetailUiState, onBack: () -> Unit, onEdit: () ->
             }
             val step = if (goal.target >= 50) (goal.target / 20).let { kotlin.math.round(it) }.coerceAtLeast(1.0) else 1.0
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                PlannerButton(stringResource(R.string.goal_decrement, numbers.format(step)), { viewModel?.setProgress(goal.currentValue - step) },
+                PlannerButton(stringResource(R.string.goal_decrement, numbers.format(step)), { viewModel?.adjustProgress(-step) },
                     style = PlannerButtonStyle.Outlined, icon = Icons.Rounded.Remove, enabled = goal.currentValue > 0)
-                PlannerButton(stringResource(R.string.goal_increment, numbers.format(step)), { viewModel?.setProgress(goal.currentValue + step) }, icon = Icons.Rounded.Add)
+                PlannerButton(stringResource(R.string.goal_increment, numbers.format(step)), { viewModel?.adjustProgress(step) }, icon = Icons.Rounded.Add)
             }
             PlannerButton(stringResource(R.string.goal_update_progress), { dialog = "progress" }, style = PlannerButtonStyle.Tonal)
             if (goal.description.isNotBlank()) Text(goal.description, style = MaterialTheme.typography.bodyLarge)
@@ -268,13 +269,13 @@ fun GoalDetailScreen(state: GoalDetailUiState, onBack: () -> Unit, onEdit: () ->
             viewModel?.delete()
         })
         "progress" -> if (goal != null) {
-            var text by rememberSaveable { mutableStateOf(goal.currentValue.let { if (it % 1.0 == 0.0) it.toLong().toString() else it.toString() }) }
-            val value = com.behnamjalali.planb.core.common.Digits.toLatin(text).replace('٫', '.').toDoubleOrNull()
+            var text by rememberSaveable { mutableStateOf(GoalNumbers.format(goal.currentValue)) }
+            val value = GoalNumbers.parse(text)
             PlannerDialog(
                 title = stringResource(R.string.goal_update_progress),
                 onDismiss = { dialog = null },
                 confirmLabel = stringResource(com.behnamjalali.planb.core.ui.R.string.ui_save),
-                confirmEnabled = value != null && value >= 0,
+                confirmEnabled = value != null,
                 onConfirm = {
                     value?.let { viewModel?.setProgress(it) }
                     dialog = null

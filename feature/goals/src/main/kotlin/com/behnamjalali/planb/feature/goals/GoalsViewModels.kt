@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.behnamjalali.planb.core.common.Digits
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.repository.GoalRepository
@@ -30,6 +29,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -96,7 +97,21 @@ class GoalDetailViewModel @Inject constructor(
         runCatchingSafely { block() }.onFailure { _events.tryEmit(GoalEvent.Failed) }
     }
 
-    fun setProgress(value: Double) = launchSafely { goals.updateProgress(goalId, value) }
+    /** Serializes progress changes, so each one builds on the stored value left by the previous one. */
+    private val progressMutex = Mutex()
+
+    fun setProgress(value: Double) = launchSafely { progressMutex.withLock { goals.updateProgress(goalId, value) } }
+
+    /**
+     * Adds [delta] (negative to subtract) to the stored progress. The new value is computed from
+     * the repository, not from what the screen showed, so rapid taps all count.
+     */
+    fun adjustProgress(delta: Double) = launchSafely {
+        progressMutex.withLock {
+            val goal = goals.getGoal(goalId) ?: return@withLock
+            goals.updateProgress(goalId, (goal.currentValue + delta).coerceAtLeast(0.0))
+        }
+    }
     fun addMilestone(title: String) {
         if (title.isBlank()) return
         launchSafely { goals.saveMilestone(GoalMilestone(goalId = goalId, title = title.trim())) }
@@ -124,9 +139,8 @@ data class GoalForm(
     val createdAt: Long = 0,
     val archived: Boolean = false,
 ) {
-    private fun parse(text: String) = Digits.toLatin(text.trim()).replace('٫', '.').replace(',', '.').toDoubleOrNull()
-    val targetValue get() = parse(target)?.takeIf { it > 0 }
-    val currentValue get() = parse(current)?.takeIf { it >= 0 }
+    val targetValue get() = GoalNumbers.parse(target)?.takeIf { it > 0 }
+    val currentValue get() = GoalNumbers.parse(current)
     val valid get() = title.isNotBlank() && targetValue != null && currentValue != null
 
     fun toGoal() = Goal(
@@ -136,9 +150,8 @@ data class GoalForm(
     )
 
     companion object {
-        private fun fmt(v: Double) = if (v % 1.0 == 0.0) v.toLong().toString() else v.toString()
         fun from(g: Goal) = GoalForm(
-            g.id, g.title, g.description, fmt(g.target), fmt(g.currentValue), g.unit, g.deadline?.toEpochDay(), g.projectId, g.notes,
+            g.id, g.title, g.description, GoalNumbers.format(g.target), GoalNumbers.format(g.currentValue), g.unit, g.deadline?.toEpochDay(), g.projectId, g.notes,
             g.createdAt.toEpochMilli(), g.archived,
         )
     }
