@@ -6,12 +6,14 @@ import com.behnamjalali.planb.core.data.platform.AppIconSwitcher
 import com.behnamjalali.planb.core.data.platform.DataChangeWatcher
 import com.behnamjalali.planb.core.data.platform.WidgetUpdater
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
+import com.behnamjalali.planb.launcher.IconSwitchHook
 import com.behnamjalali.planb.launcher.LauncherIconSwitcher
 import com.behnamjalali.planb.quick.ShortcutPublisher
 import com.behnamjalali.planb.wear.WearSync
 import com.behnamjalali.planb.widget.GlanceWidgetUpdater
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
@@ -28,6 +30,15 @@ import kotlinx.coroutines.launch
 abstract class PersonalizationModule {
     @Binds abstract fun widgetUpdater(impl: GlanceWidgetUpdater): WidgetUpdater
     @Binds abstract fun appIconSwitcher(impl: LauncherIconSwitcher): AppIconSwitcher
+
+    companion object {
+        @Provides
+        fun iconSwitchHook(
+            shortcuts: ShortcutPublisher,
+            entitlements: EntitlementRepository,
+            @ApplicationScope scope: CoroutineScope,
+        ): IconSwitchHook = IconSwitchHook { scope.launch { shortcuts.publish(entitlements.current().isPro) } }
+    }
 }
 
 /**

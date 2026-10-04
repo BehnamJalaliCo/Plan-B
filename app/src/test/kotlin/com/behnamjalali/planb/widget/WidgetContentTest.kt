@@ -113,7 +113,8 @@ class WidgetContentTest {
 
     @Test
     fun launcherIconSwitcherKeepsExactlyOneAlias() {
-        val switcher = LauncherIconSwitcher(context)
+        var switched = 0
+        val switcher = LauncherIconSwitcher(context) { switched++ }
         assertThat(switcher.current()).isEqualTo(AppIcon.CLASSIC)
         switcher.apply(AppIcon.OCEAN)
         assertThat(switcher.current()).isEqualTo(AppIcon.OCEAN)
@@ -123,6 +124,7 @@ class WidgetContentTest {
                 android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED
         }
         assertThat(enabled).isEqualTo(1)
+        assertThat(switched).isEqualTo(1)
         switcher.apply(AppIcon.CLASSIC)
         assertThat(switcher.current()).isEqualTo(AppIcon.CLASSIC)
     }

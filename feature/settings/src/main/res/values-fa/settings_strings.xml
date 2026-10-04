@@ -130,5 +130,5 @@
     <string name="appearance_theme_blossom">شکوفه</string>
     <string name="appearance_theme_midnight">نیمه‌شب</string>
     <string name="settings_personalize">رنگ‌بندی و آیکون</string>
-    <string name="settings_personalize_summary">رنگ‌بندی‌ها، آیکون‌های برنامه، روشن یا تیره</string>
+    <string name="settings_personalize_summary">رنگ‌بندی‌ها و آیکون‌های برنامه</string>
 </resources>

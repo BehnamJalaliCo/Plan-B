@@ -135,5 +135,5 @@
     <string name="appearance_theme_blossom">Blossom</string>
     <string name="appearance_theme_midnight">Midnight</string>
     <string name="settings_personalize">Themes and app icon</string>
-    <string name="settings_personalize_summary">Color themes, app icons, light or dark</string>
+    <string name="settings_personalize_summary">Color themes and app icons</string>
 </resources>

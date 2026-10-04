@@ -16,7 +16,10 @@ import javax.inject.Singleton
  * alias is enabled before the old one is disabled, so the app always has a launcher entry.
  */
 @Singleton
-class LauncherIconSwitcher @Inject constructor(@ApplicationContext private val context: Context) : AppIconSwitcher {
+class LauncherIconSwitcher @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val afterSwitch: IconSwitchHook,
+) : AppIconSwitcher {
     private val pm: PackageManager get() = context.packageManager
 
     override fun current(): AppIcon = AppIcon.entries.firstOrNull { icon ->
@@ -32,6 +35,8 @@ class LauncherIconSwitcher @Inject constructor(@ApplicationContext private val c
         if (icon == current()) return
         setEnabled(icon, true)
         AppIcon.entries.filter { it != icon }.forEach { setEnabled(it, false) }
+        // Dynamic shortcuts belong to the launcher entry; publish them again for the new one.
+        afterSwitch.onSwitched()
     }
 
     private fun setEnabled(icon: AppIcon, enabled: Boolean) {
@@ -56,4 +61,9 @@ class LauncherIconSwitcher @Inject constructor(@ApplicationContext private val c
             AppIcon.MIDNIGHT -> "Midnight"
         }
     }
+}
+
+/** Runs after the launcher entry changed (re-publishes the dynamic launcher shortcuts). */
+fun interface IconSwitchHook {
+    fun onSwitched()
 }
