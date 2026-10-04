@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_title">Search</string>
+    <string name="search_hint">Search tasks, notes, projects…</string>
+    <string name="search_prompt_title">Search everything</string>
+    <string name="search_prompt">Persian and English text, any spelling of ی/ي and ک/ك, and Persian or Latin digits all match.</string>
+    <string name="search_no_results_title">No results</string>
+    <string name="search_no_results">Try a shorter or different word.</string>
+    <string name="search_error">Search failed. Please try again.</string>
+    <string name="search_type_task">Tasks</string>
+    <string name="search_type_project">Projects</string>
+    <string name="search_type_note">Notes</string>
+    <string name="search_type_notebook">Notebooks</string>
+    <string name="search_type_habit">Habits</string>
+    <string name="search_type_goal">Goals</string>
+    <string name="search_type_event">Events</string>
+    <string name="search_archived">Archived</string>
+</resources>

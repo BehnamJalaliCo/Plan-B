@@ -220,19 +220,19 @@ class OtherRepositoriesTest {
         ).inOrder()
 
         val daily = builtIns.first { it.builtInKey == "daily_planner" }
-        val noteResult = templates.apply(daily, "12 Mehr")
+        val noteResult = templates.apply(daily, "12 Mehr", "Planner")
         val note = notes.getNote(noteResult.id)!!
         assertThat(note.title).contains("12 Mehr")
         assertThat(note.document.blocks.map { it.type }).contains(BlockType.CHECKLIST)
         assertThat(note.document.blocks.map { it.id }.toSet()).hasSize(note.document.blocks.size)
 
-        val projectResult = templates.apply(builtIns.first { it.builtInKey == "project_plan" }, "today")
+        val projectResult = templates.apply(builtIns.first { it.builtInKey == "project_plan" }, "today", "Planner")
         assertThat(projectResult.type).isEqualTo(TemplateType.PROJECT)
         val summary = projects.observeProject(projectResult.id).first()!!
         assertThat(summary.totalTasks).isEqualTo(4)
         assertThat(summary.totalMilestones).isEqualTo(3)
 
-        val habitResult = templates.apply(builtIns.first { it.builtInKey == "habit_plan" }, "")
+        val habitResult = templates.apply(builtIns.first { it.builtInKey == "habit_plan" }, "", "Planner")
         assertThat(habitResult.createdCount).isEqualTo(4)
 
         val customId = templates.saveNoteAsTemplate(note)

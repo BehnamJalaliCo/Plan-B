@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="goals_title">Goals</string>
+    <string name="goals_new">New goal</string>
+    <string name="goals_archived">Archived</string>
+    <string name="goals_empty_title">Set a meaningful goal</string>
+    <string name="goals_empty">Track measurable progress toward what matters to you.</string>
+    <string name="goals_error">Could not load goals.</string>
+    <string name="goal_progress">Progress</string>
+    <string name="goal_update_progress">Update progress</string>
+    <string name="goal_current_value">Current value</string>
+    <string name="goal_pace_done">Goal reached 🎉</string>
+    <string name="goal_pace_ahead">Ahead of plan</string>
+    <string name="goal_pace_on_track">On track</string>
+    <string name="goal_pace_behind">Behind plan</string>
+    <string name="goal_pace_overdue">Deadline passed</string>
+    <string name="goal_expected">Expected by today: %1$s</string>
+    <string name="goal_days_left">%1$s days left</string>
+    <string name="goal_needed_per_week">About %1$s %2$s per week to finish on time</string>
+    <string name="goal_milestones">Milestones</string>
+    <string name="goal_milestone_hint">New milestone</string>
+    <string name="goal_milestone_delete">Delete milestone</string>
+    <string name="goal_linked_project">Linked project</string>
+    <string name="goal_no_project">None</string>
+    <string name="goal_notes">Notes</string>
+    <string name="goal_edit">Edit goal</string>
+    <string name="goal_archive">Archive goal</string>
+    <string name="goal_restore">Restore goal</string>
+    <string name="goal_delete">Delete goal</string>
+    <string name="goal_delete_confirm">Delete this goal permanently?</string>
+    <string name="goal_editor_new">New goal</string>
+    <string name="goal_editor_edit">Edit goal</string>
+    <string name="goal_editor_title">Goal</string>
+    <string name="goal_editor_description">Why it matters</string>
+    <string name="goal_editor_target">Target</string>
+    <string name="goal_editor_current">Current</string>
+    <string name="goal_editor_unit">Unit (e.g. books, km)</string>
+    <string name="goal_editor_deadline">Deadline</string>
+    <string name="goal_editor_invalid">Enter a number greater than zero</string>
+    <string name="goal_increment">Add %1$s</string>
+    <string name="goal_decrement">Subtract %1$s</string>
+</resources>

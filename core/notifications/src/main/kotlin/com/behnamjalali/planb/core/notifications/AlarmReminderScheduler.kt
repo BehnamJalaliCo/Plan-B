@@ -70,9 +70,9 @@ class AlarmReminderScheduler @Inject constructor(
     }
 
     /** Alarm for the end of a focus session. */
-    fun scheduleFocusEnd(at: Instant) = schedule(PlannedReminder(ReminderKind.FOCUS, 0, at, time.today()))
+    override fun scheduleFocusEnd(at: Instant) = schedule(PlannedReminder(ReminderKind.FOCUS, 0, at, time.today()))
 
-    fun cancelFocusEnd() = cancel(ReminderKind.FOCUS, 0)
+    override fun cancelFocusEnd() = cancel(ReminderKind.FOCUS, 0)
 
     private fun schedule(plan: PlannedReminder) {
         val manager = alarmManager ?: return

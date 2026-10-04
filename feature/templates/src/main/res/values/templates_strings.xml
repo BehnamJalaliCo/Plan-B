@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="templates_title">Templates</string>
+    <string name="templates_builtin">Built-in templates</string>
+    <string name="templates_custom">My templates</string>
+    <string name="templates_custom_empty">Save any note as a template from the note menu.</string>
+    <string name="templates_use">Use template</string>
+    <string name="templates_type_note">Note</string>
+    <string name="templates_type_project">Project with tasks</string>
+    <string name="templates_type_tasks">Tasks</string>
+    <string name="templates_type_habits">Habits</string>
+    <string name="templates_blocks">%1$s blocks</string>
+    <string name="templates_tasks_count">%1$s tasks</string>
+    <string name="templates_habits_count">%1$s habits</string>
+    <string name="templates_applied">Created from template</string>
+    <string name="templates_open">Open</string>
+    <string name="templates_failed">Could not apply the template.</string>
+    <string name="templates_rename">Rename</string>
+    <string name="templates_delete">Delete template</string>
+    <string name="templates_delete_confirm">Delete this template? Items already created from it are kept.</string>
+    <string name="templates_name">Template name</string>
+    <string name="templates_error">Could not load templates.</string>
+</resources>

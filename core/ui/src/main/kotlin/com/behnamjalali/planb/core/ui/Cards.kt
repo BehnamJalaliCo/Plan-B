@@ -515,3 +515,57 @@ fun PlannerNoteCard(
         )
     }
 }
+
+/**
+ * Lightweight completion heatmap drawn on one Canvas (no per-cell composables).
+ * Columns are weeks (oldest → newest following the reading direction), rows are
+ * weekdays starting at the user's first day of week. [intensity] returns 0..1.
+ */
+@Composable
+fun PlannerHeatmap(
+    weeks: Int,
+    endDate: LocalDate,
+    firstDayOfWeek: java.time.DayOfWeek,
+    accent: AccentColor,
+    intensity: (LocalDate) -> Float,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+) {
+    val tones = PlanBTheme.colors.accent(accent)
+    val empty = MaterialTheme.colorScheme.surfaceContainerHigh
+    val start = com.behnamjalali.planb.core.datetime.MonthGrid.weekStart(endDate, firstDayOfWeek).minusWeeks((weeks - 1).toLong())
+    val cells = androidx.compose.runtime.remember(weeks, endDate, firstDayOfWeek, intensity) {
+        (0 until weeks * 7).map { index ->
+            val date = start.plusDays(index.toLong())
+            if (date > endDate) -1f else intensity(date)
+        }
+    }
+    androidx.compose.foundation.Canvas(
+        modifier
+            .fillMaxWidth()
+            .height((7 * 16).dp)
+            .semantics { this.contentDescription = contentDescription },
+    ) {
+        val gap = 3.dp.toPx()
+        val cell = minOf((size.width - gap * (weeks - 1)) / weeks, (size.height - gap * 6) / 7)
+        val rtl = layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl
+        val radius = androidx.compose.ui.geometry.CornerRadius(cell * 0.28f)
+        cells.forEachIndexed { index, value ->
+            if (value < 0f) return@forEachIndexed
+            val week = index / 7
+            val day = index % 7
+            val column = if (rtl) weeks - 1 - week else week
+            val color = when {
+                value <= 0f -> empty
+                value >= 1f -> tones.strong
+                else -> androidx.compose.ui.graphics.lerp(tones.container, tones.strong, 0.25f + 0.5f * value)
+            }
+            drawRoundRect(
+                color = color,
+                topLeft = androidx.compose.ui.geometry.Offset(column * (cell + gap), day * (cell + gap)),
+                size = androidx.compose.ui.geometry.Size(cell, cell),
+                cornerRadius = radius,
+            )
+        }
+    }
+}

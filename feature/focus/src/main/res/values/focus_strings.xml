@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="focus_title">Focus</string>
+    <string name="focus_ready">Ready to focus</string>
+    <string name="focus_running">Focusing</string>
+    <string name="focus_paused">Paused</string>
+    <string name="focus_start">Start</string>
+    <string name="focus_pause">Pause</string>
+    <string name="focus_resume">Resume</string>
+    <string name="focus_finish">Finish</string>
+    <string name="focus_cancel">Cancel session</string>
+    <string name="focus_pomodoro">Pomodoro · %1$s</string>
+    <string name="focus_custom">Custom</string>
+    <string name="focus_custom_title">Custom duration</string>
+    <string name="focus_minutes">Minutes</string>
+    <string name="focus_link_task">Link a task</string>
+    <string name="focus_no_task">No linked task</string>
+    <string name="focus_today">Focused today: %1$s</string>
+    <string name="focus_history">History</string>
+    <string name="focus_history_empty">Completed sessions appear here.</string>
+    <string name="focus_session_completed">Completed</string>
+    <string name="focus_session_cancelled">Cancelled</string>
+    <string name="focus_remaining">%1$s remaining</string>
+    <string name="focus_completed_message">Session complete. Great focus!</string>
+    <string name="focus_break_hint">Take a %1$s break.</string>
+</resources>

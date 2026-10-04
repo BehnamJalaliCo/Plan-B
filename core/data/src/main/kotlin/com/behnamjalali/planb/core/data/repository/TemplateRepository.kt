@@ -44,9 +44,10 @@ interface TemplateRepository {
 
     /**
      * Instantiates [template]. [dateLabel] replaces `{{date}}` and is supplied by
-     * the UI so it uses the user's calendar and digits.
+     * the UI so it uses the user's calendar and digits. [notebookTitle] (localized
+     * by the UI) names the notebook created for note templates if none exists.
      */
-    suspend fun apply(template: PlannerTemplate, dateLabel: String): TemplateResult
+    suspend fun apply(template: PlannerTemplate, dateLabel: String, notebookTitle: String): TemplateResult
 }
 
 @Serializable
@@ -90,7 +91,7 @@ internal class OfflineTemplateRepository @Inject constructor(
         dao.observeAll().map { custom -> builtInTemplates() + custom.mapNotNull { it.toModel() } }
 
     override suspend fun saveCustom(title: String, type: TemplateType, payload: TemplatePayload, id: EntityId): EntityId {
-        require(title.isNotBlank()) { "Template title must not be blank" }
+        require(title.isNotBlank() || payload.blocks.isNotEmpty()) { "Template title must not be blank" }
         val now = time.now()
         val entity = PlannerTemplateEntity(
             id = id, title = title.trim(), type = type.name, payload = payload.encode(), builtIn = false,
@@ -100,7 +101,7 @@ internal class OfflineTemplateRepository @Inject constructor(
     }
 
     override suspend fun saveNoteAsTemplate(note: Note): EntityId = saveCustom(
-        title = note.title.ifBlank { context.getString(R.string.data_planner_notebook) },
+        title = note.title,
         type = TemplateType.NOTE,
         payload = TemplatePayload(noteTitle = note.title, blocks = note.document.blocks.map { if (it.type.name == "CHECKLIST") it.copy(checked = false) else it }),
     )
@@ -113,13 +114,13 @@ internal class OfflineTemplateRepository @Inject constructor(
 
     override suspend fun delete(id: EntityId) = dao.delete(id)
 
-    override suspend fun apply(template: PlannerTemplate, dateLabel: String): TemplateResult {
+    override suspend fun apply(template: PlannerTemplate, dateLabel: String, notebookTitle: String): TemplateResult {
         val p = template.payload
         fun String.fill() = replace(TemplatePayload.DATE_PLACEHOLDER, dateLabel)
         val today = time.today()
         return when (template.type) {
             TemplateType.NOTE -> {
-                val notebookId = notes.ensureDefaultNotebook(context.getString(R.string.data_planner_notebook))
+                val notebookId = notes.ensureDefaultNotebook(notebookTitle)
                 val blocks = p.blocks.map { NoteBlock(UUID.randomUUID().toString(), it.type, it.text.fill(), it.checked) }
                 val id = notes.saveNote(
                     Note(notebookId = notebookId, title = (p.noteTitle ?: template.title).fill(), document = NoteDocument(blocks = blocks)),

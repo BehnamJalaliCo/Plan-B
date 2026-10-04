@@ -18,6 +18,9 @@ class RecordingReminderScheduler : ReminderScheduler {
     override suspend fun cancelEvent(eventId: EntityId) { cancelled += "event:$eventId" }
     override suspend fun cancelHabit(habitId: EntityId) { cancelled += "habit:$habitId" }
     override suspend fun rescheduleAll() { rescheduledAll++ }
+    var focusEnd: java.time.Instant? = null
+    override fun scheduleFocusEnd(at: java.time.Instant) { focusEnd = at }
+    override fun cancelFocusEnd() { focusEnd = null }
 }
 
 object TestDatabase {

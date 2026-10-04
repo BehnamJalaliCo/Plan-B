@@ -60,6 +60,9 @@ interface TaskRepository {
     suspend fun save(task: Task): EntityId
     suspend fun setCompleted(id: EntityId, completed: Boolean): EntityId?
     suspend fun setCompleted(ids: List<EntityId>, completed: Boolean)
+
+    /** Board moves: DONE completes (spawning recurrences), others reopen if needed. */
+    suspend fun setStatus(id: EntityId, status: TaskStatus)
     suspend fun delete(ids: List<EntityId>)
     suspend fun setArchived(ids: List<EntityId>, archived: Boolean)
     suspend fun moveToProject(ids: List<EntityId>, projectId: EntityId?)
@@ -206,6 +209,17 @@ internal class OfflineTaskRepository @Inject constructor(
 
     override suspend fun setCompleted(ids: List<EntityId>, completed: Boolean) {
         ids.forEach { setCompleted(it, completed) }
+    }
+
+    override suspend fun setStatus(id: EntityId, status: TaskStatus) {
+        if (status == TaskStatus.DONE) {
+            setCompleted(id, true)
+            return
+        }
+        val entity = taskDao.getEntity(id) ?: return
+        if (entity.completed) setCompleted(id, false)
+        val current = taskDao.getEntity(id) ?: return
+        taskDao.update(current.copy(status = status.name, updatedAt = time.now()))
     }
 
     override suspend fun delete(ids: List<EntityId>) {

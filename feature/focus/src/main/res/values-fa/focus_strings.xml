@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="focus_title">تمرکز</string>
+    <string name="focus_ready">آمادهٔ تمرکز</string>
+    <string name="focus_running">در حال تمرکز</string>
+    <string name="focus_paused">متوقف شده</string>
+    <string name="focus_start">شروع</string>
+    <string name="focus_pause">توقف</string>
+    <string name="focus_resume">ادامه</string>
+    <string name="focus_finish">پایان</string>
+    <string name="focus_cancel">لغو جلسه</string>
+    <string name="focus_pomodoro">پومودورو · %1$s</string>
+    <string name="focus_custom">سفارشی</string>
+    <string name="focus_custom_title">مدت سفارشی</string>
+    <string name="focus_minutes">دقیقه</string>
+    <string name="focus_link_task">اتصال به یک کار</string>
+    <string name="focus_no_task">بدون کار مرتبط</string>
+    <string name="focus_today">تمرکز امروز: %1$s</string>
+    <string name="focus_history">تاریخچه</string>
+    <string name="focus_history_empty">جلسه‌های انجام‌شده اینجا نمایش داده می‌شوند.</string>
+    <string name="focus_session_completed">کامل</string>
+    <string name="focus_session_cancelled">لغو شده</string>
+    <string name="focus_remaining">%1$s باقی‌مانده</string>
+    <string name="focus_completed_message">جلسه تمام شد. تمرکز عالی بود!</string>
+    <string name="focus_break_hint">%1$s استراحت کنید.</string>
+</resources>

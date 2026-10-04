@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_title">جستجو</string>
+    <string name="search_hint">جستجوی کارها، یادداشت‌ها، پروژه‌ها…</string>
+    <string name="search_prompt_title">در همه‌چیز جستجو کنید</string>
+    <string name="search_prompt">متن فارسی و انگلیسی، هر شکلی از ی/ي و ک/ك، و ارقام فارسی یا لاتین همه پیدا می‌شوند.</string>
+    <string name="search_no_results_title">نتیجه‌ای یافت نشد</string>
+    <string name="search_no_results">واژهٔ کوتاه‌تر یا دیگری را امتحان کنید.</string>
+    <string name="search_error">جستجو انجام نشد. دوباره تلاش کنید.</string>
+    <string name="search_type_task">کارها</string>
+    <string name="search_type_project">پروژه‌ها</string>
+    <string name="search_type_note">یادداشت‌ها</string>
+    <string name="search_type_notebook">دفترچه‌ها</string>
+    <string name="search_type_habit">عادت‌ها</string>
+    <string name="search_type_goal">هدف‌ها</string>
+    <string name="search_type_event">رویدادها</string>
+    <string name="search_archived">بایگانی‌شده</string>
+</resources>

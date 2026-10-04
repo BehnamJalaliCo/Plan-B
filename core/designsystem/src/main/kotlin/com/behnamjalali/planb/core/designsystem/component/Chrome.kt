@@ -172,8 +172,11 @@ fun PlannerDialog(
                 )
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(dismissLabel, style = MaterialTheme.typography.labelLarge) }
+        // An empty dismiss label hides the second button (single-action dialogs).
+        dismissButton = if (dismissLabel.isEmpty()) {
+            null
+        } else {
+            { TextButton(onClick = onDismiss) { Text(dismissLabel, style = MaterialTheme.typography.labelLarge) } }
         },
     )
 }

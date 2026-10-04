@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="habits_title">عادت‌ها</string>
+    <string name="habits_new">عادت جدید</string>
+    <string name="habits_archived">بایگانی</string>
+    <string name="habits_empty_title">یک عادت بسازید</string>
+    <string name="habits_empty">قدم‌های کوچک روزانه جمع می‌شوند. اولین عادت خود را بسازید.</string>
+    <string name="habits_error">بارگذاری عادت‌ها ممکن نشد.</string>
+    <string name="habit_streak_days">زنجیرهٔ فعلی: %1$s روز</string>
+    <string name="habit_streak_weeks">زنجیرهٔ فعلی: %1$s هفته</string>
+    <string name="habit_best_streak">بهترین زنجیره</string>
+    <string name="habit_rate_30">۳۰ روز اخیر</string>
+    <string name="habit_today">امروز</string>
+    <string name="habit_history">تاریخچه</string>
+    <string name="habit_heatmap_description">تاریخچهٔ انجام در %1$s هفتهٔ اخیر؛ %2$s روز انجام شده</string>
+    <string name="habit_add_one">افزودن یکی</string>
+    <string name="habit_remove_one">کم کردن یکی</string>
+    <string name="habit_edit">ویرایش عادت</string>
+    <string name="habit_archive">بایگانی عادت</string>
+    <string name="habit_restore">بازگردانی عادت</string>
+    <string name="habit_delete">حذف عادت</string>
+    <string name="habit_delete_confirm">این عادت و کل تاریخچه‌اش برای همیشه حذف شود؟</string>
+    <string name="habit_not_scheduled_today">امروز برنامه‌ریزی نشده</string>
+    <string name="habit_editor_new">عادت جدید</string>
+    <string name="habit_editor_edit">ویرایش عادت</string>
+    <string name="habit_editor_title">نام عادت</string>
+    <string name="habit_editor_schedule">برنامه</string>
+    <string name="habit_schedule_daily">هر روز</string>
+    <string name="habit_schedule_days">روزهای منتخب</string>
+    <string name="habit_schedule_weekly">چند بار در هفته</string>
+    <string name="habit_schedule_interval">هر چند روز</string>
+    <string name="habit_editor_times_per_week">دفعات در هفته</string>
+    <string name="habit_editor_interval">هر چند روز یک بار</string>
+    <string name="habit_editor_target">هدف روزانه</string>
+    <string name="habit_editor_unit">واحد (مثلاً لیوان، صفحه)</string>
+    <string name="habit_editor_reminder">یادآور</string>
+    <string name="habit_editor_no_reminder">بدون یادآور</string>
+    <string name="habit_editor_start">تاریخ شروع</string>
+    <string name="habit_editor_color">رنگ</string>
+    <string name="habit_editor_icon">نماد</string>
+    <string name="habit_editor_invalid_number">عددی بین ۱ تا ۹۹۹ وارد کنید</string>
+    <string name="habit_summary_times_week">%1$s بار در هفته</string>
+    <string name="habit_summary_every_n">هر %1$s روز</string>
+</resources>

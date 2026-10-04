@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="review_title">Weekly review</string>
+    <string name="review_previous_week">Previous week</string>
+    <string name="review_next_week">Next week</string>
+    <string name="review_completed">Completed tasks</string>
+    <string name="review_completed_chart">Tasks completed per day: %1$s</string>
+    <string name="review_missed">Missed or overdue</string>
+    <string name="review_missed_none">Nothing slipped this week. 👏</string>
+    <string name="review_habits">Habits</string>
+    <string name="review_habits_none">No active habits this week.</string>
+    <string name="review_habit_rate">%1$s · %2$s days</string>
+    <string name="review_focus">Focus time</string>
+    <string name="review_notes">Notes created</string>
+    <string name="review_projects">Project progress</string>
+    <string name="review_projects_none">No active projects.</string>
+    <string name="review_goals">Goal progress</string>
+    <string name="review_goals_none">No active goals.</string>
+    <string name="review_next">Next week\'s priorities</string>
+    <string name="review_next_none">Nothing scheduled yet for next week.</string>
+    <string name="review_error">Could not build the review.</string>
+    <string name="review_habit_average">Average habit completion</string>
+</resources>

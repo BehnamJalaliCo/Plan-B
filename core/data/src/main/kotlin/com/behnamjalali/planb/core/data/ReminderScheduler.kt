@@ -17,4 +17,8 @@ interface ReminderScheduler {
 
     /** Re-creates every pending reminder (boot, time-zone change, restore). */
     suspend fun rescheduleAll()
+
+    /** Alarm that completes a running focus session in the background. */
+    fun scheduleFocusEnd(at: java.time.Instant)
+    fun cancelFocusEnd()
 }

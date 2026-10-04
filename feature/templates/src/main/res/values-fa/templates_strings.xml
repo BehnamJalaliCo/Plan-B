@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="templates_title">الگوها</string>
+    <string name="templates_builtin">الگوهای آماده</string>
+    <string name="templates_custom">الگوهای من</string>
+    <string name="templates_custom_empty">هر یادداشتی را می‌توانید از منوی یادداشت به‌عنوان الگو ذخیره کنید.</string>
+    <string name="templates_use">استفاده از الگو</string>
+    <string name="templates_type_note">یادداشت</string>
+    <string name="templates_type_project">پروژه با کارها</string>
+    <string name="templates_type_tasks">کارها</string>
+    <string name="templates_type_habits">عادت‌ها</string>
+    <string name="templates_blocks">%1$s بلوک</string>
+    <string name="templates_tasks_count">%1$s کار</string>
+    <string name="templates_habits_count">%1$s عادت</string>
+    <string name="templates_applied">از روی الگو ساخته شد</string>
+    <string name="templates_open">باز کردن</string>
+    <string name="templates_failed">اعمال الگو ممکن نشد.</string>
+    <string name="templates_rename">تغییر نام</string>
+    <string name="templates_delete">حذف الگو</string>
+    <string name="templates_delete_confirm">این الگو حذف شود؟ مواردی که از آن ساخته شده‌اند حفظ می‌شوند.</string>
+    <string name="templates_name">نام الگو</string>
+    <string name="templates_error">بارگذاری الگوها ممکن نشد.</string>
+</resources>

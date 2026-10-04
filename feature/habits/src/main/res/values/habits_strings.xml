@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="habits_title">Habits</string>
+    <string name="habits_new">New habit</string>
+    <string name="habits_archived">Archived</string>
+    <string name="habits_empty_title">Build a habit</string>
+    <string name="habits_empty">Small daily steps add up. Create your first habit.</string>
+    <string name="habits_error">Could not load habits.</string>
+    <string name="habit_streak_days">Current streak: %1$s days</string>
+    <string name="habit_streak_weeks">Current streak: %1$s weeks</string>
+    <string name="habit_best_streak">Best streak</string>
+    <string name="habit_rate_30">Last 30 days</string>
+    <string name="habit_today">Today</string>
+    <string name="habit_history">History</string>
+    <string name="habit_heatmap_description">Completion history for the last %1$s weeks; %2$s days completed</string>
+    <string name="habit_add_one">Add one</string>
+    <string name="habit_remove_one">Remove one</string>
+    <string name="habit_edit">Edit habit</string>
+    <string name="habit_archive">Archive habit</string>
+    <string name="habit_restore">Restore habit</string>
+    <string name="habit_delete">Delete habit</string>
+    <string name="habit_delete_confirm">Delete this habit and its whole history permanently?</string>
+    <string name="habit_not_scheduled_today">Not scheduled today</string>
+    <string name="habit_editor_new">New habit</string>
+    <string name="habit_editor_edit">Edit habit</string>
+    <string name="habit_editor_title">Habit name</string>
+    <string name="habit_editor_schedule">Schedule</string>
+    <string name="habit_schedule_daily">Every day</string>
+    <string name="habit_schedule_days">Selected days</string>
+    <string name="habit_schedule_weekly">Times per week</string>
+    <string name="habit_schedule_interval">Every N days</string>
+    <string name="habit_editor_times_per_week">Times per week</string>
+    <string name="habit_editor_interval">Every how many days</string>
+    <string name="habit_editor_target">Daily target</string>
+    <string name="habit_editor_unit">Unit (e.g. glasses, pages)</string>
+    <string name="habit_editor_reminder">Reminder</string>
+    <string name="habit_editor_no_reminder">No reminder</string>
+    <string name="habit_editor_start">Start date</string>
+    <string name="habit_editor_color">Color</string>
+    <string name="habit_editor_icon">Icon</string>
+    <string name="habit_editor_invalid_number">Enter a number from 1 to 999</string>
+    <string name="habit_summary_times_week">%1$s times a week</string>
+    <string name="habit_summary_every_n">Every %1$s days</string>
+</resources>

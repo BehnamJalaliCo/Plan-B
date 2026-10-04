@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="goals_title">هدف‌ها</string>
+    <string name="goals_new">هدف جدید</string>
+    <string name="goals_archived">بایگانی</string>
+    <string name="goals_empty_title">یک هدف معنادار تعیین کنید</string>
+    <string name="goals_empty">پیشرفت قابل‌اندازه‌گیری به سوی چیزهای مهم را دنبال کنید.</string>
+    <string name="goals_error">بارگذاری هدف‌ها ممکن نشد.</string>
+    <string name="goal_progress">پیشرفت</string>
+    <string name="goal_update_progress">به‌روزرسانی پیشرفت</string>
+    <string name="goal_current_value">مقدار فعلی</string>
+    <string name="goal_pace_done">به هدف رسیدید 🎉</string>
+    <string name="goal_pace_ahead">جلوتر از برنامه</string>
+    <string name="goal_pace_on_track">طبق برنامه</string>
+    <string name="goal_pace_behind">عقب‌تر از برنامه</string>
+    <string name="goal_pace_overdue">مهلت گذشته است</string>
+    <string name="goal_expected">انتظار تا امروز: %1$s</string>
+    <string name="goal_days_left">%1$s روز باقی مانده</string>
+    <string name="goal_needed_per_week">برای رسیدن به‌موقع، حدود %1$s %2$s در هفته</string>
+    <string name="goal_milestones">نقاط عطف</string>
+    <string name="goal_milestone_hint">نقطهٔ عطف جدید</string>
+    <string name="goal_milestone_delete">حذف نقطهٔ عطف</string>
+    <string name="goal_linked_project">پروژهٔ مرتبط</string>
+    <string name="goal_no_project">هیچ</string>
+    <string name="goal_notes">یادداشت</string>
+    <string name="goal_edit">ویرایش هدف</string>
+    <string name="goal_archive">بایگانی هدف</string>
+    <string name="goal_restore">بازگردانی هدف</string>
+    <string name="goal_delete">حذف هدف</string>
+    <string name="goal_delete_confirm">این هدف برای همیشه حذف شود؟</string>
+    <string name="goal_editor_new">هدف جدید</string>
+    <string name="goal_editor_edit">ویرایش هدف</string>
+    <string name="goal_editor_title">هدف</string>
+    <string name="goal_editor_description">چرا مهم است</string>
+    <string name="goal_editor_target">مقدار هدف</string>
+    <string name="goal_editor_current">مقدار فعلی</string>
+    <string name="goal_editor_unit">واحد (مثلاً کتاب، کیلومتر)</string>
+    <string name="goal_editor_deadline">مهلت</string>
+    <string name="goal_editor_invalid">عددی بزرگ‌تر از صفر وارد کنید</string>
+    <string name="goal_increment">افزودن %1$s</string>
+    <string name="goal_decrement">کم کردن %1$s</string>
+</resources>
