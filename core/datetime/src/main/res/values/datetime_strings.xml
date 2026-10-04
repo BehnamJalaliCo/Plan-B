@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="jalali_month_names">
+        <item>Farvardin</item>
+        <item>Ordibehesht</item>
+        <item>Khordad</item>
+        <item>Tir</item>
+        <item>Mordad</item>
+        <item>Shahrivar</item>
+        <item>Mehr</item>
+        <item>Aban</item>
+        <item>Azar</item>
+        <item>Dey</item>
+        <item>Bahman</item>
+        <item>Esfand</item>
+    </string-array>
+    <string-array name="gregorian_month_names">
+        <item>January</item>
+        <item>February</item>
+        <item>March</item>
+        <item>April</item>
+        <item>May</item>
+        <item>June</item>
+        <item>July</item>
+        <item>August</item>
+        <item>September</item>
+        <item>October</item>
+        <item>November</item>
+        <item>December</item>
+    </string-array>
+    <!-- Monday first, matching java.time.DayOfWeek ordering. -->
+    <string-array name="weekday_names">
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+        <item>Sunday</item>
+    </string-array>
+    <string-array name="weekday_short_names">
+        <item>Mon</item>
+        <item>Tue</item>
+        <item>Wed</item>
+        <item>Thu</item>
+        <item>Fri</item>
+        <item>Sat</item>
+        <item>Sun</item>
+    </string-array>
+    <string-array name="weekday_narrow_names">
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+        <item>S</item>
+    </string-array>
+    <string name="date_today">Today</string>
+    <string name="date_tomorrow">Tomorrow</string>
+    <string name="date_yesterday">Yesterday</string>
+    <string name="time_am">AM</string>
+    <string name="time_pm">PM</string>
+    <!-- %1$s weekday, %2$s day, %3$s month, %4$s year -->
+    <string name="date_pattern_full_jalali">%1$s, %2$s %3$s %4$s</string>
+    <string name="date_pattern_full_gregorian">%1$s, %3$s %2$s, %4$s</string>
+    <!-- %1$s day, %2$s month -->
+    <string name="date_pattern_day_month_jalali">%1$s %2$s</string>
+    <string name="date_pattern_day_month_gregorian">%2$s %1$s</string>
+    <!-- %1$s day, %2$s month, %3$s year -->
+    <string name="date_pattern_medium_jalali">%1$s %2$s %3$s</string>
+    <string name="date_pattern_medium_gregorian">%2$s %1$s, %3$s</string>
+    <!-- %1$s month, %2$s year -->
+    <string name="date_pattern_month_year">%1$s %2$s</string>
+    <!-- %1$s weekday, %2$s short date -->
+    <string name="date_pattern_weekday_date">%1$s, %2$s</string>
+    <!-- %1$d minutes -->
+    <plurals name="duration_minutes">
+        <item quantity="one">%1$s min</item>
+        <item quantity="other">%1$s min</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="one">%1$s hr</item>
+        <item quantity="other">%1$s hr</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s hr %2$s min</string>
+    <string name="time_range">%1$s – %2$s</string>
+</resources>

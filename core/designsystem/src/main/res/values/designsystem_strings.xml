@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ds_clear_search">Clear search</string>
+    <string name="ds_back">Back</string>
+    <string name="ds_close">Close</string>
+    <string name="ds_retry">Try again</string>
+    <string name="ds_loading">Loading</string>
+    <string name="ds_completed">Completed</string>
+    <string name="ds_not_completed">Not completed</string>
+    <string name="ds_mark_complete">Mark as complete</string>
+    <string name="ds_mark_incomplete">Mark as not complete</string>
+    <string name="ds_progress">%1$s complete</string>
+    <string name="ds_cancel">Cancel</string>
+    <string name="ds_confirm">OK</string>
+    <string name="ds_more_options">More options</string>
+    <string name="ds_selected">Selected</string>
+    <string name="ds_something_went_wrong">Something went wrong</string>
+</resources>

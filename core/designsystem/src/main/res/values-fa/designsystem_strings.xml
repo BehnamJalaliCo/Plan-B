@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ds_clear_search">پاک کردن جستجو</string>
+    <string name="ds_back">بازگشت</string>
+    <string name="ds_close">بستن</string>
+    <string name="ds_retry">تلاش دوباره</string>
+    <string name="ds_loading">در حال بارگذاری</string>
+    <string name="ds_completed">انجام شده</string>
+    <string name="ds_not_completed">انجام نشده</string>
+    <string name="ds_mark_complete">علامت‌گذاری به‌عنوان انجام‌شده</string>
+    <string name="ds_mark_incomplete">علامت‌گذاری به‌عنوان انجام‌نشده</string>
+    <string name="ds_progress">%1$s انجام شده</string>
+    <string name="ds_cancel">انصراف</string>
+    <string name="ds_confirm">تأیید</string>
+    <string name="ds_more_options">گزینه‌های بیشتر</string>
+    <string name="ds_selected">انتخاب شده</string>
+    <string name="ds_something_went_wrong">مشکلی پیش آمد</string>
+</resources>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="jalali_month_names">
+        <item>فروردین</item>
+        <item>اردیبهشت</item>
+        <item>خرداد</item>
+        <item>تیر</item>
+        <item>مرداد</item>
+        <item>شهریور</item>
+        <item>مهر</item>
+        <item>آبان</item>
+        <item>آذر</item>
+        <item>دی</item>
+        <item>بهمن</item>
+        <item>اسفند</item>
+    </string-array>
+    <string-array name="gregorian_month_names">
+        <item>ژانویه</item>
+        <item>فوریه</item>
+        <item>مارس</item>
+        <item>آوریل</item>
+        <item>مه</item>
+        <item>ژوئن</item>
+        <item>ژوئیه</item>
+        <item>اوت</item>
+        <item>سپتامبر</item>
+        <item>اکتبر</item>
+        <item>نوامبر</item>
+        <item>دسامبر</item>
+    </string-array>
+    <string-array name="weekday_names">
+        <item>دوشنبه</item>
+        <item>سه‌شنبه</item>
+        <item>چهارشنبه</item>
+        <item>پنجشنبه</item>
+        <item>جمعه</item>
+        <item>شنبه</item>
+        <item>یکشنبه</item>
+    </string-array>
+    <string-array name="weekday_short_names">
+        <item>دوشنبه</item>
+        <item>سه‌شنبه</item>
+        <item>چهارشنبه</item>
+        <item>پنجشنبه</item>
+        <item>جمعه</item>
+        <item>شنبه</item>
+        <item>یکشنبه</item>
+    </string-array>
+    <string-array name="weekday_narrow_names">
+        <item>د</item>
+        <item>س</item>
+        <item>چ</item>
+        <item>پ</item>
+        <item>ج</item>
+        <item>ش</item>
+        <item>ی</item>
+    </string-array>
+    <string name="date_today">امروز</string>
+    <string name="date_tomorrow">فردا</string>
+    <string name="date_yesterday">دیروز</string>
+    <string name="time_am">ق.ظ</string>
+    <string name="time_pm">ب.ظ</string>
+    <string name="date_pattern_full_jalali">%1$s %2$s %3$s %4$s</string>
+    <string name="date_pattern_full_gregorian">%1$s %2$s %3$s %4$s</string>
+    <string name="date_pattern_day_month_jalali">%1$s %2$s</string>
+    <string name="date_pattern_day_month_gregorian">%1$s %2$s</string>
+    <string name="date_pattern_medium_jalali">%1$s %2$s %3$s</string>
+    <string name="date_pattern_medium_gregorian">%1$s %2$s %3$s</string>
+    <string name="date_pattern_month_year">%1$s %2$s</string>
+    <string name="date_pattern_weekday_date">%1$s، %2$s</string>
+    <plurals name="duration_minutes">
+        <item quantity="one">%1$s دقیقه</item>
+        <item quantity="other">%1$s دقیقه</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="one">%1$s ساعت</item>
+        <item quantity="other">%1$s ساعت</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s ساعت و %2$s دقیقه</string>
+    <string name="time_range">%1$s تا %2$s</string>
+</resources>

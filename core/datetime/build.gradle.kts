@@ -8,7 +8,7 @@ android {
 
 dependencies {
     api(projects.core.model)
-    implementation(projects.core.common)
+    api(projects.core.common)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
 }

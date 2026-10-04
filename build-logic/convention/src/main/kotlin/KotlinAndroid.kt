@@ -30,6 +30,12 @@ internal fun Project.configureKotlinAndroid(extension: CommonExtension) {
     tasks.withType<Test>().configureEach {
         maxHeapSize = "2g"
         systemProperty("robolectric.logging.enabled", "false")
+        // Robolectric (SDK 36 sandbox) needs access to JDK internals on Java 17+.
+        jvmArgs(
+            "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED",
+            "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+            "--add-opens=java.base/java.io=ALL-UNNAMED",
+        )
     }
 }
 

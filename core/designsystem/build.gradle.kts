@@ -13,6 +13,7 @@ dependencies {
     api(libs.androidx.compose.runtime)
     api(libs.androidx.compose.ui)
     api(libs.androidx.compose.animation)
-    implementation(libs.androidx.compose.material.iconsExtended)
+    api(libs.androidx.compose.material.iconsExtended)
+    api(projects.core.model)
     implementation(libs.androidx.core.ktx)
 }
