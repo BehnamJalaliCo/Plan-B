@@ -1,0 +1,45 @@
+{
+ "title": "برنامهٔ پروژه",
+ "description": "پروژهٔ جدید با کارهای شروع و نقاط عطف.",
+ "type": "project",
+ "payload": {
+  "projectTitle": "پروژهٔ جدید",
+  "description": "هدف، محدوده و معیار موفقیت.",
+  "tasks": [
+   {
+    "title": "تعریف هدف و محدوده",
+    "dayOffset": 0,
+    "priority": 3
+   },
+   {
+    "title": "فهرست خروجی‌ها",
+    "dayOffset": 1,
+    "priority": 2
+   },
+   {
+    "title": "شکستن کار به وظیفه‌ها",
+    "dayOffset": 2,
+    "priority": 2
+   },
+   {
+    "title": "تعیین جلسهٔ مرور میانی",
+    "dayOffset": 7,
+    "priority": 1
+   }
+  ],
+  "milestones": [
+   {
+    "title": "تأیید برنامه",
+    "dayOffset": 3
+   },
+   {
+    "title": "اولین خروجی",
+    "dayOffset": 14
+   },
+   {
+    "title": "پایان پروژه",
+    "dayOffset": 30
+   }
+  ]
+ }
+}

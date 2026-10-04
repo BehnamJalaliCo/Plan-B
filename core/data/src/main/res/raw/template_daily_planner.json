@@ -1,0 +1,75 @@
+{
+ "title": "Daily Planner",
+ "description": "Plan one day: top priorities, schedule and reflection.",
+ "type": "note",
+ "payload": {
+  "noteTitle": "Daily plan · {{date}}",
+  "blocks": [
+   {
+    "id": "b0",
+    "type": "heading",
+    "text": "Top 3 priorities"
+   },
+   {
+    "id": "b1",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b2",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b3",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b4",
+    "type": "heading",
+    "text": "Schedule"
+   },
+   {
+    "id": "b5",
+    "type": "bullet",
+    "text": "Morning: "
+   },
+   {
+    "id": "b6",
+    "type": "bullet",
+    "text": "Afternoon: "
+   },
+   {
+    "id": "b7",
+    "type": "bullet",
+    "text": "Evening: "
+   },
+   {
+    "id": "b8",
+    "type": "heading",
+    "text": "Notes"
+   },
+   {
+    "id": "b9",
+    "type": "text",
+    "text": ""
+   },
+   {
+    "id": "b10",
+    "type": "divider",
+    "text": ""
+   },
+   {
+    "id": "b11",
+    "type": "heading",
+    "text": "End-of-day reflection"
+   },
+   {
+    "id": "b12",
+    "type": "text",
+    "text": "What went well?"
+   }
+  ]
+ }
+}

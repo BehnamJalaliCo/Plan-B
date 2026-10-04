@@ -1,0 +1,55 @@
+{
+ "title": "Personal Journal",
+ "description": "A calm daily journal entry with gratitude and mood.",
+ "type": "note",
+ "payload": {
+  "noteTitle": "Journal · {{date}}",
+  "blocks": [
+   {
+    "id": "b0",
+    "type": "heading",
+    "text": "How am I feeling?"
+   },
+   {
+    "id": "b1",
+    "type": "text",
+    "text": ""
+   },
+   {
+    "id": "b2",
+    "type": "heading",
+    "text": "Three things I'm grateful for"
+   },
+   {
+    "id": "b3",
+    "type": "numbered",
+    "text": ""
+   },
+   {
+    "id": "b4",
+    "type": "numbered",
+    "text": ""
+   },
+   {
+    "id": "b5",
+    "type": "numbered",
+    "text": ""
+   },
+   {
+    "id": "b6",
+    "type": "heading",
+    "text": "Today's highlight"
+   },
+   {
+    "id": "b7",
+    "type": "text",
+    "text": ""
+   },
+   {
+    "id": "b8",
+    "type": "quote",
+    "text": "One thing I learned today"
+   }
+  ]
+ }
+}

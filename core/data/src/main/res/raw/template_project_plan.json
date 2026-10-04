@@ -1,0 +1,45 @@
+{
+ "title": "Project Plan",
+ "description": "A new project with kickoff tasks and milestones.",
+ "type": "project",
+ "payload": {
+  "projectTitle": "New project",
+  "description": "Goal, scope and success criteria.",
+  "tasks": [
+   {
+    "title": "Define goal and scope",
+    "dayOffset": 0,
+    "priority": 3
+   },
+   {
+    "title": "List deliverables",
+    "dayOffset": 1,
+    "priority": 2
+   },
+   {
+    "title": "Break work into tasks",
+    "dayOffset": 2,
+    "priority": 2
+   },
+   {
+    "title": "Schedule a mid-point review",
+    "dayOffset": 7,
+    "priority": 1
+   }
+  ],
+  "milestones": [
+   {
+    "title": "Plan approved",
+    "dayOffset": 3
+   },
+   {
+    "title": "First deliverable",
+    "dayOffset": 14
+   },
+   {
+    "title": "Project complete",
+    "dayOffset": 30
+   }
+  ]
+ }
+}

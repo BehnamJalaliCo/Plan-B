@@ -1,0 +1,41 @@
+{
+ "title": "Habit Plan",
+ "description": "Start a set of healthy daily habits.",
+ "type": "habits",
+ "payload": {
+  "habits": [
+   {
+    "title": "Drink water",
+    "schedule": "DAILY",
+    "target": 8,
+    "unit": "glasses",
+    "icon": "water",
+    "color": "powder_blue"
+   },
+   {
+    "title": "Read",
+    "schedule": "DAILY",
+    "target": 20,
+    "unit": "pages",
+    "icon": "book",
+    "color": "lavender"
+   },
+   {
+    "title": "Exercise",
+    "schedule": "WEEKLY:3",
+    "target": 1,
+    "unit": "",
+    "icon": "fitness",
+    "color": "peach"
+   },
+   {
+    "title": "Meditate",
+    "schedule": "DAILY",
+    "target": 1,
+    "unit": "",
+    "icon": "meditation",
+    "color": "mint"
+   }
+  ]
+ }
+}

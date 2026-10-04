@@ -1,0 +1,41 @@
+{
+ "title": "برنامهٔ عادت‌ها",
+ "description": "شروع مجموعه‌ای از عادت‌های سالم روزانه.",
+ "type": "habits",
+ "payload": {
+  "habits": [
+   {
+    "title": "نوشیدن آب",
+    "schedule": "DAILY",
+    "target": 8,
+    "unit": "لیوان",
+    "icon": "water",
+    "color": "powder_blue"
+   },
+   {
+    "title": "مطالعه",
+    "schedule": "DAILY",
+    "target": 20,
+    "unit": "صفحه",
+    "icon": "book",
+    "color": "lavender"
+   },
+   {
+    "title": "ورزش",
+    "schedule": "WEEKLY:3",
+    "target": 1,
+    "unit": "",
+    "icon": "fitness",
+    "color": "peach"
+   },
+   {
+    "title": "مدیتیشن",
+    "schedule": "DAILY",
+    "target": 1,
+    "unit": "",
+    "icon": "meditation",
+    "color": "mint"
+   }
+  ]
+ }
+}

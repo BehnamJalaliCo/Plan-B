@@ -65,3 +65,27 @@ enum class Priority(val weight: Int) {
         fun fromWeight(weight: Int): Priority = entries.firstOrNull { it.weight == weight } ?: NONE
     }
 }
+
+/** Searchable entity kinds. [code] is persisted in the search index; never reorder. */
+enum class SearchEntityType(val code: Int) {
+    TASK(1),
+    PROJECT(2),
+    NOTE(3),
+    NOTEBOOK(4),
+    HABIT(5),
+    GOAL(6),
+    EVENT(7),
+    ;
+
+    companion object {
+        fun fromCode(code: Int): SearchEntityType? = entries.firstOrNull { it.code == code }
+    }
+}
+
+data class SearchResult(
+    val type: SearchEntityType,
+    val id: EntityId,
+    val title: String,
+    val snippet: String = "",
+    val archived: Boolean = false,
+)

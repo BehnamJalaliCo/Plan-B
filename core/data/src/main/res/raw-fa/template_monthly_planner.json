@@ -1,0 +1,70 @@
+{
+ "title": "برنامه‌ریز ماهانه",
+ "description": "موضوع ماه، تاریخ‌های مهم و هدف‌ها.",
+ "type": "note",
+ "payload": {
+  "noteTitle": "برنامهٔ ماه · {{date}}",
+  "blocks": [
+   {
+    "id": "b0",
+    "type": "heading",
+    "text": "موضوع این ماه"
+   },
+   {
+    "id": "b1",
+    "type": "text",
+    "text": ""
+   },
+   {
+    "id": "b2",
+    "type": "heading",
+    "text": "هدف‌های کلیدی"
+   },
+   {
+    "id": "b3",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b4",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b5",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b6",
+    "type": "heading",
+    "text": "تاریخ‌های مهم"
+   },
+   {
+    "id": "b7",
+    "type": "bullet",
+    "text": ""
+   },
+   {
+    "id": "b8",
+    "type": "heading",
+    "text": "عادت‌هایی که می‌سازم"
+   },
+   {
+    "id": "b9",
+    "type": "bullet",
+    "text": ""
+   },
+   {
+    "id": "b10",
+    "type": "heading",
+    "text": "مرور پایان ماه"
+   },
+   {
+    "id": "b11",
+    "type": "quote",
+    "text": "ماه آینده چه کاری را متفاوت انجام می‌دهم؟"
+   }
+  ]
+ }
+}

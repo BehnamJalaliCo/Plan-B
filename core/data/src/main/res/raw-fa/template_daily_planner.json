@@ -1,0 +1,75 @@
+{
+ "title": "برنامه‌ریز روزانه",
+ "description": "برنامهٔ یک روز: اولویت‌ها، زمان‌بندی و مرور پایان روز.",
+ "type": "note",
+ "payload": {
+  "noteTitle": "برنامهٔ روز · {{date}}",
+  "blocks": [
+   {
+    "id": "b0",
+    "type": "heading",
+    "text": "سه اولویت مهم"
+   },
+   {
+    "id": "b1",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b2",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b3",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b4",
+    "type": "heading",
+    "text": "زمان‌بندی"
+   },
+   {
+    "id": "b5",
+    "type": "bullet",
+    "text": "صبح: "
+   },
+   {
+    "id": "b6",
+    "type": "bullet",
+    "text": "بعدازظهر: "
+   },
+   {
+    "id": "b7",
+    "type": "bullet",
+    "text": "عصر: "
+   },
+   {
+    "id": "b8",
+    "type": "heading",
+    "text": "یادداشت‌ها"
+   },
+   {
+    "id": "b9",
+    "type": "text",
+    "text": ""
+   },
+   {
+    "id": "b10",
+    "type": "divider",
+    "text": ""
+   },
+   {
+    "id": "b11",
+    "type": "heading",
+    "text": "مرور پایان روز"
+   },
+   {
+    "id": "b12",
+    "type": "text",
+    "text": "چه چیزی خوب پیش رفت؟"
+   }
+  ]
+ }
+}

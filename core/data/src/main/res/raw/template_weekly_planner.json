@@ -1,0 +1,90 @@
+{
+ "title": "Weekly Planner",
+ "description": "Set weekly goals and plan each day of the week.",
+ "type": "note",
+ "payload": {
+  "noteTitle": "Week of {{date}}",
+  "blocks": [
+   {
+    "id": "b0",
+    "type": "heading",
+    "text": "Goals for this week"
+   },
+   {
+    "id": "b1",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b2",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b3",
+    "type": "checklist",
+    "text": ""
+   },
+   {
+    "id": "b4",
+    "type": "heading",
+    "text": "Focus areas"
+   },
+   {
+    "id": "b5",
+    "type": "bullet",
+    "text": "Work: "
+   },
+   {
+    "id": "b6",
+    "type": "bullet",
+    "text": "Personal: "
+   },
+   {
+    "id": "b7",
+    "type": "bullet",
+    "text": "Health: "
+   },
+   {
+    "id": "b8",
+    "type": "heading",
+    "text": "Plan by day"
+   },
+   {
+    "id": "b9",
+    "type": "numbered",
+    "text": "Day 1: "
+   },
+   {
+    "id": "b10",
+    "type": "numbered",
+    "text": "Day 2: "
+   },
+   {
+    "id": "b11",
+    "type": "numbered",
+    "text": "Day 3: "
+   },
+   {
+    "id": "b12",
+    "type": "numbered",
+    "text": "Day 4: "
+   },
+   {
+    "id": "b13",
+    "type": "numbered",
+    "text": "Day 5: "
+   },
+   {
+    "id": "b14",
+    "type": "numbered",
+    "text": "Day 6: "
+   },
+   {
+    "id": "b15",
+    "type": "numbered",
+    "text": "Day 7: "
+   }
+  ]
+ }
+}

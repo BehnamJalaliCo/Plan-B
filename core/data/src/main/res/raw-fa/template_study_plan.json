@@ -1,0 +1,46 @@
+{
+ "title": "برنامهٔ مطالعه",
+ "description": "پروژهٔ مطالعه با جلسه‌ها و نقاط مرور.",
+ "type": "project",
+ "payload": {
+  "projectTitle": "برنامهٔ مطالعه",
+  "description": "موضوع، منابع و تاریخ آزمون.",
+  "tasks": [
+   {
+    "title": "جمع‌آوری منابع",
+    "dayOffset": 0,
+    "priority": 2
+   },
+   {
+    "title": "جلسهٔ مطالعهٔ ۱",
+    "dayOffset": 1,
+    "priority": 2
+   },
+   {
+    "title": "جلسهٔ مطالعهٔ ۲",
+    "dayOffset": 3,
+    "priority": 2
+   },
+   {
+    "title": "آزمون تمرینی",
+    "dayOffset": 7,
+    "priority": 3
+   },
+   {
+    "title": "مرور مباحث ضعیف",
+    "dayOffset": 9,
+    "priority": 2
+   }
+  ],
+  "milestones": [
+   {
+    "title": "پایان دور اول",
+    "dayOffset": 7
+   },
+   {
+    "title": "آمادهٔ آزمون",
+    "dayOffset": 14
+   }
+  ]
+ }
+}

@@ -1,0 +1,46 @@
+{
+ "title": "Study Plan",
+ "description": "A study project with sessions and review milestones.",
+ "type": "project",
+ "payload": {
+  "projectTitle": "Study plan",
+  "description": "Subject, resources and exam date.",
+  "tasks": [
+   {
+    "title": "Gather study resources",
+    "dayOffset": 0,
+    "priority": 2
+   },
+   {
+    "title": "Study session 1",
+    "dayOffset": 1,
+    "priority": 2
+   },
+   {
+    "title": "Study session 2",
+    "dayOffset": 3,
+    "priority": 2
+   },
+   {
+    "title": "Practice test",
+    "dayOffset": 7,
+    "priority": 3
+   },
+   {
+    "title": "Review weak topics",
+    "dayOffset": 9,
+    "priority": 2
+   }
+  ],
+  "milestones": [
+   {
+    "title": "First pass complete",
+    "dayOffset": 7
+   },
+   {
+    "title": "Ready for exam",
+    "dayOffset": 14
+   }
+  ]
+ }
+}

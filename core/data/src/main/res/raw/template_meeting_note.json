@@ -1,0 +1,60 @@
+{
+ "title": "Meeting Note",
+ "description": "Attendees, agenda, decisions and action items.",
+ "type": "note",
+ "payload": {
+  "noteTitle": "Meeting · {{date}}",
+  "blocks": [
+   {
+    "id": "b0",
+    "type": "heading",
+    "text": "Attendees"
+   },
+   {
+    "id": "b1",
+    "type": "bullet",
+    "text": ""
+   },
+   {
+    "id": "b2",
+    "type": "heading",
+    "text": "Agenda"
+   },
+   {
+    "id": "b3",
+    "type": "numbered",
+    "text": ""
+   },
+   {
+    "id": "b4",
+    "type": "heading",
+    "text": "Notes"
+   },
+   {
+    "id": "b5",
+    "type": "text",
+    "text": ""
+   },
+   {
+    "id": "b6",
+    "type": "heading",
+    "text": "Decisions"
+   },
+   {
+    "id": "b7",
+    "type": "bullet",
+    "text": ""
+   },
+   {
+    "id": "b8",
+    "type": "heading",
+    "text": "Action items"
+   },
+   {
+    "id": "b9",
+    "type": "checklist",
+    "text": ""
+   }
+  ]
+ }
+}

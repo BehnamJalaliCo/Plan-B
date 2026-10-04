@@ -62,6 +62,7 @@ data class PlannerTemplate(
     /** Stable key for built-in templates (localized at runtime); null for custom. */
     val builtInKey: String? = null,
     val title: String,
+    val description: String = "",
     val type: TemplateType,
     val payload: TemplatePayload,
     val createdAt: Instant = Instant.EPOCH,
