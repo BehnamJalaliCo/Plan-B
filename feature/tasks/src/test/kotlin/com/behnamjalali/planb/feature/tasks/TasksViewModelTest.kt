@@ -9,6 +9,7 @@ import com.behnamjalali.planb.core.testing.awaitItem
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -151,14 +152,123 @@ class TasksViewModelTest {
         vm.setQuery("")
         vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week", "Someday")
 
-        vm.requestDelete(listOf(inbox))
+        val first = vm.requestDelete(listOf(inbox))!!
         vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week")
-        vm.undoDelete()
+        vm.undoDelete(first)
         vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week", "Someday")
 
-        vm.requestDelete(listOf(inbox))
-        vm.commitDelete()
+        val second = vm.requestDelete(listOf(inbox))!!
+        vm.commitDelete(second)
         withTimeout(20_000) { graph.tasks.observeTask(inbox).first { it == null } }
         vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week")
+    }
+
+    @Test
+    fun twoQuickDeletes_areUndoneAndCommittedIndependently() = runBlocking<Unit> {
+        val vm = viewModel(TaskView.ALL)
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week", "Someday")
+
+        val a = vm.requestDelete(listOf(inbox))!!
+        val b = vm.requestDelete(listOf(upcoming))!!
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today")
+
+        // A's snackbar times out (commit) while B's undo is still on offer: only A goes.
+        vm.holdDelete(a)
+        vm.holdDelete(b)
+        vm.commitDelete(a)
+        withTimeout(20_000) { graph.tasks.observeTask(inbox).first { it == null } }
+        assertThat(graph.tasks.getTask(upcoming)).isNotNull()
+
+        // B's undo restores B alone.
+        vm.undoDelete(b)
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week")
+        assertThat(graph.tasks.getTask(upcoming)).isNotNull()
+    }
+
+    @Test
+    fun undoOfOneDelete_doesNotRestoreAnother() = runBlocking<Unit> {
+        val vm = viewModel(TaskView.ALL)
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week", "Someday")
+
+        val a = vm.requestDelete(listOf(inbox))!!
+        val b = vm.requestDelete(listOf(upcoming))!!
+        vm.holdDelete(b)
+        vm.undoDelete(a)
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Someday")
+        vm.commitDelete(b)
+        withTimeout(20_000) { graph.tasks.observeTask(upcoming).first { it == null } }
+        assertThat(graph.tasks.getTask(inbox)).isNotNull()
+    }
+
+    @Test
+    fun deleteWithoutSnackbar_isCommittedByTheViewModelTimer() = runBlocking<Unit> {
+        val vm = viewModel(TaskView.ALL)
+        vm.undoWindowMillis = 200
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week", "Someday")
+
+        // Nobody collects the message (e.g. the user switched tabs): the delete still happens.
+        vm.requestDelete(listOf(inbox))
+        withTimeout(20_000) { graph.tasks.observeTask(inbox).first { it == null } }
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week")
+    }
+
+    @Test
+    fun heldDelete_waitsForTheSnackbarInsteadOfTheTimer() = runBlocking<Unit> {
+        val vm = viewModel(TaskView.ALL)
+        vm.undoWindowMillis = 100
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week", "Someday")
+
+        val token = vm.requestDelete(listOf(inbox))!!
+        assertThat(vm.holdDelete(token)).isTrue()
+        delay(500)
+        assertThat(graph.tasks.getTask(inbox)).isNotNull()
+        vm.undoDelete(token)
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week", "Someday")
+        assertThat(vm.holdDelete(token)).isFalse()
+    }
+
+    @Test
+    fun pendingDelete_isCommittedWhenTheViewModelIsCleared() = runBlocking<Unit> {
+        val vm = viewModel(TaskView.ALL)
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week", "Someday")
+        val token = vm.requestDelete(listOf(inbox))!!
+        vm.holdDelete(token)
+        main.clearViewModels()
+        withTimeout(20_000) { graph.tasks.observeTask(inbox).first { it == null } }
+    }
+
+    @Test
+    fun filterChange_prunesSelection_andBulkActionsSkipHiddenTasks() = runBlocking<Unit> {
+        val vm = viewModel(TaskView.ALL)
+        vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week", "Someday")
+        vm.toggleSelection(overdue)
+        vm.toggleSelection(inbox)
+        vm.uiState.awaitItem { it.selection == setOf(overdue, inbox) }
+
+        vm.setQuery("over")
+        val filtered = vm.awaitTitles(TaskView.ALL, "Overdue")
+        assertThat(filtered.selection).containsExactly(overdue)
+
+        vm.completeSelected(true)
+        withTimeout(20_000) { graph.tasks.observeTask(overdue).first { it?.isCompleted == true } }
+        assertThat(graph.tasks.getTask(inbox)!!.isCompleted).isFalse()
+
+        // Clearing the search does not bring the hidden task back selected.
+        vm.setQuery("")
+        val all = vm.awaitTitles(TaskView.ALL, "Due today", "Next week", "Someday")
+        assertThat(all.selection).isEmpty()
+    }
+
+    @Test
+    fun searchText_survivesProcessDeath() = runBlocking<Unit> {
+        val handle = SavedStateHandle(mapOf("tasks_view" to TaskView.ALL.name))
+        val vm = main.track(TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope))
+        vm.setQuery("next")
+        assertThat(handle.get<String>("tasks_query")).isEqualTo("next")
+
+        val restored = main.track(TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope))
+        main.keepCollecting(restored.uiState)
+        val state = restored.awaitTitles(TaskView.ALL, "Next week")
+        assertThat(state.filter.query).isEqualTo("next")
     }
 }

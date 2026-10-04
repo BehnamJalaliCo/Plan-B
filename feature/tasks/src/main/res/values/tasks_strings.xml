@@ -86,4 +86,6 @@
     <string name="task_editor_notification_permission">Allow notifications so Plan-B can remind you.</string>
     <string name="task_editor_not_found">This task no longer exists.</string>
     <string name="task_editor_invalid_number">Enter a whole number</string>
+    <string name="task_editor_remove_tag">Remove tag %1$s</string>
+    <string name="task_editor_start_after_due">The start date can\'t be after the due date</string>
 </resources>

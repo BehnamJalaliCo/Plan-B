@@ -19,10 +19,14 @@ import com.behnamjalali.planb.core.model.Task
 import com.behnamjalali.planb.core.model.TaskSort
 import com.behnamjalali.planb.core.model.TaskView
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -33,6 +37,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -62,7 +67,8 @@ data class TasksUiState(
 }
 
 sealed interface TasksMessage {
-    data class Deleted(val count: Int) : TasksMessage
+    /** [token] identifies this delete for [TasksViewModel.undoDelete] / [TasksViewModel.commitDelete]. */
+    data class Deleted(val token: Long, val count: Int) : TasksMessage
     data class Completed(val taskId: EntityId, val nextOccurrenceId: EntityId?) : TasksMessage
     data object Failed : TasksMessage
 }
@@ -84,14 +90,24 @@ class TasksViewModel @Inject constructor(
             projectId = savedState.get<Long>(KEY_PROJECT),
             tagId = savedState.get<Long>(KEY_TAG),
             sort = savedState.get<String>(KEY_SORT)?.let { runCatching { TaskSort.valueOf(it) }.getOrNull() } ?: TaskSort.MANUAL,
+            query = savedState.get<String>(KEY_QUERY).orEmpty(),
         ),
     )
     private val selection = MutableStateFlow<Set<EntityId>>(emptySet())
 
-    /** Ids hidden while a delete can still be undone; committed when the snackbar closes. */
-    private val pendingDelete = MutableStateFlow<Set<EntityId>>(emptySet())
+    /**
+     * Deletes that can still be undone, by token. Their ids are hidden from the list; each one is
+     * committed on its own, either by the snackbar that offered the undo or, when no snackbar
+     * took it, by its own timer, so one delete's timeout or undo never affects another.
+     */
+    private val pendingDeletes = MutableStateFlow<Map<Long, Set<EntityId>>>(emptyMap())
+    private val deleteTimers = ConcurrentHashMap<Long, Job>()
+    private val nextDeleteToken = AtomicLong()
 
-    private val _messages = MutableSharedFlow<TasksMessage>(extraBufferCapacity = 4)
+    /** How long a delete waits for an undo when no snackbar holds it; matches a short snackbar. */
+    internal var undoWindowMillis: Long = UNDO_WINDOW_MILLIS
+
+    private val _messages = MutableSharedFlow<TasksMessage>(extraBufferCapacity = 16)
     val messages: SharedFlow<TasksMessage> = _messages
 
     init {
@@ -112,26 +128,32 @@ class TasksViewModel @Inject constructor(
     private val query = filter.map { it.query }.debounce(150).onStart { emit(filter.value.query) }
 
     val uiState: StateFlow<TasksUiState> = combine(
-        taskList, query, filter, projects.observeActiveProjects(), tasks.observeTags(), selection, pendingDelete,
+        taskList, query, filter, projects.observeActiveProjects(), tasks.observeTags(), selection, pendingDeletes,
     ) { values ->
         @Suppress("UNCHECKED_CAST")
         val list = values[0] as List<Task>
         val q = values[1] as String
         val f = values[2] as TasksFilterState
         @Suppress("UNCHECKED_CAST")
-        val pending = values[6] as Set<EntityId>
+        val pending = (values[6] as Map<Long, Set<EntityId>>).values.flatten().toSet()
         val normalized = SearchNormalizer.normalize(q)
+        val visible = list.filter { it.id !in pending }.filter {
+            normalized.isBlank() || SearchNormalizer.normalize(it.title + " " + it.description).contains(normalized)
+        }
+        val visibleIds = visible.mapTo(HashSet()) { it.id }
         @Suppress("UNCHECKED_CAST")
         TasksUiState(
             loading = false,
             filter = f,
-            tasks = list.filter { it.id !in pending }.filter {
-                normalized.isBlank() || SearchNormalizer.normalize(it.title + " " + it.description).contains(normalized)
-            },
+            tasks = visible,
             projects = values[3] as List<Project>,
             tags = values[4] as List<Tag>,
-            selection = values[5] as Set<EntityId>,
+            // A filter, search or delete can hide selected tasks; bulk actions must never reach them.
+            selection = (values[5] as Set<EntityId>).filterTo(LinkedHashSet()) { it in visibleIds },
         )
+    }.onEach { state ->
+        // Drop hidden ids from the selection itself too, so they don't come back selected later.
+        if (!state.error) selection.update { current -> if (current.all { it in state.selection }) current else state.selection }
     }.catch { emit(TasksUiState(loading = false, error = true)) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TasksUiState())
 
@@ -156,7 +178,10 @@ class TasksViewModel @Inject constructor(
         filter.update { it.copy(sort = sort) }
     }
 
-    fun setQuery(query: String) = filter.update { it.copy(query = query) }
+    fun setQuery(query: String) {
+        savedState[KEY_QUERY] = query
+        filter.update { it.copy(query = query) }
+    }
 
     fun toggleSelection(id: EntityId) = selection.update { if (id in it) it - id else it + id }
     fun clearSelection() { selection.value = emptySet() }
@@ -175,49 +200,84 @@ class TasksViewModel @Inject constructor(
 
     /** Undo a completion; also removes the occurrence a recurring completion created. */
     fun undoComplete(id: EntityId, nextOccurrenceId: EntityId?) = launchSafely {
-        val original = tasks.getTask(id)
-        if (nextOccurrenceId != null) {
-            val next = tasks.getTask(nextOccurrenceId)
-            tasks.delete(listOf(nextOccurrenceId))
-            if (original != null && next != null) {
-                tasks.save(original.copy(recurrence = next.recurrence, recurrenceAnchor = next.recurrenceAnchor))
-            }
-        }
+        val next = nextOccurrenceId?.let { tasks.getTask(it) }
+        if (nextOccurrenceId != null) tasks.delete(listOf(nextOccurrenceId))
+        // Reopen first, so restoring the series below saves an open task, not a done one
+        // (saving a done recurring task would spawn yet another occurrence).
         tasks.setCompleted(id, false)
+        val reopened = tasks.getTask(id)
+        if (reopened != null && next != null) {
+            tasks.save(reopened.copy(recurrence = next.recurrence, recurrenceAnchor = next.recurrenceAnchor))
+        }
     }
 
-    fun completeSelected(completed: Boolean) = launchSafely {
-        tasks.setCompleted(selection.value.toList(), completed)
-        clearSelection()
+    /** The selected tasks that are actually on screen; never a task a filter has since hidden. */
+    private fun visibleSelection(): List<EntityId> {
+        val visible = uiState.value.tasks.mapTo(HashSet()) { it.id }
+        return selection.value.filter { it in visible }
     }
 
-    fun archiveSelected(archived: Boolean) = launchSafely {
-        tasks.setArchived(selection.value.toList(), archived)
-        clearSelection()
+    fun completeSelected(completed: Boolean) {
+        val ids = visibleSelection()
+        launchSafely {
+            tasks.setCompleted(ids, completed)
+            clearSelection()
+        }
     }
 
-    fun moveSelected(projectId: EntityId?) = launchSafely {
-        tasks.moveToProject(selection.value.toList(), projectId)
-        clearSelection()
+    fun archiveSelected(archived: Boolean) {
+        val ids = visibleSelection()
+        launchSafely {
+            tasks.setArchived(ids, archived)
+            clearSelection()
+        }
+    }
+
+    fun moveSelected(projectId: EntityId?) {
+        val ids = visibleSelection()
+        launchSafely {
+            tasks.moveToProject(ids, projectId)
+            clearSelection()
+        }
     }
 
     fun duplicate(id: EntityId) = launchSafely { tasks.duplicate(id) }
 
-    fun requestDelete(ids: Collection<EntityId>) {
-        if (ids.isEmpty()) return
-        pendingDelete.update { it + ids }
+    /** Hides [ids] at once and deletes them unless [undoDelete] is called for the returned token. */
+    fun requestDelete(ids: Collection<EntityId>): Long? {
+        if (ids.isEmpty()) return null
+        val token = nextDeleteToken.incrementAndGet()
+        pendingDeletes.update { it + (token to ids.toSet()) }
         clearSelection()
-        _messages.tryEmit(TasksMessage.Deleted(ids.size))
+        deleteTimers[token] = viewModelScope.launch {
+            delay(undoWindowMillis)
+            commitDelete(token)
+        }
+        _messages.tryEmit(TasksMessage.Deleted(token, ids.size))
+        return token
     }
 
-    fun undoDelete() { pendingDelete.value = emptySet() }
+    /**
+     * Called by the snackbar that offers the undo for [token]: it now decides between [undoDelete]
+     * and [commitDelete], so the fallback timer stops. False when the delete is already committed.
+     */
+    fun holdDelete(token: Long): Boolean {
+        deleteTimers.remove(token)?.cancel()
+        return token in pendingDeletes.value
+    }
 
-    fun commitDelete() {
-        val ids = pendingDelete.value
-        if (ids.isEmpty()) return
-        launchSafely {
-            tasks.delete(ids.toList())
-            pendingDelete.update { it - ids }
+    fun undoDelete(token: Long) {
+        deleteTimers.remove(token)?.cancel()
+        pendingDeletes.update { it - token }
+    }
+
+    fun commitDelete(token: Long) {
+        deleteTimers.remove(token)?.cancel()
+        val ids = pendingDeletes.value[token] ?: return
+        // The application scope finishes the delete even if this screen goes away meanwhile.
+        appScope.launch {
+            runCatchingSafely { tasks.delete(ids.toList()) }.onFailure { _messages.tryEmit(TasksMessage.Failed) }
+            pendingDeletes.update { it - token }
         }
     }
 
@@ -235,8 +295,10 @@ class TasksViewModel @Inject constructor(
 
     override fun onCleared() {
         // A pending delete the user did not undo is committed on a scope that outlives the screen.
-        val ids = pendingDelete.value
-        if (ids.isNotEmpty()) appScope.launch { runCatchingSafely { tasks.delete(ids.toList()) } }
+        deleteTimers.values.forEach { it.cancel() }
+        deleteTimers.clear()
+        val ids = pendingDeletes.value.values.flatten()
+        if (ids.isNotEmpty()) appScope.launch { runCatchingSafely { tasks.delete(ids) } }
     }
 
     private companion object {
@@ -244,5 +306,9 @@ class TasksViewModel @Inject constructor(
         const val KEY_PROJECT = "tasks_project"
         const val KEY_TAG = "tasks_tag"
         const val KEY_SORT = "tasks_sort"
+        const val KEY_QUERY = "tasks_query"
+
+        /** [androidx.compose.material3.SnackbarDuration.Short]. */
+        const val UNDO_WINDOW_MILLIS = 4_000L
     }
 }
