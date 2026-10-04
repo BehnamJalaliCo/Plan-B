@@ -120,6 +120,21 @@ class HabitStatsTest {
     }
 
     @Test
+    fun nextScheduledDate_followsEverySchedule_withoutHorizon() {
+        val every30 = Habit(title = "h", schedule = HabitSchedule.EveryNDays(30), startDate = today.minusDays(5))
+        assertThat(HabitStats.nextScheduledDate(every30, today)).isEqualTo(today.plusDays(25))
+        assertThat(HabitStats.nextScheduledDate(every30, today.minusDays(5))).isEqualTo(today.minusDays(5))
+        val startsLater = Habit(title = "h", startDate = today.plusDays(40))
+        assertThat(HabitStats.nextScheduledDate(startsLater, today)).isEqualTo(today.plusDays(40))
+        val fridays = habit(HabitSchedule.SelectedDays(setOf(DayOfWeek.FRIDAY)))
+        assertThat(HabitStats.nextScheduledDate(fridays, today)).isEqualTo(LocalDate.of(2026, 10, 9))
+        assertThat(HabitStats.nextScheduledDate(habit(HabitSchedule.SelectedDays(emptySet())), today)).isNull()
+        listOf(every30, startsLater, fridays).forEach { h ->
+            assertThat(HabitStats.isScheduled(h, HabitStats.nextScheduledDate(h, today)!!)).isTrue()
+        }
+    }
+
+    @Test
     fun scheduleEncoding_roundTrips() {
         listOf(
             HabitSchedule.Daily,

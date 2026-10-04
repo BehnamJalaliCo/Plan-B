@@ -3,13 +3,16 @@ package com.behnamjalali.planb.core.notifications
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,18 +29,34 @@ object DeepLinks {
 class Notifier @Inject constructor(@ApplicationContext private val context: Context) {
     private val manager = NotificationManagerCompat.from(context)
 
-    fun createChannels() {
+    /**
+     * A context whose resources use the app language [languageTag]. Needed outside activities
+     * (application start, receivers): before API 33 the application context does not carry
+     * the per-app language.
+     */
+    // Both languages are always installed: the app bundle disables language splits (app/build.gradle.kts).
+    @SuppressLint("AppBundleLocaleChanges")
+    fun localizedContext(languageTag: String): Context =
+        context.createConfigurationContext(
+            Configuration(context.resources.configuration).apply { setLocale(Locale.forLanguageTag(languageTag)) },
+        )
+
+    /**
+     * Creates the channels, or renames existing ones, using [localized] resources. Call it
+     * again whenever the app language changes so the system settings show current names.
+     */
+    fun createChannels(localized: Context = context) {
         val system = context.getSystemService(NotificationManager::class.java) ?: return
         system.createNotificationChannel(
-            NotificationChannel(CHANNEL_REMINDERS, context.getString(R.string.notif_channel_reminders), NotificationManager.IMPORTANCE_HIGH)
+            NotificationChannel(CHANNEL_REMINDERS, localized.getString(R.string.notif_channel_reminders), NotificationManager.IMPORTANCE_HIGH)
                 .apply {
-                    description = context.getString(R.string.notif_channel_reminders_desc)
+                    description = localized.getString(R.string.notif_channel_reminders_desc)
                     lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE
                 },
         )
         system.createNotificationChannel(
-            NotificationChannel(CHANNEL_FOCUS, context.getString(R.string.notif_channel_focus), NotificationManager.IMPORTANCE_DEFAULT)
-                .apply { description = context.getString(R.string.notif_channel_focus_desc) },
+            NotificationChannel(CHANNEL_FOCUS, localized.getString(R.string.notif_channel_focus), NotificationManager.IMPORTANCE_DEFAULT)
+                .apply { description = localized.getString(R.string.notif_channel_focus_desc) },
         )
     }
 

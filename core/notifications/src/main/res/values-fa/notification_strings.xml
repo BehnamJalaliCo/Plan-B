@@ -8,6 +8,7 @@
     <string name="notif_task_title">یادآور کار</string>
     <string name="notif_event_title">رویداد پیش رو</string>
     <string name="notif_habit_title">یادآور عادت</string>
+    <string name="notif_separator">"، "</string>
     <string name="notif_habit_text">وقت %1$s است</string>
     <string name="notif_focus_title">جلسهٔ تمرکز تمام شد</string>
     <string name="notif_focus_text">آفرین! کمی استراحت کنید.</string>

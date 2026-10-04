@@ -53,4 +53,15 @@ class ReminderPlannerTest {
         val weekly = habit.copy(schedule = HabitSchedule.SelectedDays(setOf(DayOfWeek.FRIDAY)))
         assertThat(ReminderPlanner.forHabit(weekly, 0, now, zone)!!.occurrenceDate.dayOfWeek).isEqualTo(DayOfWeek.FRIDAY)
     }
+
+    @Test
+    fun habit_farAhead_hasNoLookaheadLimit() {
+        val every30 = Habit(id = 4, title = "h", schedule = HabitSchedule.EveryNDays(30), startDate = today, reminderTime = LocalTime.of(8, 0))
+        // 08:00 today has passed (it is 09:00), so the next one is 30 days later.
+        assertThat(ReminderPlanner.forHabit(every30, 0, now, zone)!!.occurrenceDate).isEqualTo(today.plusDays(30))
+        val startsLater = Habit(id = 5, title = "h", startDate = today.plusDays(60), reminderTime = LocalTime.of(20, 0))
+        assertThat(ReminderPlanner.forHabit(startsLater, 0, now, zone)!!.occurrenceDate).isEqualTo(today.plusDays(60))
+        val noDays = Habit(id = 6, title = "h", schedule = HabitSchedule.SelectedDays(emptySet()), startDate = today, reminderTime = LocalTime.of(20, 0))
+        assertThat(ReminderPlanner.forHabit(noDays, 0, now, zone)).isNull()
+    }
 }

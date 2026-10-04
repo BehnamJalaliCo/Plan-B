@@ -1,11 +1,10 @@
 package com.behnamjalali.planb.core.notifications
 
-import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.text.format.DateFormat
+import android.util.Log
 import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.common.NumberFormatter
 import com.behnamjalali.planb.core.common.TimeProvider
@@ -14,26 +13,106 @@ import com.behnamjalali.planb.core.data.repository.FocusRepository
 import com.behnamjalali.planb.core.data.repository.HabitRepository
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
+import com.behnamjalali.planb.core.data.repository.recordFocusSession
 import com.behnamjalali.planb.core.datetime.PlannerDateFormatter
-import com.behnamjalali.planb.core.datetime.ReminderTime
+import com.behnamjalali.planb.core.model.FocusStatus
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.time.Instant
 import java.time.LocalDate
-import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
+private const val TAG = "PlanBReminders"
+
+/**
+ * What a fired reminder alarm does, apart from the receiver so it can be tested:
+ * - the item is re-read, and an alarm that no longer matches the item's planned reminder
+ *   (changed reminder, deleted and restored item) is dropped instead of notifying;
+ * - after posting, only the item's alarm is renewed (next occurrence or none). Syncing
+ *   would also clear the notification that was just posted.
+ */
+class ReminderDelivery @Inject constructor(
+    @ApplicationContext private val appContext: Context,
+    private val tasks: TaskRepository,
+    private val events: EventRepository,
+    private val habits: HabitRepository,
+    private val focus: FocusRepository,
+    private val notifier: Notifier,
+    private val scheduler: AlarmReminderScheduler,
+    private val time: TimeProvider,
+    private val settings: SettingsRepository,
+) {
+    /** [plannedAt] is the trigger time the alarm was set for (null for alarms set by older versions). */
+    suspend fun deliver(kind: ReminderKind, id: Long, occurrence: LocalDate, plannedAt: Instant?) {
+        // Receivers run without an activity, so apply the user's language explicitly.
+        val prefs = settings.current()
+        val context = notifier.localizedContext(prefs.language.tag)
+        val formatter = PlannerDateFormatter(
+            context.resources, prefs.calendarSystem, prefs.firstDayOfWeek,
+            NumberFormatter(prefs.usePersianDigits), DateFormat.is24HourFormat(appContext),
+        )
+        val separator = context.getString(R.string.notif_separator)
+        val zone = time.zone()
+        // The plan as seen just before the alarm's time must name this very alarm.
+        val asOf = plannedAt?.minusMillis(1)
+        fun stillPlanned(plan: () -> PlannedReminder?): Boolean = asOf == null || plan()?.at == plannedAt
+
+        when (kind) {
+            ReminderKind.TASK -> {
+                val task = tasks.getTask(id) ?: return
+                if (!task.isCompleted && !task.archived && task.dueDate != null && stillPlanned { ReminderPlanner.forTask(task, asOf!!, zone) }) {
+                    val text = buildString {
+                        append(task.title)
+                        task.dueTime?.let { append(separator).append(formatter.time(it)) }
+                    }
+                    notifier.showReminder(kind, id, context.getString(R.string.notif_task_title), text, DeepLinks.task(id), context)
+                }
+                scheduler.renewTaskAlarm(id)
+            }
+            ReminderKind.EVENT -> {
+                val event = events.getEvent(id) ?: return
+                if (stillPlanned { ReminderPlanner.forEvent(event, asOf!!, zone) }) {
+                    val text = listOfNotNull(event.title, event.startTime?.let(formatter::time)).joinToString(separator)
+                    notifier.showReminder(kind, id, context.getString(R.string.notif_event_title), text, DeepLinks.event(id), context)
+                }
+                // Recurring events: the next occurrence's alarm.
+                scheduler.renewEventAlarm(id)
+            }
+            ReminderKind.HABIT -> {
+                val habit = habits.getHabit(id) ?: return
+                // Whether today's target is met is checked separately below.
+                val planned = stillPlanned { ReminderPlanner.forHabit(habit, 0, asOf!!, zone) }
+                if (planned && habits.amountOn(id, occurrence) < habit.target) {
+                    notifier.showReminder(
+                        kind, id, context.getString(R.string.notif_habit_title),
+                        context.getString(R.string.notif_habit_text, habit.title), DeepLinks.habit(id), context,
+                    )
+                }
+                scheduler.renewHabitAlarm(id)
+            }
+            ReminderKind.FOCUS -> {
+                val session = focus.completeIfElapsed() ?: return
+                if (session.status == FocusStatus.COMPLETED) {
+                    tasks.recordFocusSession(session)
+                    notifier.showFocusComplete(context)
+                } else if (session.status == FocusStatus.RUNNING) {
+                    // Fired before the session's end (e.g. the clock changed): wait for the real end.
+                    val now = time.now()
+                    scheduler.scheduleFocusEnd(now.plusMillis(session.remainingMillis(now)))
+                }
+            }
+        }
+    }
+}
 
 /** Fires a reminder, re-validating the item first so stale alarms never notify. */
 @AndroidEntryPoint
 class ReminderReceiver : BroadcastReceiver() {
-    @Inject lateinit var tasks: TaskRepository
-    @Inject lateinit var events: EventRepository
-    @Inject lateinit var habits: HabitRepository
-    @Inject lateinit var focus: FocusRepository
-    @Inject lateinit var notifier: Notifier
-    @Inject lateinit var scheduler: AlarmReminderScheduler
+    @Inject lateinit var delivery: ReminderDelivery
     @Inject lateinit var time: TimeProvider
-    @Inject lateinit var settings: SettingsRepository
     @Inject @ApplicationScope lateinit var scope: CoroutineScope
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -41,63 +120,18 @@ class ReminderReceiver : BroadcastReceiver() {
         val kind = intent.getStringExtra(EXTRA_KIND)?.let { runCatching { ReminderKind.valueOf(it) }.getOrNull() } ?: return
         val id = intent.getLongExtra(EXTRA_ID, -1)
         val occurrence = LocalDate.ofEpochDay(intent.getLongExtra(EXTRA_DATE, time.today().toEpochDay()))
+        val plannedAt = intent.getLongExtra(EXTRA_AT, 0L).takeIf { it > 0L }?.let(Instant::ofEpochMilli)
         val pending = goAsync()
         scope.launch {
             try {
-                handle(context, kind, id, occurrence)
+                delivery.deliver(kind, id, occurrence, plannedAt)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // A failed delivery must not take the process down. Never log item content.
+                Log.w(TAG, "Could not deliver a ${kind.name} reminder (${e.javaClass.simpleName})")
             } finally {
                 pending.finish()
-            }
-        }
-    }
-
-    // Both languages are always installed: the app bundle disables language splits (app/build.gradle.kts).
-    @SuppressLint("AppBundleLocaleChanges")
-    private suspend fun handle(appContext: Context, kind: ReminderKind, id: Long, occurrence: LocalDate) {
-        // Receivers run without an activity, so apply the user's language explicitly (pre-API 33
-        // the application context does not carry the per-app locale).
-        val prefs = settings.current()
-        val context = appContext.createConfigurationContext(
-            Configuration(appContext.resources.configuration).apply { setLocale(Locale.forLanguageTag(prefs.language.tag)) },
-        )
-        val formatter = PlannerDateFormatter(
-            context.resources, prefs.calendarSystem, prefs.firstDayOfWeek,
-            NumberFormatter(prefs.usePersianDigits), DateFormat.is24HourFormat(appContext),
-        )
-        when (kind) {
-            ReminderKind.TASK -> {
-                val task = tasks.getTask(id) ?: return
-                if (task.isCompleted || task.archived || task.dueDate == null) return
-                val due = task.dueDate!!
-                val text = buildString {
-                    append(task.title)
-                    task.dueTime?.let { append(" · ").append(formatter.time(it)) }
-                }
-                notifier.showReminder(kind, id, context.getString(R.string.notif_task_title), text, DeepLinks.task(id), context)
-                if (ReminderTime.triggerAt(due, task.dueTime, task.reminderOffsetMinutes ?: 0, time.zone()).isAfter(time.now())) {
-                    scheduler.syncTask(id)
-                }
-            }
-            ReminderKind.EVENT -> {
-                val event = events.getEvent(id) ?: return
-                val text = listOfNotNull(event.title, event.startTime?.let(formatter::time)).joinToString(" · ")
-                notifier.showReminder(kind, id, context.getString(R.string.notif_event_title), text, DeepLinks.event(id), context)
-                // Recurring events: schedule the next occurrence.
-                scheduler.syncEvent(id)
-            }
-            ReminderKind.HABIT -> {
-                val habit = habits.getHabit(id) ?: return
-                if (habits.amountOn(id, occurrence) < habit.target) {
-                    notifier.showReminder(
-                        kind, id, context.getString(R.string.notif_habit_title),
-                        context.getString(R.string.notif_habit_text, habit.title), DeepLinks.habit(id), context,
-                    )
-                }
-                scheduler.syncHabit(id)
-            }
-            ReminderKind.FOCUS -> {
-                val completed = focus.completeIfElapsed()
-                if (completed != null && completed.endedAt != null) notifier.showFocusComplete(context)
             }
         }
     }
@@ -107,6 +141,7 @@ class ReminderReceiver : BroadcastReceiver() {
         const val EXTRA_KIND = "kind"
         const val EXTRA_ID = "id"
         const val EXTRA_DATE = "date"
+        const val EXTRA_AT = "at"
     }
 }
 
@@ -132,7 +167,11 @@ class RescheduleReceiver : BroadcastReceiver() {
         val pending = goAsync()
         scope.launch {
             try {
-                runCatching { scheduler.rescheduleAll() }
+                scheduler.rescheduleAll()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not restore reminders (${e.javaClass.simpleName})")
             } finally {
                 pending.finish()
             }

@@ -24,6 +24,9 @@ interface FocusRepository {
     fun observeActive(): Flow<FocusSession?>
     fun observeHistory(limit: Int = 50): Flow<List<FocusSession>>
     fun observeFocusedMillis(from: Instant, to: Instant): Flow<Long>
+
+    /** The running or paused session, if any. */
+    suspend fun getActive(): FocusSession?
     suspend fun start(plannedMillis: Long, linkedTaskId: EntityId?): FocusSession
     suspend fun pause(): FocusSession?
     suspend fun resume(): FocusSession?
@@ -44,6 +47,8 @@ class OfflineFocusRepository @Inject constructor(
     override fun observeHistory(limit: Int) = dao.observeHistory(limit).map { l -> l.map { it.toModel() } }
     override fun observeFocusedMillis(from: Instant, to: Instant) =
         dao.observeFocusedMillis(from.toEpochMilli(), to.toEpochMilli())
+
+    override suspend fun getActive(): FocusSession? = dao.getActive()?.toModel()
 
     override suspend fun start(plannedMillis: Long, linkedTaskId: EntityId?): FocusSession {
         require(plannedMillis > 0) { "Planned duration must be positive" }
@@ -100,4 +105,14 @@ class OfflineFocusRepository @Inject constructor(
             runningSince = null,
         )
     }
+}
+
+/**
+ * Adds a completed session's whole minutes to its linked task's actual time. Used by every
+ * path that completes a session (the screen and the background end alarm).
+ */
+suspend fun TaskRepository.recordFocusSession(session: FocusSession) {
+    if (session.status != FocusStatus.COMPLETED) return
+    val taskId = session.linkedTaskId ?: return
+    addActualMinutes(taskId, (session.actualDurationMillis / 60_000L).toInt())
 }

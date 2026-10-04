@@ -30,6 +30,24 @@ object HabitStats {
         }
     }
 
+    /**
+     * The first scheduled day on or after [from] (never before the start date), computed
+     * directly from the schedule, so there is no look-ahead limit. Null when the habit has
+     * no scheduled days at all (an empty weekday set).
+     */
+    fun nextScheduledDate(habit: Habit, from: LocalDate): LocalDate? {
+        val start = maxOf(from, habit.startDate)
+        return when (val s = habit.schedule) {
+            HabitSchedule.Daily, is HabitSchedule.TimesPerWeek -> start
+            is HabitSchedule.SelectedDays -> (0L until 7L).map { start.plusDays(it) }.firstOrNull { it.dayOfWeek in s.days }
+            is HabitSchedule.EveryNDays -> {
+                val interval = s.interval.coerceAtLeast(1).toLong()
+                val rest = Math.floorMod(ChronoUnit.DAYS.between(habit.startDate, start), interval)
+                if (rest == 0L) start else start.plusDays(interval - rest)
+            }
+        }
+    }
+
     fun isDone(habit: Habit, amounts: Map<LocalDate, Int>, date: LocalDate): Boolean =
         (amounts[date] ?: 0) >= habit.target
 

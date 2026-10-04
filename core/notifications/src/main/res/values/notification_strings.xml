@@ -8,6 +8,9 @@
     <string name="notif_task_title">Task reminder</string>
     <string name="notif_event_title">Upcoming event</string>
     <string name="notif_habit_title">Habit reminder</string>
+    <!-- Joins a title and its time. Persian uses the Persian comma: a middle dot next to
+         Persian digits reads like the digit zero. -->
+    <string name="notif_separator">" · "</string>
     <string name="notif_habit_text">Time for: %1$s</string>
     <string name="notif_focus_title">Focus session complete</string>
     <string name="notif_focus_text">Nice work. Take a short break.</string>

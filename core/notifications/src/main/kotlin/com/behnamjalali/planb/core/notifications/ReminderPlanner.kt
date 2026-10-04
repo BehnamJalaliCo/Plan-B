@@ -21,7 +21,6 @@ enum class ReminderKind(val code: Int) { TASK(1), EVENT(2), HABIT(3), FOCUS(4) }
  */
 object ReminderPlanner {
     private const val EVENT_LOOKAHEAD_DAYS = 400L
-    private const val HABIT_LOOKAHEAD_DAYS = 14L
 
     fun forTask(task: Task, now: Instant, zone: ZoneId): PlannedReminder? {
         val offset = task.reminderOffsetMinutes ?: return null
@@ -47,17 +46,23 @@ object ReminderPlanner {
             ?.let { (date, at) -> PlannedReminder(ReminderKind.EVENT, event.id, at, date) }
     }
 
-    /** Next scheduled day at the habit's reminder time; today is skipped once the target is met. */
+    /**
+     * Next scheduled day at the habit's reminder time; today is skipped once the target is met
+     * or the time has passed. The day comes straight from the schedule (no look-ahead window),
+     * so "every 30 days" or a start date months away still get their reminder.
+     */
     fun forHabit(habit: Habit, todayAmount: Int, now: Instant, zone: ZoneId): PlannedReminder? {
         val time = habit.reminderTime ?: return null
         if (habit.archived) return null
         val today = now.atZone(zone).toLocalDate()
-        for (offset in 0..HABIT_LOOKAHEAD_DAYS) {
-            val date = today.plusDays(offset)
-            if (!HabitStats.isScheduled(habit, date)) continue
-            if (offset == 0L && todayAmount >= habit.target) continue
+        var from = today
+        // Only today can be skipped, so the second candidate is always the answer.
+        repeat(2) {
+            val date = HabitStats.nextScheduledDate(habit, from) ?: return null
             val at = date.atTime(time).atZone(zone).toInstant()
-            if (at.isAfter(now)) return PlannedReminder(ReminderKind.HABIT, habit.id, at, date)
+            val metToday = date == today && todayAmount >= habit.target
+            if (!metToday && at.isAfter(now)) return PlannedReminder(ReminderKind.HABIT, habit.id, at, date)
+            from = date.plusDays(1)
         }
         return null
     }
