@@ -181,7 +181,11 @@ object AutoBackupStoreModule {
         @ApplicationContext context: Context,
         @ApplicationScope scope: CoroutineScope,
     ): DataStore<Preferences> = createPreferencesDataStore(scope) { context.preferencesDataStoreFile(FILE) }
+}
 
+@Module
+@InstallIn(SingletonComponent::class)
+object AutoBackupFoldersModule {
     @Provides
     fun provideBackupFolders(@ApplicationContext context: Context): BackupFolders =
         BackupFolders { uri -> SafBackupFolder.open(context, uri) }
