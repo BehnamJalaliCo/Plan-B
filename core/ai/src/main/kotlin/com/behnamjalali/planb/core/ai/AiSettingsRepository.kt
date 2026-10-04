@@ -211,21 +211,23 @@ class AiSettingsRepository @Inject constructor(
 @InstallIn(SingletonComponent::class)
 abstract class AiModule {
     @Binds abstract fun bindCipher(impl: AndroidKeystoreCipher): SecretCipher
+}
 
-    companion object {
-        /** Not the user preferences file, so it is never exported or backed up. */
-        private const val FILE = "planb_ai_settings"
+@Module
+@InstallIn(SingletonComponent::class)
+object AiStorageModule {
+    /** Not the user preferences file, so it is never exported or backed up. */
+    private const val FILE = "planb_ai_settings"
 
-        @Provides
-        @Singleton
-        @AiPreferences
-        fun provideAiDataStore(
-            @ApplicationContext context: Context,
-            @ApplicationScope scope: CoroutineScope,
-        ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
-            corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
-            scope = scope,
-            produceFile = { context.preferencesDataStoreFile(FILE) },
-        )
-    }
+    @Provides
+    @Singleton
+    @AiPreferences
+    fun provideAiDataStore(
+        @ApplicationContext context: Context,
+        @ApplicationScope scope: CoroutineScope,
+    ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+        corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
+        scope = scope,
+        produceFile = { context.preferencesDataStoreFile(FILE) },
+    )
 }
