@@ -320,6 +320,7 @@ fun PlannerHabitCard(
     onCheckIn: () -> Unit,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    subtitle: String? = null,
 ) {
     val numbers = PlannerLocals.numbers
     val tones = PlanBTheme.colors.accent(habit.color)
@@ -347,6 +348,9 @@ fun PlannerHabitCard(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (subtitle != null) {
+                    Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 if (streak > 0) {
                     MetaItem(
                         Icons.Rounded.LocalFireDepartment,

@@ -6,8 +6,14 @@
     <string name="habits_empty_title">Build a habit</string>
     <string name="habits_empty">Small daily steps add up. Create your first habit.</string>
     <string name="habits_error">Could not load habits.</string>
-    <string name="habit_streak_days">Current streak: %1$s days</string>
-    <string name="habit_streak_weeks">Current streak: %1$s weeks</string>
+    <plurals name="habit_streak_days">
+        <item quantity="one">Current streak: %1$s day</item>
+        <item quantity="other">Current streak: %1$s days</item>
+    </plurals>
+    <plurals name="habit_streak_weeks">
+        <item quantity="one">Current streak: %1$s week</item>
+        <item quantity="other">Current streak: %1$s weeks</item>
+    </plurals>
     <string name="habit_best_streak">Best streak</string>
     <string name="habit_rate_30">Last 30 days</string>
     <string name="habit_today">Today</string>
@@ -39,6 +45,12 @@
     <string name="habit_editor_color">Color</string>
     <string name="habit_editor_icon">Icon</string>
     <string name="habit_editor_invalid_number">Enter a number from 1 to 999</string>
-    <string name="habit_summary_times_week">%1$s times a week</string>
-    <string name="habit_summary_every_n">Every %1$s days</string>
+    <plurals name="habit_summary_times_week">
+        <item quantity="one">Once a week</item>
+        <item quantity="other">%1$s times a week</item>
+    </plurals>
+    <plurals name="habit_summary_every_n">
+        <item quantity="one">Every day</item>
+        <item quantity="other">Every %1$s days</item>
+    </plurals>
 </resources>

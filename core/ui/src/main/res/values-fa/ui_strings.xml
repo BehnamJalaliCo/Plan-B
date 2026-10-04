@@ -20,7 +20,6 @@
     <string name="ui_previous_month">ماه قبل</string>
     <string name="ui_next_month">ماه بعد</string>
     <string name="ui_today">امروز</string>
-    <string name="ui_tasks_count">%1$s کار</string>
     <string name="ui_project_progress">%1$s از کارها انجام شده</string>
     <string name="ui_streak">%1$s روز پیاپی</string>
     <string name="ui_habit_progress">%1$s از %2$s %3$s</string>

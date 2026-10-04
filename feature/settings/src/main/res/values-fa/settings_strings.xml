@@ -8,9 +8,9 @@
     <string name="settings_theme_dark">تیره</string>
     <string name="settings_calendar">تقویم</string>
     <string name="settings_calendar_system">نوع تقویم</string>
-    <string name="settings_calendar_jalali">شمسی (هجری خورشیدی)</string>
+    <string name="settings_calendar_jalali">هجری شمسی</string>
     <string name="settings_calendar_gregorian">میلادی</string>
-    <string name="settings_calendar_auto">پیش‌فرض زبان (%1$s)</string>
+    <string name="settings_calendar_auto">پیش‌فرض زبان · %1$s</string>
     <string name="settings_first_day">اولین روز هفته</string>
     <string name="settings_first_day_auto">پیش‌فرض تقویم (%1$s)</string>
     <string name="settings_number_format">اعداد</string>
@@ -70,7 +70,10 @@
     <string name="export_tasks_json">کارها به‌صورت JSON</string>
     <string name="export_notes_markdown">یادداشت‌ها به‌صورت Markdown (zip)</string>
     <string name="export_notes_json">یادداشت‌ها به‌صورت JSON</string>
-    <string name="export_done">%1$s مورد برون‌بری شد</string>
+    <plurals name="export_done">
+        <item quantity="one">%1$s مورد برون‌بری شد</item>
+        <item quantity="other">%1$s مورد برون‌بری شد</item>
+    </plurals>
     <string name="export_failed">برون‌بری ناموفق بود</string>
     <string name="backup_section_import">درون‌ریزی</string>
     <string name="import_tasks">درون‌ریزی کارها (CSV یا JSON)</string>

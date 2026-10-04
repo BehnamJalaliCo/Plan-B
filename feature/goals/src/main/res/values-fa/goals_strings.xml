@@ -15,7 +15,10 @@
     <string name="goal_pace_behind">عقب‌تر از برنامه</string>
     <string name="goal_pace_overdue">مهلت گذشته است</string>
     <string name="goal_expected">انتظار تا امروز: %1$s</string>
-    <string name="goal_days_left">%1$s روز باقی مانده</string>
+    <plurals name="goal_days_left">
+        <item quantity="one">%1$s روز باقی مانده</item>
+        <item quantity="other">%1$s روز باقی مانده</item>
+    </plurals>
     <string name="goal_needed_per_week">برای رسیدن به‌موقع، حدود %1$s %2$s در هفته</string>
     <string name="goal_milestones">نقاط عطف</string>
     <string name="goal_milestone_hint">نقطهٔ عطف جدید</string>

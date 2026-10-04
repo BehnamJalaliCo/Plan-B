@@ -60,3 +60,9 @@ dependencies {
     testImplementation(libs.androidx.room.runtime)
     testImplementation(libs.androidx.test.ext.junit)
 }
+
+// Screenshots and end-to-end flows use a frozen Tehran clock; align the JVM zone with it so
+// formatting that relies on the system zone is deterministic on every machine.
+tasks.withType<Test>().configureEach {
+    systemProperty("user.timezone", "Asia/Tehran")
+}

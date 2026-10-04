@@ -46,7 +46,7 @@ data class Variant(val language: AppLanguage, val dark: Boolean, val fontScale: 
 }
 
 /** Repository-root screenshot folder; the same files feed docs/UI_GALLERY.md. */
-private val screenshotRoot: File by lazy {
+internal val screenshotRoot: File by lazy {
     var dir: File? = File(System.getProperty("user.dir") ?: ".").absoluteFile
     while (dir != null && !File(dir, "settings.gradle.kts").exists()) dir = dir.parentFile
     File(requireNotNull(dir) { "Repository root not found" }, "artifacts/screenshots")

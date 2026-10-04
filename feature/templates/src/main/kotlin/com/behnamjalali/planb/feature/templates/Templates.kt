@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -220,9 +221,9 @@ private fun TemplateCard(t: PlannerTemplate, onApply: (PlannerTemplate) -> Unit,
             Column(Modifier.weight(1f)) {
                 Text(t.title.ifBlank { stringResource(com.behnamjalali.planb.core.ui.R.string.ui_untitled) }, style = MaterialTheme.typography.titleSmall)
                 val detail = when (t.type) {
-                    TemplateType.NOTE -> stringResource(R.string.templates_blocks, numbers.format(t.payload.blocks.size))
-                    TemplateType.PROJECT, TemplateType.TASKS -> stringResource(R.string.templates_tasks_count, numbers.format(t.payload.tasks.size))
-                    TemplateType.HABITS -> stringResource(R.string.templates_habits_count, numbers.format(t.payload.habits.size))
+                    TemplateType.NOTE -> pluralStringResource(R.plurals.templates_blocks, t.payload.blocks.size, numbers.format(t.payload.blocks.size))
+                    TemplateType.PROJECT, TemplateType.TASKS -> pluralStringResource(R.plurals.templates_tasks_count, t.payload.tasks.size, numbers.format(t.payload.tasks.size))
+                    TemplateType.HABITS -> pluralStringResource(R.plurals.templates_habits_count, t.payload.habits.size, numbers.format(t.payload.habits.size))
                 }
                 val type = stringResource(
                     when (t.type) {

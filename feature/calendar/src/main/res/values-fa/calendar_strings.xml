@@ -15,7 +15,10 @@
     <string name="calendar_nothing_day">برای این روز برنامه‌ای ثبت نشده.</string>
     <string name="calendar_nothing_agenda_title">روزهای آرام</string>
     <string name="calendar_nothing_agenda">در ۳۰ روز آینده رویداد یا کاری ندارید.</string>
-    <string name="calendar_items_count">%1$s مورد</string>
+    <plurals name="calendar_items_count">
+        <item quantity="one">%1$s مورد</item>
+        <item quantity="other">%1$s مورد</item>
+    </plurals>
     <string name="calendar_error">بارگذاری تقویم ممکن نشد.</string>
     <string name="calendar_week_range">%1$s تا %2$s</string>
     <string name="event_editor_new">رویداد جدید</string>

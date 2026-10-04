@@ -6,8 +6,9 @@ from collections import defaultdict
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHOTS = os.path.join(ROOT, "artifacts", "screenshots")
 OUT = os.path.join(ROOT, "docs", "UI_GALLERY.md")
-ORDER = ["today", "tasks", "calendar", "projects", "notebooks", "habits", "goals", "focus",
-         "search", "templates", "review", "settings", "backup", "capture", "onboarding"]
+ORDER = ["today", "capture", "tasks", "calendar", "notebooks", "more", "projects", "habits", "goals",
+         "focus", "search", "templates", "review", "settings", "onboarding", "states"]
+VARIANT_ORDER = ["fa_light", "fa_dark", "en_light", "en_dark", "fa_light_font150", "en_light_font150"]
 
 def main():
     groups = defaultdict(lambda: defaultdict(list))
@@ -22,18 +23,21 @@ def main():
                 groups[folder][screen].append((lang + variant, f"../artifacts/screenshots/{folder}/{name}"))
     folders = sorted(groups, key=lambda f: ORDER.index(f) if f in ORDER else len(ORDER))
     lines = ["# Plan-B UI Gallery", "",
-             "Real screenshots rendered by Roborazzi (Robolectric, native graphics) from the production",
-             "Compose screens. Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.",
+             "Real screenshots of the running app: the production Hilt graph, Room database and navigation,",
+             "seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Tehran), rendered",
+             "by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.",
+             "Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.",
              "Verified in CI with `./gradlew verifyRoborazziDebug`.", ""]
     total = 0
     for folder in folders:
         lines += [f"## {folder.capitalize()}", ""]
         for screen, variants in sorted(groups[folder].items()):
+            variants.sort(key=lambda v: VARIANT_ORDER.index(v[0]) if v[0] in VARIANT_ORDER else 99)
             lines += [f"### `{screen}`", "", "| " + " | ".join(v for v, _ in variants) + " |",
                       "|" + "---|" * len(variants),
                       "| " + " | ".join(f'<img src="{p}" width="220"/>' for _, p in variants) + " |", ""]
             total += len(variants)
-    lines.insert(5, f"Total screenshots: **{total}**.\n")
+    lines.insert(7, f"Total screenshots: **{total}**.\n")
     with open(OUT, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
     print(f"{total} screenshots -> {OUT}")

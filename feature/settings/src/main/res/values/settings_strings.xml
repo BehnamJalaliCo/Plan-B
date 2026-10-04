@@ -12,7 +12,7 @@
     <string name="settings_calendar_system">Calendar system</string>
     <string name="settings_calendar_jalali">Jalali (Solar Hijri)</string>
     <string name="settings_calendar_gregorian">Gregorian</string>
-    <string name="settings_calendar_auto">Language default (%1$s)</string>
+    <string name="settings_calendar_auto">Language default · %1$s</string>
     <string name="settings_first_day">First day of week</string>
     <string name="settings_first_day_auto">Calendar default (%1$s)</string>
     <string name="settings_number_format">Numbers</string>
@@ -73,7 +73,10 @@
     <string name="export_tasks_json">Tasks as JSON</string>
     <string name="export_notes_markdown">Notes as Markdown (.zip)</string>
     <string name="export_notes_json">Notes as JSON</string>
-    <string name="export_done">Exported %1$s items</string>
+    <plurals name="export_done">
+        <item quantity="one">Exported %1$s item</item>
+        <item quantity="other">Exported %1$s items</item>
+    </plurals>
     <string name="export_failed">Export failed</string>
     <string name="backup_section_import">Import</string>
     <string name="import_tasks">Import tasks (CSV or JSON)</string>

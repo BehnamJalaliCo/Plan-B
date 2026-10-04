@@ -11,7 +11,10 @@
     <string name="notebooks_archived_notebooks">دفترچه‌های بایگانی‌شده</string>
     <string name="notebooks_empty_title">اولین دفترچه‌تان را بسازید</string>
     <string name="notebooks_empty">یادداشت‌ها را در دفترچه‌ها و بخش‌ها مرتب کنید.</string>
-    <string name="notebooks_note_count">%1$s یادداشت</string>
+    <plurals name="notebooks_note_count">
+        <item quantity="one">%1$s یادداشت</item>
+        <item quantity="other">%1$s یادداشت</item>
+    </plurals>
     <string name="notebooks_error">بارگذاری دفترچه‌ها ممکن نشد.</string>
     <string name="notebook_name">نام دفترچه</string>
     <string name="notebook_rename">تغییر نام دفترچه</string>

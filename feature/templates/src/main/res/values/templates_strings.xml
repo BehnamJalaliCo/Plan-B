@@ -9,9 +9,18 @@
     <string name="templates_type_project">Project with tasks</string>
     <string name="templates_type_tasks">Tasks</string>
     <string name="templates_type_habits">Habits</string>
-    <string name="templates_blocks">%1$s blocks</string>
-    <string name="templates_tasks_count">%1$s tasks</string>
-    <string name="templates_habits_count">%1$s habits</string>
+    <plurals name="templates_blocks">
+        <item quantity="one">%1$s block</item>
+        <item quantity="other">%1$s blocks</item>
+    </plurals>
+    <plurals name="templates_tasks_count">
+        <item quantity="one">%1$s task</item>
+        <item quantity="other">%1$s tasks</item>
+    </plurals>
+    <plurals name="templates_habits_count">
+        <item quantity="one">%1$s habit</item>
+        <item quantity="other">%1$s habits</item>
+    </plurals>
     <string name="templates_applied">Created from template</string>
     <string name="templates_open">Open</string>
     <string name="templates_failed">Could not apply the template.</string>

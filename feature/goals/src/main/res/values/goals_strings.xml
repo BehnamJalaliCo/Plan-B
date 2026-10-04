@@ -15,7 +15,10 @@
     <string name="goal_pace_behind">Behind plan</string>
     <string name="goal_pace_overdue">Deadline passed</string>
     <string name="goal_expected">Expected by today: %1$s</string>
-    <string name="goal_days_left">%1$s days left</string>
+    <plurals name="goal_days_left">
+        <item quantity="one">%1$s day left</item>
+        <item quantity="other">%1$s days left</item>
+    </plurals>
     <string name="goal_needed_per_week">About %1$s %2$s per week to finish on time</string>
     <string name="goal_milestones">Milestones</string>
     <string name="goal_milestone_hint">New milestone</string>

@@ -58,7 +58,7 @@ fun BackupDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, 
                 DataMessage.BackupFailed -> context.getString(R.string.backup_failed)
                 DataMessage.Restored -> context.getString(R.string.backup_restored)
                 is DataMessage.RestoreError -> context.getString(restoreErrorMessage(m.error))
-                is DataMessage.Exported -> context.getString(R.string.export_done, numbers.format(m.count))
+                is DataMessage.Exported -> context.resources.getQuantityString(R.plurals.export_done, m.count, numbers.format(m.count))
                 DataMessage.ExportFailed -> context.getString(R.string.export_failed)
                 is DataMessage.Imported -> context.getString(R.string.import_done, numbers.format(m.imported), numbers.format(m.skipped))
                 DataMessage.ImportFailed -> context.getString(R.string.import_failed)

@@ -33,6 +33,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -195,7 +197,14 @@ private fun TodayHeader(data: TodayData, actions: TodayActions) {
 private fun SummaryRow(data: TodayData) {
     val numbers = PlannerLocals.numbers
     val colors = PlanBTheme.colors
-    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+    // Four tiles fit one row at normal sizes; with large fonts they wrap into a 2×2 grid so
+    // labels are never broken mid-word.
+    val perRow = if (LocalDensity.current.fontScale > 1.3f) 2 else 4
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        maxItemsInEachRow = perRow,
+    ) {
         SummaryTile(Icons.Rounded.Warning, numbers.format(data.overdueCount), stringResource(R.string.today_summary_overdue),
             if (data.overdueCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant, Modifier.weight(1f))
         SummaryTile(Icons.Rounded.WbSunny, numbers.format(data.dueTodayCount), stringResource(R.string.today_summary_due),

@@ -5,13 +5,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.behnamjalali.planb.core.designsystem.R
 
 /**
  * Vazirmatn (SIL OFL 1.1) covers Persian and Latin with harmonized metrics, so
  * both languages share one family. Sizes are in sp to respect font scaling.
+ * No letter spacing is applied: tracking breaks Persian cursive joining.
  */
 val Vazirmatn = FontFamily(
     Font(R.font.vazirmatn_regular, FontWeight.Normal),
@@ -20,17 +20,17 @@ val Vazirmatn = FontFamily(
     Font(R.font.vazirmatn_bold, FontWeight.Bold),
 )
 
-private fun style(size: Int, line: Int, weight: FontWeight, tracking: Double = 0.0) = TextStyle(
+private fun style(size: Int, line: Int, weight: FontWeight) = TextStyle(
     fontFamily = Vazirmatn,
     fontWeight = weight,
     fontSize = size.sp,
     lineHeight = line.sp,
-    letterSpacing = tracking.em,
+    letterSpacing = 0.sp,
 )
 
 internal val PlanBTypography = Typography(
-    displayLarge = style(40, 52, FontWeight.Bold, -0.01),
-    displayMedium = style(34, 44, FontWeight.Bold, -0.01),
+    displayLarge = style(40, 52, FontWeight.Bold),
+    displayMedium = style(34, 44, FontWeight.Bold),
     displaySmall = style(30, 40, FontWeight.SemiBold),
     headlineLarge = style(28, 38, FontWeight.SemiBold),
     headlineMedium = style(24, 34, FontWeight.SemiBold),

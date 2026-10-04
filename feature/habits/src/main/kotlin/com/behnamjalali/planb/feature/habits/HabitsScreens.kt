@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -89,7 +91,7 @@ import java.time.LocalTime
 @Composable
 fun streakText(streak: Streak): String {
     val n = PlannerLocals.numbers.format(streak.count)
-    return stringResource(if (streak.unit == Streak.Unit.WEEKS) R.string.habit_streak_weeks else R.string.habit_streak_days, n)
+    return pluralStringResource(if (streak.unit == Streak.Unit.WEEKS) R.plurals.habit_streak_weeks else R.plurals.habit_streak_days, streak.count, n)
 }
 
 @Composable
@@ -99,8 +101,8 @@ fun scheduleSummary(schedule: HabitSchedule): String {
         HabitSchedule.Daily -> stringResource(R.string.habit_schedule_daily)
         is HabitSchedule.SelectedDays -> formatter.weekdays().filter { it in schedule.days }
             .joinToString(stringResource(com.behnamjalali.planb.core.ui.R.string.ui_list_separator)) { formatter.weekdayShort(it) }
-        is HabitSchedule.TimesPerWeek -> stringResource(R.string.habit_summary_times_week, formatter.numbers.format(schedule.times))
-        is HabitSchedule.EveryNDays -> stringResource(R.string.habit_summary_every_n, formatter.numbers.format(schedule.interval))
+        is HabitSchedule.TimesPerWeek -> pluralStringResource(R.plurals.habit_summary_times_week, schedule.times, formatter.numbers.format(schedule.times))
+        is HabitSchedule.EveryNDays -> pluralStringResource(R.plurals.habit_summary_every_n, schedule.interval, formatter.numbers.format(schedule.interval))
     }
 }
 
@@ -158,12 +160,7 @@ fun HabitsScreen(
                             streak = row.streak.count,
                             onCheckIn = { onCheckIn(row) },
                             onClick = { onOpenHabit(row.habit.id) },
-                        )
-                        Text(
-                            scheduleSummary(row.habit.schedule),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xxs),
+                            subtitle = scheduleSummary(row.habit.schedule),
                         )
                     }
                 }
@@ -249,7 +246,8 @@ fun HabitDetailScreen(
                     }
                 }
                 Spacer(Modifier.height(Spacing.md))
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                // Wraps to a second line instead of truncating with large fonts.
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     PlannerButton(stringResource(R.string.habit_remove_one), { onAdjust(-1) }, style = com.behnamjalali.planb.core.designsystem.component.PlannerButtonStyle.Outlined, icon = Icons.Rounded.Remove, enabled = todayAmount > 0)
                     PlannerButton(stringResource(R.string.habit_add_one), { onAdjust(1) }, icon = Icons.Rounded.Add)
                 }

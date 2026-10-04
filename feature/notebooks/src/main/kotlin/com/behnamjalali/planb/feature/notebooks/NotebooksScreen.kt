@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -259,7 +260,7 @@ private fun NotebookRow(
             Column(Modifier.weight(1f)) {
                 Text(notebook.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    stringResource(R.string.notebooks_note_count, PlannerLocals.numbers.format(notebook.noteCount)),
+                    pluralStringResource(R.plurals.notebooks_note_count, notebook.noteCount, PlannerLocals.numbers.format(notebook.noteCount)),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

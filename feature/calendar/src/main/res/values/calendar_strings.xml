@@ -15,7 +15,10 @@
     <string name="calendar_nothing_day">Nothing planned for this day.</string>
     <string name="calendar_nothing_agenda_title">A quiet stretch</string>
     <string name="calendar_nothing_agenda">No events or tasks in the next 30 days.</string>
-    <string name="calendar_items_count">%1$s items</string>
+    <plurals name="calendar_items_count">
+        <item quantity="one">%1$s item</item>
+        <item quantity="other">%1$s items</item>
+    </plurals>
     <string name="calendar_error">Could not load the calendar.</string>
     <string name="calendar_week_range">%1$s – %2$s</string>
     <!-- Event editor -->

@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -223,7 +224,7 @@ private fun WeekView(state: CalendarUiState, callbacks: CalendarCallbacks, conte
                     Spacer(Modifier.weight(1f))
                     if (items.count > 0) {
                         Text(
-                            stringResource(R.string.calendar_items_count, formatter.numbers.format(items.count)),
+                            pluralStringResource(R.plurals.calendar_items_count, items.count, formatter.numbers.format(items.count)),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

@@ -11,7 +11,10 @@
     <string name="notebooks_archived_notebooks">Archived notebooks</string>
     <string name="notebooks_empty_title">Start your first notebook</string>
     <string name="notebooks_empty">Organize notes into notebooks and sections.</string>
-    <string name="notebooks_note_count">%1$s notes</string>
+    <plurals name="notebooks_note_count">
+        <item quantity="one">%1$s note</item>
+        <item quantity="other">%1$s notes</item>
+    </plurals>
     <string name="notebooks_error">Could not load notebooks.</string>
     <string name="notebook_name">Notebook name</string>
     <string name="notebook_rename">Rename notebook</string>

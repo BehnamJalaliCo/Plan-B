@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -42,6 +43,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.behnamjalali.planb.core.common.Digits
@@ -155,7 +157,10 @@ fun FocusScreen(state: FocusUiState, now: Instant, callbacks: FocusCallbacks) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 formatter.timer(remaining),
-                                style = MaterialTheme.typography.displayMedium,
+                                // A clock reads left-to-right in both languages and must never wrap.
+                                style = MaterialTheme.typography.displayMedium.copy(textDirection = TextDirection.Ltr),
+                                maxLines = 1,
+                                softWrap = false,
                                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                             )
                             Text(

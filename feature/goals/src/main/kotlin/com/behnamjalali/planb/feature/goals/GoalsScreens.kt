@@ -49,6 +49,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -215,7 +216,7 @@ fun GoalDetailScreen(state: GoalDetailUiState, onBack: () -> Unit, onEdit: () ->
                                 else -> PlanBTheme.colors.success
                             }
                             Text(paceLabel(pace.status), style = MaterialTheme.typography.labelLarge, color = color)
-                            if (pace.daysLeft >= 0) Text(stringResource(R.string.goal_days_left, numbers.format(pace.daysLeft)), style = MaterialTheme.typography.bodySmall)
+                            if (pace.daysLeft >= 0) Text(pluralStringResource(R.plurals.goal_days_left, pace.daysLeft.toInt(), numbers.format(pace.daysLeft)), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }

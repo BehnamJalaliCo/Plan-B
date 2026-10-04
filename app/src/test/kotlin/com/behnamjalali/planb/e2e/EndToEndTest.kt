@@ -37,6 +37,7 @@ import com.behnamjalali.planb.core.model.Habit
 import com.behnamjalali.planb.core.model.Project
 import com.behnamjalali.planb.core.model.TaskView
 import com.behnamjalali.planb.core.model.ThemeMode
+import com.behnamjalali.planb.core.testing.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -44,7 +45,6 @@ import dagger.hilt.android.testing.HiltTestApplication
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.time.Duration
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -88,6 +88,7 @@ class EndToEndTest {
     @Inject lateinit var focus: FocusRepository
     @Inject lateinit var search: SearchRepository
     @Inject lateinit var backup: BackupManager
+    @Inject lateinit var clock: FakeTimeProvider
 
     private lateinit var scenario: ActivityScenario<MainActivity>
     private val context: Context get() = ApplicationProvider.getApplicationContext()
@@ -148,20 +149,20 @@ class EndToEndTest {
         clickDescription(s(AppR.string.quick_capture))
         waitFor(hasSetTextAction()).performTextInput("خرید کتاب Kotlin")
         click(s(TodayR.string.capture_save))
-        waitUntil { runBlocking { tasks.observeTasks(TaskFilter(view = TaskView.ALL, today = LocalDate.now())).first() }.any { it.title == "خرید کتاب Kotlin" } }
+        waitUntil { runBlocking { tasks.observeTasks(TaskFilter(view = TaskView.ALL, today = clock.today())).first() }.any { it.title == "خرید کتاب Kotlin" } }
 
         openTab(AppR.string.nav_tasks)
         waitForText("خرید کتاب Kotlin")
         // Complete via the checkbox (its content description is the task title).
         waitFor(hasContentDescription("خرید کتاب Kotlin")).performClick()
         waitUntil {
-            runBlocking { tasks.observeTasks(TaskFilter(view = TaskView.COMPLETED, today = LocalDate.now())).first() }.any { it.title == "خرید کتاب Kotlin" }
+            runBlocking { tasks.observeTasks(TaskFilter(view = TaskView.COMPLETED, today = clock.today())).first() }.any { it.title == "خرید کتاب Kotlin" }
         }
     }
 
     @Test
     fun taskEditor_editsAndPersistsChanges() {
-        val id = runBlocking { tasks.save(com.behnamjalali.planb.core.model.Task(title = "Draft task", dueDate = LocalDate.now())) }
+        val id = runBlocking { tasks.save(com.behnamjalali.planb.core.model.Task(title = "Draft task", dueDate = clock.today())) }
         openTab(AppR.string.nav_tasks)
         click("Draft task")
         waitForText(s(TasksR.string.task_editor_edit))
@@ -193,10 +194,10 @@ class EndToEndTest {
 
     @Test
     fun habits_checkInFromToday_persists() {
-        val id = runBlocking { habits.save(Habit(title = "Read", startDate = LocalDate.now().minusDays(3))) }
+        val id = runBlocking { habits.save(Habit(title = "Read", startDate = clock.today().minusDays(3))) }
         waitForText("Read")
         waitFor(hasContentDescription("Read", substring = true) and hasClickAction()).performClick()
-        waitUntil { runBlocking { habits.amountOn(id, LocalDate.now()) } == 1 }
+        waitUntil { runBlocking { habits.amountOn(id, clock.today()) } == 1 }
     }
 
     @Test
@@ -206,6 +207,7 @@ class EndToEndTest {
         click(s(AppR.string.more_focus))
         click(s(FocusR.string.focus_start))
         waitUntil { runBlocking { focus.observeActive().first() }?.status == FocusStatus.RUNNING }
+        clock.advance(Duration.ofMinutes(10))
         click(s(FocusR.string.focus_finish))
         waitUntil { runBlocking { focus.observeHistory().first() }.any { it.status == FocusStatus.COMPLETED } }
         assertThat(runBlocking { goals.observeGoals().first() }.single().title).isEqualTo("Read 12 books")
@@ -238,7 +240,7 @@ class EndToEndTest {
         val bytes = ByteArrayOutputStream().also { BackupCodec.write(archive, it) }.toByteArray()
         tasks.save(com.behnamjalali.planb.core.model.Task(title = "After backup"))
         backup.restore(BackupCodec.read(ByteArrayInputStream(bytes)))
-        val titles = tasks.observeTasks(TaskFilter(view = TaskView.ALL, today = LocalDate.now())).first().map { it.title }
+        val titles = tasks.observeTasks(TaskFilter(view = TaskView.ALL, today = clock.today())).first().map { it.title }
         assertThat(titles).containsExactly("Before backup")
         assertThat(search.search("After")).isEmpty()
     }

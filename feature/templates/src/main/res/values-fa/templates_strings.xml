@@ -9,9 +9,18 @@
     <string name="templates_type_project">پروژه با کارها</string>
     <string name="templates_type_tasks">کارها</string>
     <string name="templates_type_habits">عادت‌ها</string>
-    <string name="templates_blocks">%1$s بلوک</string>
-    <string name="templates_tasks_count">%1$s کار</string>
-    <string name="templates_habits_count">%1$s عادت</string>
+    <plurals name="templates_blocks">
+        <item quantity="one">%1$s بلوک</item>
+        <item quantity="other">%1$s بلوک</item>
+    </plurals>
+    <plurals name="templates_tasks_count">
+        <item quantity="one">%1$s کار</item>
+        <item quantity="other">%1$s کار</item>
+    </plurals>
+    <plurals name="templates_habits_count">
+        <item quantity="one">%1$s عادت</item>
+        <item quantity="other">%1$s عادت</item>
+    </plurals>
     <string name="templates_applied">از روی الگو ساخته شد</string>
     <string name="templates_open">باز کردن</string>
     <string name="templates_failed">اعمال الگو ممکن نشد.</string>
