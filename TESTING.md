@@ -23,14 +23,14 @@ needs no emulator. CI also runs the device suite on an Android emulator.
 | `core:common` | 11 | Persian/Latin digits, search normalization (Arabic ي/ك, ZWNJ, diacritics, digits) |
 | `core:datetime` | 27 | Jalali conversion and month lengths (incl. leap years), month grids, recurrence (intervals, weekdays, month-end clamping, Jalali months, counts/until, DST) |
 | `core:database` | 8 | DAOs, cascades and constraints, FTS queries, migration 1→2 against the exported schema |
-| `core:datastore` | 4 | Defaults, round-trips, tolerance of malformed values |
+| `core:datastore` | 6 | Defaults, round-trips, tolerance of malformed values |
 | `core:data` | 26 | Task filtering/sorting/views, recurrence spawning, reminders scheduling, notes hierarchy, drafts, habits, goals, events validation, focus timing, search indexing, templates, **large-dataset performance** |
 | `core:notifications` | 4 | Reminder planning for tasks, recurring events and habits |
-| `core:backup` | 12 | Backup round trip, validation of corrupt/foreign/newer archives, limits, transactional restore, CSV/JSON/Markdown export and non-overwriting import |
-| `feature:notebooks`, `feature:tasks` | 10 | Block editing operations, task form validation and serialization |
+| `core:backup` | 15 | Backup round trip, validation of corrupt/foreign/newer archives, limits, transactional restore, CSV/JSON/Markdown export and non-overwriting import |
+| `feature:*` | 40 | ViewModels of Today, Tasks, Habits, Focus and Search on real repositories (30), block editing, task form validation |
 | `app` | 123 | Persian default locale, smoke test, 9 end-to-end flows, 108 screenshot tests, launcher/store icon rendering |
 
-Total: **249 JVM tests**, all passing.
+Total: **284 JVM tests**, all passing locally and in CI.
 
 ### End-to-end flows (`app/src/test/.../e2e`)
 

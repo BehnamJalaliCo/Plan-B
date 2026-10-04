@@ -49,7 +49,7 @@ by build only · ⏳ needs an external step (credentials, device lab).
 
 | Item | Status | Notes |
 |---|---|---|
-| CI workflow (tests, screenshots, lint, builds, device tests) | ✅ | `.github/workflows/ci.yml` |
+| CI workflow (tests, screenshots, lint, builds, device tests) | ✅ | `.github/workflows/ci.yml` — green on `main` ([run #2](https://github.com/BehnamJalaliCo/Plan-B/actions/runs/37180478313)) |
 | Manual release workflow (signing from secrets, GitHub Release, optional Pishkhan) | ☑️ | `.github/workflows/release.yml`; packaging script dry-run verified locally with a throwaway key that was deleted afterwards |
 | Cafe Bazaar packaging with the official bundle-signer | ☑️ | `tools/package_cafebazaar.sh` (pinned version + SHA-256) |
 | Store material (listing fa/en, icon, covers, screenshots, what's new) | ✅ | `store/cafebazaar/` |
