@@ -131,6 +131,66 @@ class OtherRepositoriesTest {
     }
 
     @Test
+    fun updateContent_keepsADraftWrittenAfterTheCapture() = runTest {
+        val nb = notes.ensureDefaultNotebook("Default")
+        val id = notes.saveNote(Note(notebookId = nb, title = "Saved"))
+        val captured = time.now()
+        val committedDoc = NoteDocument(blocks = listOf(NoteBlock("a", text = "older")))
+        // The editor keeps typing; a draft with newer content lands before the commit runs.
+        time.advance(Duration.ofMillis(300))
+        notes.saveDraft(id, "Saved", NoteDocument(blocks = listOf(NoteBlock("a", text = "newer"))))
+        time.advance(Duration.ofMillis(300))
+        notes.updateContent(id, "Saved", committedDoc, capturedAt = captured)
+        assertThat(notes.getDraft(id)!!.document.plainText()).isEqualTo("newer")
+        assertThat(notes.getDraft(id)!!.updatedAt).isGreaterThan(notes.getNote(id)!!.updatedAt)
+        // A commit captured after the draft removes it.
+        notes.updateContent(id, "Saved", NoteDocument(blocks = listOf(NoteBlock("a", text = "newer"))))
+        assertThat(notes.getDraft(id)).isNull()
+    }
+
+    @Test
+    fun notesInArchivedNotebook_leaveRecentPinnedAndActiveSearch() = runTest {
+        val nb = notes.saveNotebook(Notebook(title = "Old project"))
+        val other = notes.saveNotebook(Notebook(title = "Inbox"))
+        val inArchived = notes.saveNote(Note(notebookId = nb, title = "Archived ideas"))
+        notes.setPinned(inArchived, true)
+        val active = notes.saveNote(Note(notebookId = other, title = "Active ideas"))
+        notes.setFavorite(active, true)
+        notes.setNotebookArchived(nb, true)
+
+        assertThat(notes.observeRecent(10).first().map { it.id }).containsExactly(active)
+        assertThat(notes.observePinnedOrFavorite(10).first().map { it.id }).containsExactly(active)
+        val hits = search.search("ideas")
+        assertThat(hits.map { it.id to it.archived }).containsExactly(active to false, inArchived to true).inOrder()
+
+        notes.setNotebookArchived(nb, false)
+        assertThat(notes.observeRecent(10).first().map { it.id }).contains(inArchived)
+    }
+
+    @Test
+    fun pinFavoriteMoveArchive_onlyTouchTheirColumns() = runTest {
+        val nb = notes.saveNotebook(Notebook(title = "A"))
+        val target = notes.saveNotebook(Notebook(title = "B"))
+        val id = notes.saveNote(Note(notebookId = nb, title = "Draft"))
+        // Autosave commits new content; flags written afterwards must not bring back the old content.
+        notes.updateContent(id, "Typed title", NoteDocument(blocks = listOf(NoteBlock("a", text = "typed"))))
+        notes.setPinned(id, true)
+        notes.setFavorite(id, true)
+        notes.moveNote(id, target, null)
+        var note = notes.getNote(id)!!
+        assertThat(note.title).isEqualTo("Typed title")
+        assertThat(note.document.plainText()).isEqualTo("typed")
+        assertThat(note.pinned).isTrue()
+        assertThat(note.favorite).isTrue()
+        assertThat(note.notebookId).isEqualTo(target)
+        notes.setArchived(id, true)
+        note = notes.getNote(id)!!
+        assertThat(note.archived).isTrue()
+        assertThat(note.pinned).isFalse()
+        assertThat(note.title).isEqualTo("Typed title")
+    }
+
+    @Test
     fun habits_checkIn_accumulatesAndUndo() = runTest {
         val today = time.today()
         val id = habits.save(Habit(title = "Water", target = 3, startDate = today.minusDays(5)))

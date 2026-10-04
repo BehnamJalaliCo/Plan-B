@@ -75,12 +75,16 @@ interface NoteDao {
     )
     fun observeNotes(notebookId: Long, sectionId: Long?): Flow<List<NoteWithTags>>
 
+    /** Notes in an archived notebook are archived with it, so they are left out like archived notes. */
     @Transaction
-    @Query("SELECT * FROM notes WHERE archived = 0 AND (pinned = 1 OR favorite = 1) ORDER BY pinned DESC, updated_at DESC LIMIT :limit")
+    @Query(
+        "SELECT * FROM notes WHERE archived = 0 AND (pinned = 1 OR favorite = 1) AND $IN_ACTIVE_NOTEBOOK " +
+            "ORDER BY pinned DESC, updated_at DESC LIMIT :limit",
+    )
     fun observePinnedOrFavorite(limit: Int): Flow<List<NoteWithTags>>
 
     @Transaction
-    @Query("SELECT * FROM notes WHERE archived = 0 ORDER BY updated_at DESC LIMIT :limit")
+    @Query("SELECT * FROM notes WHERE archived = 0 AND $IN_ACTIVE_NOTEBOOK ORDER BY updated_at DESC LIMIT :limit")
     fun observeRecent(limit: Int): Flow<List<NoteWithTags>>
 
     @Transaction
@@ -103,6 +107,23 @@ interface NoteDao {
     @Update
     suspend fun updateNote(note: NoteEntity)
 
+    // Single-column updates: they never rewrite (and so never undo) a concurrent content save.
+    @Query("UPDATE notes SET pinned = :pinned WHERE id = :id")
+    suspend fun setPinned(id: Long, pinned: Boolean)
+
+    @Query("UPDATE notes SET favorite = :favorite WHERE id = :id")
+    suspend fun setFavorite(id: Long, favorite: Boolean)
+
+    /** Archiving also unpins. */
+    @Query("UPDATE notes SET archived = :archived, pinned = CASE WHEN :archived THEN 0 ELSE pinned END WHERE id = :id")
+    suspend fun setArchived(id: Long, archived: Boolean)
+
+    @Query("UPDATE notes SET notebook_id = :notebookId, section_id = :sectionId, updated_at = :now WHERE id = :id")
+    suspend fun move(id: Long, notebookId: Long, sectionId: Long?, now: Long)
+
+    @Query("SELECT archived FROM notebooks WHERE id = :id")
+    suspend fun isNotebookArchived(id: Long): Boolean?
+
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNote(id: Long)
 
@@ -120,4 +141,8 @@ interface NoteDao {
 
     @Query("SELECT COUNT(*) FROM notes WHERE created_at >= :from AND created_at < :to")
     suspend fun countCreatedBetween(from: Long, to: Long): Int
+
+    companion object {
+        const val IN_ACTIVE_NOTEBOOK = "notebook_id IN (SELECT id FROM notebooks WHERE archived = 0)"
+    }
 }

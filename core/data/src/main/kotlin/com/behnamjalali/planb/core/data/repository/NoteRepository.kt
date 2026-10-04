@@ -52,8 +52,12 @@ interface NoteRepository {
 
     suspend fun saveNote(note: Note): EntityId
 
-    /** Content-only update used by autosave; does not touch other fields. */
-    suspend fun updateContent(id: EntityId, title: String, document: NoteDocument)
+    /**
+     * Content-only update used by autosave; does not touch other fields. [capturedAt] is when
+     * the editor read this content; a draft saved after that is newer and is kept. When it is
+     * omitted, the time of the call is used.
+     */
+    suspend fun updateContent(id: EntityId, title: String, document: NoteDocument, capturedAt: java.time.Instant? = null)
     suspend fun moveNote(id: EntityId, notebookId: EntityId, sectionId: EntityId?)
     suspend fun duplicateNote(id: EntityId, copySuffix: String): EntityId
     suspend fun setPinned(id: EntityId, pinned: Boolean)
@@ -163,15 +167,17 @@ class OfflineNoteRepository @Inject constructor(
         }
     }
 
-    override suspend fun updateContent(id: EntityId, title: String, document: NoteDocument) {
+    override suspend fun updateContent(id: EntityId, title: String, document: NoteDocument, capturedAt: java.time.Instant?) {
+        // Taken before waiting for the transaction: a draft written while this commit was
+        // queued holds newer content than [document] and must survive.
+        val captured = capturedAt ?: time.now()
         db.withTransaction {
             val existing = dao.getNote(id) ?: throw IllegalStateException("Note $id no longer exists")
-            val now = time.now()
-            val updated = existing.copy(title = title, content = document.encode(), updatedAt = now)
+            val updated = existing.copy(title = title, content = document.encode(), updatedAt = maxOf(captured, existing.updatedAt))
             dao.updateNote(updated)
             searchDao.upsert(SearchIndexer.note(updated))
-            // The committed note now contains the draft; drop it unless a newer draft arrived.
-            draftDao.deleteIfNotNewer(id, now.toEpochMilli())
+            // The committed note now contains drafts up to the capture time; newer ones stay.
+            draftDao.deleteIfNotNewer(id, captured.toEpochMilli())
         }
     }
 
@@ -185,8 +191,7 @@ class OfflineNoteRepository @Inject constructor(
     override suspend fun clearDraft(noteId: EntityId) = draftDao.delete(noteId)
 
     override suspend fun moveNote(id: EntityId, notebookId: EntityId, sectionId: EntityId?) {
-        val note = dao.getNote(id) ?: return
-        dao.updateNote(note.copy(notebookId = notebookId, sectionId = sectionId, updatedAt = time.now()))
+        dao.move(id, notebookId, sectionId, time.now().toEpochMilli())
     }
 
     override suspend fun duplicateNote(id: EntityId, copySuffix: String): EntityId {
@@ -208,17 +213,11 @@ class OfflineNoteRepository @Inject constructor(
         }
     }
 
-    override suspend fun setPinned(id: EntityId, pinned: Boolean) {
-        dao.getNote(id)?.let { dao.updateNote(it.copy(pinned = pinned)) }
-    }
+    override suspend fun setPinned(id: EntityId, pinned: Boolean) = dao.setPinned(id, pinned)
 
-    override suspend fun setFavorite(id: EntityId, favorite: Boolean) {
-        dao.getNote(id)?.let { dao.updateNote(it.copy(favorite = favorite)) }
-    }
+    override suspend fun setFavorite(id: EntityId, favorite: Boolean) = dao.setFavorite(id, favorite)
 
-    override suspend fun setArchived(id: EntityId, archived: Boolean) {
-        dao.getNote(id)?.let { dao.updateNote(it.copy(archived = archived, pinned = if (archived) false else it.pinned)) }
-    }
+    override suspend fun setArchived(id: EntityId, archived: Boolean) = dao.setArchived(id, archived)
 
     override suspend fun setTags(id: EntityId, tags: List<Tag>) {
         db.withTransaction { writeTags(id, tags) }

@@ -40,7 +40,9 @@ class FtsSearchRepository @Inject constructor(
                     SearchResult(SearchEntityType.PROJECT, it.id, it.title, it.description.snippet(), it.archived)
                 }
                 SearchEntityType.NOTE -> noteDao.getNote(hit.entityId)?.let {
-                    SearchResult(SearchEntityType.NOTE, it.id, it.title, NoteDocument.decode(it.content).plainText().snippet(), it.archived)
+                    // A note in an archived notebook is archived with it.
+                    val archived = it.archived || noteDao.isNotebookArchived(it.notebookId) == true
+                    SearchResult(SearchEntityType.NOTE, it.id, it.title, NoteDocument.decode(it.content).plainText().snippet(), archived)
                 }
                 SearchEntityType.NOTEBOOK -> noteDao.getNotebook(hit.entityId)?.let {
                     SearchResult(SearchEntityType.NOTEBOOK, it.id, it.title, archived = it.archived)
