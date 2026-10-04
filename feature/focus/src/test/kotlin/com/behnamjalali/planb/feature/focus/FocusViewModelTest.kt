@@ -8,6 +8,7 @@ import com.behnamjalali.planb.core.testing.TestDataGraph
 import com.behnamjalali.planb.core.testing.awaitItem
 import com.google.common.truth.Truth.assertThat
 import java.time.Duration
+import java.time.LocalTime
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -150,6 +151,39 @@ class FocusViewModelTest {
         // Elapsed time is capped at the planned duration.
         assertThat(state.history.single().actualDurationMillis).isEqualTo(Duration.ofMinutes(5).toMillis())
         assertThat(reminders.focusEnd).isNull()
+    }
+
+    @Test
+    fun doubleTapStart_startsOneSession_withoutAJunkCancelledOne() = runBlocking<Unit> {
+        viewModel.uiState.awaitItem { !it.loading }
+        val first = viewModel.start()
+        val second = viewModel.start()
+        first.join()
+        second.join()
+        // A later tap while the session runs is ignored as well.
+        viewModel.start().join()
+
+        val state = viewModel.uiState.awaitItem { it.active?.status == FocusStatus.RUNNING }
+        assertThat(graph.focus.observeHistory(10).first()).isEmpty()
+        assertThat(state.active!!.startedAt).isEqualTo(time.now())
+    }
+
+    @Test
+    fun focusedToday_startsAgainAfterMidnight() = runBlocking<Unit> {
+        val day = time.today()
+        time.setLocal(day, LocalTime.of(23, 30))
+        graph.focus.start(Duration.ofMinutes(10).toMillis(), null)
+        time.advance(Duration.ofMinutes(10))
+        graph.focus.finish()
+
+        // A screen opened one second before midnight and left open.
+        time.setLocal(day, LocalTime.of(23, 59, 59))
+        val lateViewModel = main.track(FocusViewModel(SavedStateHandle(), graph.focus, graph.tasks, graph.settings, graph.reminders, graph.time))
+        main.keepCollecting(lateViewModel.uiState)
+        lateViewModel.uiState.awaitItem { !it.loading && it.focusedTodayMinutes == 10 }
+
+        time.setLocal(day.plusDays(1), LocalTime.of(0, 0, 30))
+        lateViewModel.uiState.awaitItem { it.focusedTodayMinutes == 0 }
     }
 
     @Test

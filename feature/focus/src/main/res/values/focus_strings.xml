@@ -23,4 +23,6 @@
     <string name="focus_remaining">%1$s remaining</string>
     <string name="focus_completed_message">Session complete. Great focus!</string>
     <string name="focus_break_hint">Take a %1$s break.</string>
+    <!-- A past session: its day and start time. -->
+    <string name="focus_history_when">%1$s · %2$s</string>
 </resources>

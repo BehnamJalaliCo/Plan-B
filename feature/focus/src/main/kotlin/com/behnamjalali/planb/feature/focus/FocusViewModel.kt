@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.common.runCatchingSafely
+import com.behnamjalali.planb.core.common.todayFlow
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.repository.FocusRepository
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
 import com.behnamjalali.planb.core.data.repository.TaskFilter
 import com.behnamjalali.planb.core.data.repository.TaskRepository
+import com.behnamjalali.planb.core.data.repository.recordFocusSession
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.FocusSession
 import com.behnamjalali.planb.core.model.FocusStatus
@@ -18,13 +20,17 @@ import com.behnamjalali.planb.core.model.TaskView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.Serializable
 
 @Serializable data object FocusRoute
@@ -50,6 +56,7 @@ enum class FocusMessage { Completed, Failed }
  * (FocusSession.elapsedMillis); the UI only re-reads it on each frame/tick, so
  * dropped frames or backgrounding never change the result.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class FocusViewModel @Inject constructor(
     private val savedState: SavedStateHandle,
@@ -64,14 +71,21 @@ class FocusViewModel @Inject constructor(
     private val _messages = MutableSharedFlow<FocusMessage>(extraBufferCapacity = 2)
     val messages: SharedFlow<FocusMessage> = _messages
 
-    private val today = time.today()
-    private val dayStart = today.atStartOfDay(time.zone()).toInstant()
-    private val dayEnd = today.plusDays(1).atStartOfDay(time.zone()).toInstant()
+    /** Held while a start is being written, so a double tap cannot start two sessions. */
+    private val starting = Mutex()
+
+    /** The current day; moves on at midnight so "focused today" starts again from zero. */
+    private val today = time.todayFlow().shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
+
+    private val focusedToday = today.flatMapLatest { day ->
+        val zone = time.zone()
+        focus.observeFocusedMillis(day.atStartOfDay(zone).toInstant(), day.plusDays(1).atStartOfDay(zone).toInstant())
+    }
 
     val uiState: StateFlow<FocusUiState> = combine(
         listOf(
-            focus.observeActive(), focus.observeHistory(30), focus.observeFocusedMillis(dayStart, dayEnd), settings.settings, selected, linked,
-            tasks.observeTasks(TaskFilter(view = TaskView.ALL, today = today, limit = 50)),
+            focus.observeActive(), focus.observeHistory(30), focusedToday, settings.settings, selected, linked,
+            today.flatMapLatest { day -> tasks.observeTasks(TaskFilter(view = TaskView.ALL, today = day, limit = 50)) },
         ),
     ) { v ->
         val s = v[3] as com.behnamjalali.planb.core.model.UserSettings
@@ -98,10 +112,17 @@ class FocusViewModel @Inject constructor(
         runCatchingSafely { block() }.onFailure { _messages.tryEmit(FocusMessage.Failed) }
     }
 
+    /** Ignored while another start is in progress or a session is already running or paused. */
     fun start() = launchSafely {
-        val minutes = uiState.value.selectedMinutes
-        val session = focus.start(minutes * 60_000L, uiState.value.linkedTaskId)
-        reminders.scheduleFocusEnd(session.startedAt.plusMillis(session.plannedDurationMillis))
+        if (!starting.tryLock()) return@launchSafely
+        try {
+            if (focus.getActive() != null) return@launchSafely
+            val minutes = uiState.value.selectedMinutes
+            val session = focus.start(minutes * 60_000L, uiState.value.linkedTaskId)
+            reminders.scheduleFocusEnd(session.startedAt.plusMillis(session.plannedDurationMillis))
+        } finally {
+            starting.unlock()
+        }
     }
 
     fun pause() = launchSafely {
@@ -117,7 +138,7 @@ class FocusViewModel @Inject constructor(
     fun finish() = launchSafely {
         val done = focus.finish() ?: return@launchSafely
         reminders.cancelFocusEnd()
-        recordOnTask(done)
+        tasks.recordFocusSession(done)
     }
 
     fun cancel() = launchSafely {
@@ -130,17 +151,9 @@ class FocusViewModel @Inject constructor(
         val done = focus.completeIfElapsed() ?: return@launchSafely
         if (done.status == FocusStatus.COMPLETED) {
             reminders.cancelFocusEnd()
-            recordOnTask(done)
+            tasks.recordFocusSession(done)
             _messages.tryEmit(FocusMessage.Completed)
         }
-    }
-
-    /** Adds the focused minutes to the linked task's actual duration. */
-    private suspend fun recordOnTask(session: FocusSession) {
-        val taskId = session.linkedTaskId ?: return
-        val task = tasks.getTask(taskId) ?: return
-        val minutes = (session.actualDurationMillis / 60_000L).toInt()
-        if (minutes > 0) tasks.save(task.copy(actualMinutes = (task.actualMinutes ?: 0) + minutes))
     }
 
     private companion object {

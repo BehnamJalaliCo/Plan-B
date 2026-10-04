@@ -237,7 +237,7 @@ fun FocusScreen(state: FocusUiState, now: Instant, callbacks: FocusCallbacks) {
                         Column(Modifier.weight(1f)) {
                             val date = s.startedAt.atZone(ZoneId.systemDefault())
                             Text(formatter.duration((s.actualDurationMillis / 60_000L).toInt()), style = MaterialTheme.typography.titleSmall)
-                            Text("${formatter.relativeDate(date.toLocalDate(), PlannerLocals.today)} · ${formatter.time(date.toLocalTime())}",
+                            Text(stringResource(R.string.focus_history_when, formatter.relativeDate(date.toLocalDate(), PlannerLocals.today), formatter.time(date.toLocalTime())),
                                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text(
