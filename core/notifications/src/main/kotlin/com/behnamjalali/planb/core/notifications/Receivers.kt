@@ -4,14 +4,20 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.behnamjalali.planb.core.common.ApplicationScope
+import com.behnamjalali.planb.core.common.NumberFormatter
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.data.repository.EventRepository
 import com.behnamjalali.planb.core.data.repository.FocusRepository
 import com.behnamjalali.planb.core.data.repository.HabitRepository
+import com.behnamjalali.planb.core.data.repository.SettingsRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
+import com.behnamjalali.planb.core.datetime.PlannerDateFormatter
 import com.behnamjalali.planb.core.datetime.ReminderTime
 import dagger.hilt.android.AndroidEntryPoint
+import android.content.res.Configuration
+import android.text.format.DateFormat
 import java.time.LocalDate
+import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -26,6 +32,7 @@ class ReminderReceiver : BroadcastReceiver() {
     @Inject lateinit var notifier: Notifier
     @Inject lateinit var scheduler: AlarmReminderScheduler
     @Inject lateinit var time: TimeProvider
+    @Inject lateinit var settings: SettingsRepository
     @Inject @ApplicationScope lateinit var scope: CoroutineScope
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -43,7 +50,17 @@ class ReminderReceiver : BroadcastReceiver() {
         }
     }
 
-    private suspend fun handle(context: Context, kind: ReminderKind, id: Long, occurrence: LocalDate) {
+    private suspend fun handle(appContext: Context, kind: ReminderKind, id: Long, occurrence: LocalDate) {
+        // Receivers run without an activity, so apply the user's language explicitly (pre-API 33
+        // the application context does not carry the per-app locale).
+        val prefs = settings.current()
+        val context = appContext.createConfigurationContext(
+            Configuration(appContext.resources.configuration).apply { setLocale(Locale.forLanguageTag(prefs.language.tag)) },
+        )
+        val formatter = PlannerDateFormatter(
+            context.resources, prefs.calendarSystem, prefs.firstDayOfWeek,
+            NumberFormatter(prefs.usePersianDigits), DateFormat.is24HourFormat(appContext),
+        )
         when (kind) {
             ReminderKind.TASK -> {
                 val task = tasks.getTask(id) ?: return
@@ -51,17 +68,17 @@ class ReminderReceiver : BroadcastReceiver() {
                 val due = task.dueDate!!
                 val text = buildString {
                     append(task.title)
-                    task.dueTime?.let { append(" · ").append(it.toString()) }
+                    task.dueTime?.let { append(" · ").append(formatter.time(it)) }
                 }
-                notifier.showReminder(kind, id, context.getString(R.string.notif_task_title), text, DeepLinks.task(id))
+                notifier.showReminder(kind, id, context.getString(R.string.notif_task_title), text, DeepLinks.task(id), context)
                 if (ReminderTime.triggerAt(due, task.dueTime, task.reminderOffsetMinutes ?: 0, time.zone()).isAfter(time.now())) {
                     scheduler.syncTask(id)
                 }
             }
             ReminderKind.EVENT -> {
                 val event = events.getEvent(id) ?: return
-                val text = listOfNotNull(event.title, event.startTime?.toString()).joinToString(" · ")
-                notifier.showReminder(kind, id, context.getString(R.string.notif_event_title), text, DeepLinks.event(id))
+                val text = listOfNotNull(event.title, event.startTime?.let(formatter::time)).joinToString(" · ")
+                notifier.showReminder(kind, id, context.getString(R.string.notif_event_title), text, DeepLinks.event(id), context)
                 // Recurring events: schedule the next occurrence.
                 scheduler.syncEvent(id)
             }
@@ -70,14 +87,14 @@ class ReminderReceiver : BroadcastReceiver() {
                 if (habits.amountOn(id, occurrence) < habit.target) {
                     notifier.showReminder(
                         kind, id, context.getString(R.string.notif_habit_title),
-                        context.getString(R.string.notif_habit_text, habit.title), DeepLinks.habit(id),
+                        context.getString(R.string.notif_habit_text, habit.title), DeepLinks.habit(id), context,
                     )
                 }
                 scheduler.syncHabit(id)
             }
             ReminderKind.FOCUS -> {
                 val completed = focus.completeIfElapsed()
-                if (completed != null && completed.endedAt != null) notifier.showFocusComplete()
+                if (completed != null && completed.endedAt != null) notifier.showFocusComplete(context)
             }
         }
     }

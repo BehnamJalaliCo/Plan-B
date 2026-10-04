@@ -195,7 +195,7 @@ class EndToEndTest {
     fun habits_checkInFromToday_persists() {
         val id = runBlocking { habits.save(Habit(title = "Read", startDate = LocalDate.now().minusDays(3))) }
         waitForText("Read")
-        waitFor(hasContentDescription("Read")).performClick()
+        waitFor(hasContentDescription("Read", substring = true) and hasClickAction()).performClick()
         waitUntil { runBlocking { habits.amountOn(id, LocalDate.now()) } == 1 }
     }
 

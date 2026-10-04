@@ -53,13 +53,13 @@ class Notifier @Inject constructor(@ApplicationContext private val context: Cont
      * Shows a reminder. Lock screens get a generic public version so private
      * planning details are not exposed (NotificationCompat.VISIBILITY_PRIVATE).
      */
-    fun showReminder(kind: ReminderKind, id: Long, title: String, text: String, uri: Uri) {
+    fun showReminder(kind: ReminderKind, id: Long, title: String, text: String, uri: Uri, localized: Context = context) {
         if (!manager.areNotificationsEnabled()) return
         val notificationId = notificationId(kind, id)
         val publicVersion = NotificationCompat.Builder(context, CHANNEL_REMINDERS)
             .setSmallIcon(R.drawable.ic_stat_planb)
-            .setContentTitle(context.getString(R.string.app_label_fallback))
-            .setContentText(context.getString(R.string.notif_public_text))
+            .setContentTitle(localized.getString(R.string.app_label_fallback))
+            .setContentText(localized.getString(R.string.notif_public_text))
             .build()
         val notification = NotificationCompat.Builder(context, CHANNEL_REMINDERS)
             .setSmallIcon(R.drawable.ic_stat_planb)
@@ -76,12 +76,12 @@ class Notifier @Inject constructor(@ApplicationContext private val context: Cont
         runCatching { manager.notify(notificationId, notification) }
     }
 
-    fun showFocusComplete() {
+    fun showFocusComplete(localized: Context = context) {
         if (!manager.areNotificationsEnabled()) return
         val notification = NotificationCompat.Builder(context, CHANNEL_FOCUS)
             .setSmallIcon(R.drawable.ic_stat_planb)
-            .setContentTitle(context.getString(R.string.notif_focus_title))
-            .setContentText(context.getString(R.string.notif_focus_text))
+            .setContentTitle(localized.getString(R.string.notif_focus_title))
+            .setContentText(localized.getString(R.string.notif_focus_text))
             .setAutoCancel(true)
             .setContentIntent(openIntent(DeepLinks.focus(), FOCUS_NOTIFICATION_ID))
             .build()

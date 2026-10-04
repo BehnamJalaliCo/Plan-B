@@ -19,7 +19,7 @@ class PlanBApplication : Application() {
         super.onCreate()
         // Persian is the default language on a fresh install. Once the user (or the
         // system per-app language setting) picks a language, that choice is kept.
-        AppLocales.applyDefaultIfUnset()
+        AppLocales.applyDefaultIfUnset(this)
         notifier.createChannels()
         // Alarms can be lost (force-stop, restore); re-sync them off the main thread.
         appScope.launch { runCatching { reminders.rescheduleAll() } }

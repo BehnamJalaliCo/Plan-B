@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -324,6 +325,8 @@ fun PlannerHabitCard(
     val tones = PlanBTheme.colors.accent(habit.color)
     val done = todayAmount >= habit.target
     val progress = if (habit.target <= 0) 0f else todayAmount.toFloat() / habit.target
+    val checkInLabel = stringResource(R.string.ui_habit_check_in, habit.title)
+    val doneLabel = if (done) stringResource(R.string.ui_done) else ""
     PlannerCard(modifier = modifier.fillMaxWidth(), onClick = onClick) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             PlannerProgressRing(
@@ -360,7 +363,8 @@ fun PlannerHabitCard(
                 modifier = Modifier
                     .size(48.dp)
                     .semantics {
-                        contentDescription = habit.title
+                        contentDescription = checkInLabel
+                        stateDescription = doneLabel
                     },
             ) {
                 Box(contentAlignment = Alignment.Center) {
