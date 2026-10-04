@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Translations are mandatory: every user-facing string must exist in values-fa. -->
+    <issue id="MissingTranslation" severity="error" />
+    <issue id="HardcodedText" severity="error" />
+    <issue id="RtlHardcoded" severity="error" />
+    <!-- Dependency freshness is managed deliberately via the version catalog (see docs/DEPENDENCIES.md). -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+</lint>

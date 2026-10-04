@@ -1,0 +1,42 @@
+# Gradle / build
+.gradle/
+build/
+!src/**/build/
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+.vscode/
+
+# Local configuration
+local.properties
+
+# Signing material & secrets - never commit
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+keystore.properties
+signing.properties
+secrets.properties
+*.secret
+.env
+.env.*
+release-signing/
+
+# Release outputs (attached to GitHub Releases instead)
+/release/cafebazaar/*.apk
+/release/cafebazaar/*.aab
+/release/cafebazaar/*.bin
+/release/cafebazaar/mapping*.txt
+/release/cafebazaar/SHA256SUMS.txt
+/tools/bundle-signer/
+
+# Roborazzi comparison scratch output
+**/build/outputs/roborazzi/
