@@ -284,7 +284,8 @@ fun SettingsScreen(
                             } == true,
                         )
                         when (action) {
-                            NotificationRowAction.REQUEST_PERMISSION -> {
+                            // Only returned on Android 13+, where the permission exists.
+                            NotificationRowAction.REQUEST_PERMISSION -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 NotificationPermissionMemory.markRequested(context)
                                 permission.launch(Manifest.permission.POST_NOTIFICATIONS)
                             }
