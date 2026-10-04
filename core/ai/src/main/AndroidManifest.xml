@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        The only network access in Plan-B: the optional AI assistant. It is off by default and
+        sends only the text the user chooses, directly to the provider the user configured
+        with their own key. Nothing else in the app uses the network.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ai_provider_iran_gateway">Iranian AI gateway (OpenAI-compatible)</string>
+    <string name="ai_provider_custom">Custom (OpenAI-compatible base URL)</string>
+    <string name="ai_error_invalid_key">The key was not accepted. Check the key and the selected provider.</string>
+    <string name="ai_error_network">The connection could not be established. Check the key and your internet connection, then try again.</string>
+    <string name="ai_error_rate_limited">The provider is receiving too many requests right now. Please try again in a moment.</string>
+    <string name="ai_error_provider">The provider could not answer this request. Check the model name and try again.</string>
+</resources>

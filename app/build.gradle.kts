@@ -124,6 +124,7 @@ dependencies {
     implementation(projects.feature.settings)
     implementation(projects.core.backup)
     implementation(projects.core.billing)
+    implementation(projects.core.ai)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)

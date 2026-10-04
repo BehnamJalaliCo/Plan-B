@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ai_provider_iran_gateway">درگاه هوش مصنوعی ایرانی (سازگار با OpenAI)</string>
+    <string name="ai_provider_custom">سفارشی (نشانی پایهٔ سازگار با OpenAI)</string>
+    <string name="ai_error_invalid_key">کلید پذیرفته نشد. کلید و سرویس‌دهندهٔ انتخاب‌شده را بررسی کنید.</string>
+    <string name="ai_error_network">اتصال برقرار نشد. کلید و اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.</string>
+    <string name="ai_error_rate_limited">سرویس‌دهنده در این لحظه درخواست‌های زیادی دریافت می‌کند. کمی بعد دوباره امتحان کنید.</string>
+    <string name="ai_error_provider">سرویس‌دهنده نتوانست به این درخواست پاسخ دهد. نام مدل را بررسی کنید و دوباره امتحان کنید.</string>
+</resources>
