@@ -85,6 +85,7 @@ class OfflineEventRepository @Inject constructor(
         db.withTransaction {
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.EVENT, id))
             dao.delete(id)
+            db.attachmentDao().deleteOrphans()
         }
         reminders.cancelEvent(id)
     }

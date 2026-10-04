@@ -27,6 +27,7 @@ import com.behnamjalali.planb.core.model.GoalMilestone
 import com.behnamjalali.planb.core.model.Habit
 import com.behnamjalali.planb.core.model.HabitCompletion
 import com.behnamjalali.planb.core.model.HabitSchedule
+import com.behnamjalali.planb.core.model.HealthMetric
 import com.behnamjalali.planb.core.model.Note
 import com.behnamjalali.planb.core.model.NoteDocument
 import com.behnamjalali.planb.core.model.NoteFormat
@@ -83,6 +84,11 @@ internal fun TaskEntity.toModel(
     tags = tags,
     subtaskCount = subtaskCount,
     completedSubtaskCount = completedSubtaskCount,
+    deadline = deadline,
+    scheduledStart = scheduledStart,
+    scheduledEnd = scheduledEnd,
+    nag = nag,
+    deletedAt = deletedAt,
 )
 
 internal fun TaskWithDetails.toModel() =
@@ -112,6 +118,11 @@ internal fun Task.toEntity() = TaskEntity(
     updatedAt = updatedAt,
     completedAt = completedAt,
     archived = archived,
+    deadline = deadline,
+    scheduledStart = scheduledStart,
+    scheduledEnd = scheduledEnd,
+    nag = nag,
+    deletedAt = deletedAt,
 )
 
 internal fun ProjectEntity.toModel(tags: List<Tag> = emptyList()) = Project(
@@ -182,9 +193,12 @@ internal fun NoteEntity.toModel(tags: List<Tag> = emptyList()) = Note(
     updatedAt = updatedAt,
     archived = archived,
     tags = tags,
+    deletedAt = deletedAt,
+    locked = locked,
 )
 internal fun NoteWithTags.toModel() = note.toModel(tags.map { it.toModel() })
-internal fun Note.toEntity() = NoteEntity(
+/** The encrypted body is not part of the model: repositories keep the stored one ([encryptedPayload]). */
+internal fun Note.toEntity(encryptedPayload: ByteArray? = null) = NoteEntity(
     id = id,
     notebookId = notebookId,
     sectionId = sectionId,
@@ -197,6 +211,9 @@ internal fun Note.toEntity() = NoteEntity(
     createdAt = createdAt,
     updatedAt = updatedAt,
     archived = archived,
+    deletedAt = deletedAt,
+    locked = locked,
+    encryptedPayload = encryptedPayload,
 )
 
 internal fun HabitEntity.toModel() = Habit(
@@ -212,10 +229,12 @@ internal fun HabitEntity.toModel() = Habit(
     createdAt = createdAt,
     updatedAt = updatedAt,
     archived = archived,
+    healthMetric = HealthMetric.fromKey(healthMetric),
+    healthThreshold = healthThreshold,
 )
 internal fun Habit.toEntity() = HabitEntity(
     id, title.trim(), icon.key, color.key, schedule.encode(), target.coerceAtLeast(1), unit.trim(),
-    reminderTime, startDate, createdAt, updatedAt, archived,
+    reminderTime, startDate, createdAt, updatedAt, archived, healthMetric?.name, healthThreshold,
 )
 internal fun HabitCompletionEntity.toModel() = HabitCompletion(id, habitId, date, amount, createdAt)
 
@@ -269,9 +288,12 @@ internal fun FocusSessionEntity.toModel() = FocusSession(
     status = enumOf(status, FocusStatus.CANCELLED),
     runningSince = runningSince,
     accumulatedMillis = accumulatedMillis,
+    soundId = soundId,
+    strict = strict,
 )
 internal fun FocusSession.toEntity() = FocusSessionEntity(
     id, linkedTaskId, startedAt, endedAt, plannedDurationMillis, actualDurationMillis, status.name, runningSince, accumulatedMillis,
+    soundId, strict,
 )
 
 internal fun PlannerTemplateEntity.toModel(): PlannerTemplate? = runCatching {

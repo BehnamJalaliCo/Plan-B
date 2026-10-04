@@ -121,6 +121,7 @@ class OfflineNoteRepository @Inject constructor(
             dao.notesInNotebook(id).forEach { searchDao.delete(SearchIndexer.rowId(SearchEntityType.NOTE, it.id)) }
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.NOTEBOOK, id))
             dao.deleteNotebook(id)
+            db.attachmentDao().deleteOrphans()
         }
     }
 
@@ -159,7 +160,7 @@ class OfflineNoteRepository @Inject constructor(
                 createdAt = existing?.createdAt ?: now,
                 updatedAt = now,
                 sortOrder = existing?.sortOrder ?: (dao.maxNoteOrder(note.notebookId) + 1),
-            ).toEntity()
+            ).toEntity(encryptedPayload = existing?.encryptedPayload)
             val id = if (existing == null) dao.insertNote(entity.copy(id = 0)) else entity.id.also { dao.updateNote(entity) }
             writeTags(id, note.tags)
             searchDao.upsert(SearchIndexer.note(entity.copy(id = id)))
@@ -202,6 +203,7 @@ class OfflineNoteRepository @Inject constructor(
                 id = 0,
                 title = listOf(source.title, copySuffix).filter { it.isNotBlank() }.joinToString(" "),
                 pinned = false,
+                deletedAt = null,
                 createdAt = now,
                 updatedAt = now,
                 sortOrder = dao.maxNoteOrder(source.notebookId) + 1,
@@ -236,6 +238,7 @@ class OfflineNoteRepository @Inject constructor(
         db.withTransaction {
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.NOTE, id))
             dao.deleteNote(id)
+            db.attachmentDao().deleteOrphans()
         }
     }
 }

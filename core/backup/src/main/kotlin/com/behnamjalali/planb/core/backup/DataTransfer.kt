@@ -124,7 +124,8 @@ class DataTransfer @Inject constructor(
         val projects = dao.projects().associate { it.id to it.title }
         val tags = dao.tags().associate { it.id to it.name }
         val tagsByTask = dao.taskTags().groupBy({ it.taskId }, { tags[it.tagId].orEmpty() })
-        val all = dao.tasks()
+        // Exports hold the user's live data: tasks in the trash are left out.
+        val all = dao.tasks().filter { it.deletedAt == null }
         val children = all.filter { it.parentTaskId != null }.groupBy { it.parentTaskId }
         val titles = all.associate { it.id to it.title }
         // Each top-level task is followed by its subtasks, so an import can re-link them.
@@ -169,7 +170,7 @@ class DataTransfer @Inject constructor(
     /** One Markdown file per note inside a ZIP, grouped in notebook folders. */
     suspend fun exportNotesMarkdownZip(uri: Uri): Int {
         val notebooks = dao.notebooks().associate { it.id to it.title }
-        val notes = dao.notes()
+        val notes = dao.notes().filter { it.deletedAt == null }
         files.output(uri) { out ->
             ZipOutputStream(out).use { zip ->
                 val used = mutableSetOf<String>()
@@ -188,7 +189,7 @@ class DataTransfer @Inject constructor(
 
     suspend fun exportNotesJson(uri: Uri): Int {
         val notebooks = dao.notebooks().associate { it.id to it.title }
-        val notes = dao.notes().map { n ->
+        val notes = dao.notes().filter { it.deletedAt == null }.map { n ->
             NoteExport(n.title, notebooks[n.notebookId].orEmpty(), Markdown.export(n.title, NoteDocument.decode(n.content)), n.pinned, n.favorite)
         }
         files.writeText(uri, json.encodeToString(ListSerializer(NoteExport.serializer()), notes))

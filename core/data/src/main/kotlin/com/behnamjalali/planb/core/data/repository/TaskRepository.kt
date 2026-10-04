@@ -251,6 +251,10 @@ class OfflineTaskRepository @Inject constructor(
                 id = 0,
                 dueDate = next,
                 startDate = entity.startDate?.plusDays(shift),
+                deadline = entity.deadline?.plusDays(shift),
+                // A time block belongs to one occurrence; the next one is planned again.
+                scheduledStart = null,
+                scheduledEnd = null,
                 createdAt = now,
                 updatedAt = now,
                 completedAt = null,
@@ -260,10 +264,12 @@ class OfflineTaskRepository @Inject constructor(
             )
             val newId = taskDao.insert(nextEntity)
             taskDao.insertTagRefs(taskDao.tagIds(entity.id).map { TaskTagCrossRef(newId, it) })
-            taskDao.getSubtaskEntities(entity.id).forEach { sub ->
+            copyRelativeReminders(entity.id, newId)
+            taskDao.getSubtaskEntities(entity.id).filter { it.deletedAt == null }.forEach { sub ->
                 val copy = sub.copy(
                     id = 0, parentTaskId = newId, completed = false, status = TaskStatus.TODO.name,
                     dueDate = sub.dueDate?.plusDays(shift), startDate = sub.startDate?.plusDays(shift),
+                    deadline = sub.deadline?.plusDays(shift), scheduledStart = null, scheduledEnd = null,
                     completedAt = null, createdAt = now, updatedAt = now, actualMinutes = null,
                 )
                 val subId = taskDao.insert(copy)
@@ -277,6 +283,15 @@ class OfflineTaskRepository @Inject constructor(
         // The completed occurrence leaves the series; the series continues in the new task.
         taskDao.update(done.copy(recurrence = null))
         return nextId
+    }
+
+    /**
+     * Extra reminders relative to the due time (`OFFSET`) follow the task to its copy; fixed
+     * `ABSOLUTE` reminders belong to one moment and are not copied.
+     */
+    private suspend fun copyRelativeReminders(fromId: EntityId, toId: EntityId) {
+        val reminders = db.taskReminderDao().forTask(fromId).filter { it.kind == "OFFSET" }
+        if (reminders.isNotEmpty()) db.taskReminderDao().insertAll(reminders.map { it.copy(id = 0, taskId = toId) })
     }
 
     /**
@@ -331,6 +346,7 @@ class OfflineTaskRepository @Inject constructor(
             val all = ids + subtaskIds
             all.forEach { searchDao.delete(SearchIndexer.rowId(SearchEntityType.TASK, it)) }
             taskDao.delete(ids)
+            db.attachmentDao().deleteOrphans()
             all
         }
         allIds.forEach { reminders.cancelTask(it) }
@@ -356,10 +372,11 @@ class OfflineTaskRepository @Inject constructor(
         val subtaskIds = mutableListOf<EntityId>()
         val newId = db.withTransaction {
             val source = taskDao.getEntity(id) ?: throw TaskValidationException("Task $id not found")
-            val copy = source.copy(id = 0, createdAt = now, updatedAt = now, sortOrder = taskDao.maxSortOrder() + SORT_STEP)
+            val copy = source.copy(id = 0, createdAt = now, updatedAt = now, sortOrder = taskDao.maxSortOrder() + SORT_STEP, deletedAt = null)
             val newId = taskDao.insert(copy)
             taskDao.insertTagRefs(taskDao.tagIds(id).map { TaskTagCrossRef(newId, it) })
-            taskDao.getSubtaskEntities(id).forEach { sub ->
+            copyRelativeReminders(id, newId)
+            taskDao.getSubtaskEntities(id).filter { it.deletedAt == null }.forEach { sub ->
                 val subId = taskDao.insert(sub.copy(id = 0, parentTaskId = newId, createdAt = now, updatedAt = now))
                 searchDao.upsert(SearchIndexer.task(sub.copy(id = subId)))
                 subtaskIds += subId
@@ -415,6 +432,8 @@ internal object TaskQueryBuilder {
         val where = mutableListOf<String>()
         val args = mutableListOf<Any>()
         val today = filter.today.toEpochDay()
+        // Trashed tasks never appear in a list (the trash has its own query).
+        where += "t.deleted_at IS NULL"
         if (filter.topLevelOnly) where += "t.parent_task_id IS NULL"
         when (filter.view) {
             TaskView.INBOX -> where += "t.archived = 0 AND t.completed = 0 AND t.project_id IS NULL AND t.due_date IS NULL"

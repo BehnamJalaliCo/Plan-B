@@ -40,6 +40,15 @@ data class Task(
     val tags: List<Tag> = emptyList(),
     val subtaskCount: Int = 0,
     val completedSubtaskCount: Int = 0,
+    /** Hard deadline, distinct from [dueDate] (the planned date). */
+    val deadline: LocalDate? = null,
+    /** Time-blocked or auto-scheduled slot. */
+    val scheduledStart: Instant? = null,
+    val scheduledEnd: Instant? = null,
+    /** Repeat the reminder until the task is done. */
+    val nag: Boolean = false,
+    /** Set while the task is in the trash. */
+    val deletedAt: Instant? = null,
 ) {
     val isCompleted: Boolean get() = status == TaskStatus.DONE
     val isRecurring: Boolean get() = recurrence != null

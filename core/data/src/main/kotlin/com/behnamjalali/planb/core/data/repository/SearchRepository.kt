@@ -33,16 +33,18 @@ class FtsSearchRepository @Inject constructor(
         val match = SearchIndexer.matchQuery(query) ?: return emptyList()
         return searchDao.search(match, limit).mapNotNull { hit ->
             when (SearchEntityType.fromCode(hit.entityType)) {
-                SearchEntityType.TASK -> taskDao.getEntity(hit.entityId)?.let {
+                SearchEntityType.TASK -> taskDao.getEntity(hit.entityId)?.takeIf { it.deletedAt == null }?.let {
                     SearchResult(SearchEntityType.TASK, it.id, it.title, it.description.ifBlank { it.notes }.snippet(), it.archived)
                 }
                 SearchEntityType.PROJECT -> projectDao.getEntity(hit.entityId)?.let {
                     SearchResult(SearchEntityType.PROJECT, it.id, it.title, it.description.snippet(), it.archived)
                 }
-                SearchEntityType.NOTE -> noteDao.getNote(hit.entityId)?.let {
+                SearchEntityType.NOTE -> noteDao.getNote(hit.entityId)?.takeIf { it.deletedAt == null }?.let {
                     // A note in an archived notebook is archived with it.
                     val archived = it.archived || noteDao.isNotebookArchived(it.notebookId) == true
-                    SearchResult(SearchEntityType.NOTE, it.id, it.title, NoteDocument.decode(it.content).plainText().snippet(), archived)
+                    // A locked note never shows its text outside the unlocked editor.
+                    val snippet = if (it.locked || it.encryptedPayload != null) "" else NoteDocument.decode(it.content).plainText().snippet()
+                    SearchResult(SearchEntityType.NOTE, it.id, it.title, snippet, archived)
                 }
                 SearchEntityType.NOTEBOOK -> noteDao.getNotebook(hit.entityId)?.let {
                     SearchResult(SearchEntityType.NOTEBOOK, it.id, it.title, archived = it.archived)

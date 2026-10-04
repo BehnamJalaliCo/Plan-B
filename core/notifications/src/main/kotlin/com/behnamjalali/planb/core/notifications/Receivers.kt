@@ -63,7 +63,7 @@ class ReminderDelivery @Inject constructor(
         when (kind) {
             ReminderKind.TASK -> {
                 val task = tasks.getTask(id) ?: return
-                if (!task.isCompleted && !task.archived && task.dueDate != null && stillPlanned { ReminderPlanner.forTask(task, asOf!!, zone) }) {
+                if (!task.isCompleted && !task.archived && task.deletedAt == null && task.dueDate != null && stillPlanned { ReminderPlanner.forTask(task, asOf!!, zone) }) {
                     val text = buildString {
                         append(task.title)
                         task.dueTime?.let { append(separator).append(formatter.time(it)) }

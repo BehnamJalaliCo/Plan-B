@@ -3,7 +3,19 @@ package com.behnamjalali.planb.core.database.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import com.behnamjalali.planb.core.database.entity.ActivityLogEntity
+import com.behnamjalali.planb.core.database.entity.AttachmentEntity
+import com.behnamjalali.planb.core.database.entity.BadgeEntity
 import com.behnamjalali.planb.core.database.entity.CalendarEventEntity
+import com.behnamjalali.planb.core.database.entity.CalendarLinkEntity
+import com.behnamjalali.planb.core.database.entity.ChallengeEntity
+import com.behnamjalali.planb.core.database.entity.JournalEntryEntity
+import com.behnamjalali.planb.core.database.entity.MoodEntryEntity
+import com.behnamjalali.planb.core.database.entity.NoteLinkEntity
+import com.behnamjalali.planb.core.database.entity.NoteVersionEntity
+import com.behnamjalali.planb.core.database.entity.SavedFilterEntity
+import com.behnamjalali.planb.core.database.entity.TaskDependencyEntity
+import com.behnamjalali.planb.core.database.entity.TaskReminderEntity
 import com.behnamjalali.planb.core.database.entity.FocusSessionEntity
 import com.behnamjalali.planb.core.database.entity.GoalEntity
 import com.behnamjalali.planb.core.database.entity.GoalMilestoneEntity
@@ -44,6 +56,20 @@ interface BackupDao {
     @Query("SELECT * FROM focus_sessions") suspend fun focusSessions(): List<FocusSessionEntity>
     @Query("SELECT * FROM planner_templates") suspend fun templates(): List<PlannerTemplateEntity>
 
+    // Schema v3 tables.
+    @Query("SELECT * FROM task_reminders") suspend fun taskReminders(): List<TaskReminderEntity>
+    @Query("SELECT * FROM task_dependencies") suspend fun taskDependencies(): List<TaskDependencyEntity>
+    @Query("SELECT * FROM saved_filters") suspend fun savedFilters(): List<SavedFilterEntity>
+    @Query("SELECT * FROM note_versions") suspend fun noteVersions(): List<NoteVersionEntity>
+    @Query("SELECT * FROM note_links") suspend fun noteLinks(): List<NoteLinkEntity>
+    @Query("SELECT * FROM attachments") suspend fun attachments(): List<AttachmentEntity>
+    @Query("SELECT * FROM journal_entries") suspend fun journalEntries(): List<JournalEntryEntity>
+    @Query("SELECT * FROM mood_entries") suspend fun moodEntries(): List<MoodEntryEntity>
+    @Query("SELECT * FROM challenges") suspend fun challenges(): List<ChallengeEntity>
+    @Query("SELECT * FROM badges") suspend fun badges(): List<BadgeEntity>
+    @Query("SELECT * FROM activity_log") suspend fun activityLog(): List<ActivityLogEntity>
+    @Query("SELECT * FROM calendar_links") suspend fun calendarLinks(): List<CalendarLinkEntity>
+
     @Insert suspend fun insertTags(items: List<TagEntity>)
     @Insert suspend fun insertProjects(items: List<ProjectEntity>)
     @Insert suspend fun insertProjectTags(items: List<ProjectTagCrossRef>)
@@ -61,6 +87,18 @@ interface BackupDao {
     @Insert suspend fun insertEvents(items: List<CalendarEventEntity>)
     @Insert suspend fun insertFocusSessions(items: List<FocusSessionEntity>)
     @Insert suspend fun insertTemplates(items: List<PlannerTemplateEntity>)
+    @Insert suspend fun insertTaskReminders(items: List<TaskReminderEntity>)
+    @Insert suspend fun insertTaskDependencies(items: List<TaskDependencyEntity>)
+    @Insert suspend fun insertSavedFilters(items: List<SavedFilterEntity>)
+    @Insert suspend fun insertNoteVersions(items: List<NoteVersionEntity>)
+    @Insert suspend fun insertNoteLinks(items: List<NoteLinkEntity>)
+    @Insert suspend fun insertAttachments(items: List<AttachmentEntity>)
+    @Insert suspend fun insertJournalEntries(items: List<JournalEntryEntity>)
+    @Insert suspend fun insertMoodEntries(items: List<MoodEntryEntity>)
+    @Insert suspend fun insertChallenges(items: List<ChallengeEntity>)
+    @Insert suspend fun insertBadges(items: List<BadgeEntity>)
+    @Insert suspend fun insertActivityLog(items: List<ActivityLogEntity>)
+    @Insert suspend fun insertCalendarLinks(items: List<CalendarLinkEntity>)
 
     // Children first so foreign keys never block the wipe.
     @Query("DELETE FROM task_tags") suspend fun clearTaskTags()
@@ -81,8 +119,24 @@ interface BackupDao {
     @Query("DELETE FROM planner_templates") suspend fun clearTemplates()
     @Query("DELETE FROM tags") suspend fun clearTags()
     @Query("DELETE FROM search_index") suspend fun clearSearchIndex()
+    @Query("DELETE FROM task_reminders") suspend fun clearTaskReminders()
+    @Query("DELETE FROM task_dependencies") suspend fun clearTaskDependencies()
+    @Query("DELETE FROM saved_filters") suspend fun clearSavedFilters()
+    @Query("DELETE FROM note_versions") suspend fun clearNoteVersions()
+    @Query("DELETE FROM note_links") suspend fun clearNoteLinks()
+    @Query("DELETE FROM note_drafts") suspend fun clearNoteDrafts()
+    @Query("DELETE FROM attachments") suspend fun clearAttachments()
+    @Query("DELETE FROM journal_entries") suspend fun clearJournalEntries()
+    @Query("DELETE FROM mood_entries") suspend fun clearMoodEntries()
+    @Query("DELETE FROM challenges") suspend fun clearChallenges()
+    @Query("DELETE FROM badges") suspend fun clearBadges()
+    @Query("DELETE FROM activity_log") suspend fun clearActivityLog()
+    @Query("DELETE FROM calendar_links") suspend fun clearCalendarLinks()
 
     suspend fun clearAll() {
+        clearTaskReminders(); clearTaskDependencies(); clearNoteLinks(); clearNoteVersions(); clearNoteDrafts()
+        clearJournalEntries(); clearMoodEntries(); clearAttachments(); clearChallenges(); clearBadges()
+        clearActivityLog(); clearCalendarLinks(); clearSavedFilters()
         clearTaskTags(); clearProjectTags(); clearNoteTags(); clearFocusSessions()
         clearTasks(); clearProjectMilestones(); clearGoalMilestones(); clearGoals(); clearProjects()
         clearNotes(); clearSections(); clearNotebooks(); clearHabitCompletions(); clearHabits()

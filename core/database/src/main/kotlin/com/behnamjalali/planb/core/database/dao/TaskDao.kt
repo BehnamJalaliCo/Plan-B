@@ -50,7 +50,7 @@ interface TaskDao {
     suspend fun getEntity(id: Long): TaskEntity?
 
     @Transaction
-    @Query("$SELECT_WITH_COUNTS WHERE t.parent_task_id = :parentId ORDER BY t.completed, t.sort_order, t.id")
+    @Query("$SELECT_WITH_COUNTS WHERE t.parent_task_id = :parentId AND t.deleted_at IS NULL ORDER BY t.completed, t.sort_order, t.id")
     fun observeSubtasks(parentId: Long): Flow<List<TaskWithDetails>>
 
     @Query("SELECT * FROM tasks WHERE parent_task_id = :parentId")
@@ -67,6 +67,19 @@ interface TaskDao {
 
     @Query("DELETE FROM tasks WHERE id IN (:ids)")
     suspend fun delete(ids: List<Long>)
+
+    /** Moves tasks to the trash (a time) or restores them (null). Lists never show trashed tasks. */
+    @Query("UPDATE tasks SET deleted_at = :deletedAt, updated_at = :now WHERE id IN (:ids)")
+    suspend fun setDeletedAt(ids: List<Long>, deletedAt: Long?, now: Long)
+
+    /** The trash: top-level tasks with their subtask counts, most recently deleted first. */
+    @Transaction
+    @Query("$SELECT_WITH_COUNTS WHERE t.deleted_at IS NOT NULL ORDER BY t.deleted_at DESC")
+    fun observeTrash(): Flow<List<TaskWithDetails>>
+
+    /** Ids of tasks trashed before [before] (epoch ms), for purging after the retention period. */
+    @Query("SELECT id FROM tasks WHERE deleted_at IS NOT NULL AND deleted_at < :before")
+    suspend fun trashedBefore(before: Long): List<Long>
 
     @Query("UPDATE tasks SET archived = :archived, updated_at = :now WHERE id IN (:ids)")
     suspend fun setArchived(ids: List<Long>, archived: Boolean, now: Long)
@@ -89,7 +102,7 @@ interface TaskDao {
      * never modified since.
      */
     @Query(
-        "SELECT * FROM tasks WHERE id > :afterId AND completed = 0 AND recurrence IS NOT NULL " +
+        "SELECT * FROM tasks WHERE id > :afterId AND completed = 0 AND recurrence IS NOT NULL AND deleted_at IS NULL " +
             "AND created_at = :createdAt AND updated_at = created_at AND title = :title " +
             "AND parent_task_id IS :parentId AND project_id IS :projectId AND recurrence_anchor IS :anchor " +
             "ORDER BY id LIMIT 1",
@@ -118,7 +131,7 @@ interface TaskDao {
     /** Tasks with a reminder that are still open (for rescheduling after boot). */
     @Query(
         "SELECT * FROM tasks WHERE reminder_offset_minutes IS NOT NULL AND completed = 0 " +
-            "AND archived = 0 AND due_date IS NOT NULL",
+            "AND archived = 0 AND deleted_at IS NULL AND due_date IS NOT NULL",
     )
     suspend fun tasksWithReminders(): List<TaskEntity>
 
@@ -128,22 +141,25 @@ interface TaskDao {
      * day's total.
      */
     @Query(
-        "SELECT COUNT(*) FROM tasks WHERE completed = 1 AND archived = 0 AND parent_task_id IS NULL " +
+        "SELECT COUNT(*) FROM tasks WHERE completed = 1 AND archived = 0 AND deleted_at IS NULL AND parent_task_id IS NULL " +
             "AND due_date IS NOT NULL AND due_date <= :dueBy AND completed_at >= :from AND completed_at < :to",
     )
     fun observeCompletedForToday(from: Long, to: Long, dueBy: LocalDate): Flow<Int>
 
-    @Query("SELECT * FROM tasks WHERE completed = 1 AND completed_at >= :from AND completed_at < :to ORDER BY completed_at")
+    @Query(
+        "SELECT * FROM tasks WHERE completed = 1 AND deleted_at IS NULL AND completed_at >= :from AND completed_at < :to " +
+            "ORDER BY completed_at",
+    )
     suspend fun completedBetween(from: Long, to: Long): List<TaskEntity>
 
     @Query(
-        "SELECT * FROM tasks WHERE completed = 0 AND archived = 0 AND due_date IS NOT NULL " +
+        "SELECT * FROM tasks WHERE completed = 0 AND archived = 0 AND deleted_at IS NULL AND due_date IS NOT NULL " +
             "AND due_date >= :from AND due_date < :to ORDER BY due_date",
     )
     suspend fun openDueBetween(from: Long, to: Long): List<TaskEntity>
 
     @Query(
-        "SELECT * FROM tasks WHERE completed = 0 AND archived = 0 AND due_date IS NOT NULL " +
+        "SELECT * FROM tasks WHERE completed = 0 AND archived = 0 AND deleted_at IS NULL AND due_date IS NOT NULL " +
             "AND due_date >= :from AND due_date <= :to ORDER BY priority DESC, due_date LIMIT :limit",
     )
     suspend fun priorities(from: Long, to: Long, limit: Int): List<TaskEntity>
@@ -154,8 +170,9 @@ interface TaskDao {
     companion object {
         const val SELECT_WITH_COUNTS =
             "SELECT t.*, " +
-                "(SELECT COUNT(*) FROM tasks s WHERE s.parent_task_id = t.id) AS subtask_count, " +
-                "(SELECT COUNT(*) FROM tasks s WHERE s.parent_task_id = t.id AND s.completed = 1) AS completed_subtask_count " +
+                "(SELECT COUNT(*) FROM tasks s WHERE s.parent_task_id = t.id AND s.deleted_at IS NULL) AS subtask_count, " +
+                "(SELECT COUNT(*) FROM tasks s WHERE s.parent_task_id = t.id AND s.deleted_at IS NULL AND s.completed = 1) " +
+                "AS completed_subtask_count " +
                 "FROM tasks t"
     }
 }

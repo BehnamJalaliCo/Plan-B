@@ -18,6 +18,10 @@ data class FocusSession(
     val status: FocusStatus = FocusStatus.RUNNING,
     val runningSince: Instant? = startedAt,
     val accumulatedMillis: Long = 0,
+    /** Ambient sound played during the session (Focus Pro). */
+    val soundId: String? = null,
+    /** Strict mode: Do Not Disturb while the session runs (Focus Pro). */
+    val strict: Boolean = false,
 ) {
     fun elapsedMillis(now: Instant): Long {
         val running = if (status == FocusStatus.RUNNING && runningSince != null) {

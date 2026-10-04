@@ -32,6 +32,7 @@ class ReminderPlannerTest {
         val future = base.copy(dueTime = LocalTime.of(12, 0))
         assertThat(ReminderPlanner.forTask(future.copy(reminderOffsetMinutes = null), now, zone)).isNull()
         assertThat(ReminderPlanner.forTask(future.copy(archived = true), now, zone)).isNull()
+        assertThat(ReminderPlanner.forTask(future.copy(deletedAt = now), now, zone)).isNull()
         assertThat(ReminderPlanner.forTask(future, now, zone)).isNotNull()
     }
 

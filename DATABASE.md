@@ -1,6 +1,7 @@
 # Plan-B Database
 
-Plan-B keeps all user data in one local Room (SQLite) database. Nothing is synced or uploaded. This
+Plan-B keeps all user data in one local Room (SQLite) database. Nothing is uploaded. (The
+optional Pro device-calendar sync only talks to Android's calendar provider on the device.) This
 document is derived from the code in `core/database`, plus the search helpers in `core/data` and
 `core/common`.
 
@@ -8,9 +9,9 @@ document is derived from the code in `core/database`, plus the search helpers in
 |---|---|---|
 | Database class | `PlanBDatabase` | `core/database/src/main/kotlin/com/behnamjalali/planb/core/database/PlanBDatabase.kt` |
 | File name | `planb.db` (`PlanBDatabase.NAME`). It does not depend on the display name. | same |
-| Schema version | `2` (`PlanBDatabase.VERSION`) | same |
+| Schema version | `3` (`PlanBDatabase.VERSION`) | same |
 | Schema export | `exportSchema = true`, written to `core/database/schemas/` | `build-logic/.../AndroidRoomConventionPlugin.kt` |
-| Migrations | `Migrations.ALL = [MIGRATION_1_2]` | `core/database/.../Migrations.kt` |
+| Migrations | `Migrations.ALL = [MIGRATION_1_2, MIGRATION_2_3]` | `core/database/.../Migrations.kt` |
 | Builder | `Room.databaseBuilder(...).addMigrations(*Migrations.ALL)`, with **no** destructive fallback | `core/database/.../DatabaseModule.kt` |
 | DI | Hilt `SingletonComponent`. Each DAO is provided from the singleton database. | `DatabaseModule.kt` |
 
@@ -65,6 +66,11 @@ Other conventions:
   - `planner_templates.type`: `TemplateType` name. `payload` holds JSON.
   - `notes.content`: a JSON-encoded `NoteDocument` (`{"version":1,"blocks":[…]}`).
     `content_format` is `blocks-v1` (`NoteFormat.BLOCKS_V1`).
+  - `habits.health_metric`: `HealthMetric` name (`STEPS`, `SLEEP_MINUTES`, `HYDRATION_ML`,
+    `ACTIVE_MINUTES`, `DISTANCE_METERS`).
+  - v3 enum-like columns (`task_reminders.kind`, `attachments.owner_type` / `kind`,
+    `challenges.kind` / `status`, `activity_log.entity_type` / `action`,
+    `calendar_links.local_type`) store constant names listed in §3.18–3.29.
 - Unknown enum strings fall back to a default when read (`enumOf(name, default)`,
   `AccentColor.fromKey`, and so on). Corrupt values therefore degrade gracefully instead of
   crashing.
@@ -92,6 +98,13 @@ erDiagram
     notes ||--o| note_drafts : "note_id (CASCADE)"
     habits ||--o{ habit_completions : "habit_id (CASCADE)"
     tasks ||--o{ focus_sessions : "linked_task_id (SET NULL)"
+    tasks ||--o{ task_reminders : "task_id (CASCADE)"
+    tasks ||--o{ task_dependencies : "task_id / depends_on_task_id (CASCADE)"
+    notes ||--o{ note_versions : "note_id (CASCADE)"
+    notes ||--o{ note_links : "from_note_id / to_note_id (CASCADE)"
+    notes ||--o{ journal_entries : "note_id (CASCADE)"
+    notes ||--o{ mood_entries : "note_id (SET NULL)"
+    habits ||--o{ challenges : "habit_id (SET NULL)"
 
     calendar_events {
         INTEGER id PK
@@ -104,7 +117,9 @@ erDiagram
     }
 ```
 
-`calendar_events`, `planner_templates` and `search_index` have no foreign keys. Every foreign
+`calendar_events`, `planner_templates`, `search_index`, `saved_filters`, `attachments`
+(polymorphic owner, see §3.23), `badges`, `activity_log` and `calendar_links` have no foreign
+keys. Every foreign
 key uses `ON UPDATE NO ACTION`. Room turns on `PRAGMA foreign_keys` for app connections, so
 the cascade and set-null rules are enforced.
 
@@ -142,9 +157,13 @@ default value (for example `description = ""`) is only a constructor default. No
 | `created_at` / `updated_at` | INTEGER | NN | epoch ms |
 | `completed_at` | INTEGER | null | epoch ms |
 | `archived` | INTEGER (bool) | NN | |
+| `deadline` | INTEGER | null | v3. Epoch day of the **hard deadline**. `due_date` stays the *planned* date (when the user intends to do it). |
+| `scheduled_start` / `scheduled_end` | INTEGER | null | v3. Epoch ms of a time block (drag onto the calendar or auto-scheduling). Real instants, unlike the floating `due_time`. |
+| `nag` | INTEGER (bool) | NN, `DEFAULT 0` | v3. Repeat the reminder until the task is done. |
+| `deleted_at` | INTEGER | null | v3. Epoch ms when the task went to the trash; see §3.30. |
 
-Indices: `project_id`, `parent_task_id`, composite `(completed, archived, due_date)` and
-`completed_at`.
+Indices: `project_id`, `parent_task_id`, composite `(completed, archived, due_date)`,
+`completed_at`, and (v3) `deadline`, `scheduled_start`, `deleted_at`.
 
 ### 3.2 `tags` (`TagEntity`)
 
@@ -210,8 +229,22 @@ Columns: `id` (PK), `notebook_id` (INTEGER NN, FK → `notebooks.id` **CASCADE**
 | `sort_order` | INTEGER | NN | |
 | `created_at`, `updated_at` | INTEGER | NN | epoch ms |
 | `archived` | INTEGER (bool) | NN | |
+| `deleted_at` | INTEGER | null | v3. Epoch ms when the note went to the trash; see §3.30. |
+| `locked` | INTEGER (bool) | NN, `DEFAULT 0` | v3. The note opens only after unlocking (biometrics). |
+| `encrypted_payload` | BLOB | null | v3. Encrypted note body, see below. |
 
-Indices: `(notebook_id, archived)`, `section_id` and `updated_at`.
+Indices: `(notebook_id, archived)`, `section_id`, `updated_at` and (v3) `deleted_at`.
+
+**Locked and encrypted notes (v3).** A locked note is indexed by its **title only** and search
+shows no snippet for it (`SearchIndexer.note`, `FtsSearchRepository`). When the body is
+encrypted, `encrypted_payload` holds a self-describing envelope and `content` holds an empty
+`NoteDocument`, so every existing reader keeps working without seeing the text. The envelope
+is defined by the encryption work package; it must start with a version byte and carry its own
+salt and IV, and its key must be derived from a user secret (not only an Android Keystore key),
+because Keystore keys never leave the device and a restored backup must stay readable.
+`NoteDao.setLocked(...)` changes only the lock columns. Versions of a note (`note_versions`)
+are plain text: the encryption work package must delete or encrypt them when a note is
+locked. `NoteRepository.saveNote` keeps the stored payload (`Note.toEntity(encryptedPayload)`).
 
 ### 3.9 `note_drafts` (`NoteDraftEntity`, added in v2)
 
@@ -232,7 +265,10 @@ has been written since the save started.
 
 Columns: `id` (PK), `title`, `icon`, `color`, `schedule`, `unit` (TEXT NN), `target`
 (INTEGER NN), `reminder_time` (INTEGER second of day, null), `start_date` (INTEGER epoch day,
-**NN**), `created_at`, `updated_at` (epoch ms NN), `archived` (bool NN). Index: `archived`.
+**NN**), `created_at`, `updated_at` (epoch ms NN), `archived` (bool NN), and (v3)
+`health_metric` (TEXT null, `HealthMetric` name) and `health_threshold` (INTEGER null, the
+daily amount of that metric that checks the habit off; unit per metric: steps, minutes,
+millilitres or metres). Index: `archived`.
 
 ### 3.11 `habit_completions` (`HabitCompletionEntity`)
 
@@ -288,6 +324,8 @@ before the end of the range (`EventDao.observeCandidates`).
 | `status` | TEXT | NN | `RUNNING`, `PAUSED`, `COMPLETED` or `CANCELLED` |
 | `running_since` | INTEGER | null | epoch ms. Set while the timer runs. |
 | `accumulated_ms` | INTEGER | NN | time accumulated across pauses |
+| `sound_id` | TEXT | null | v3. Ambient sound key (Focus Pro). |
+| `strict` | INTEGER (bool) | NN, `DEFAULT 0` | v3. Strict mode (Do Not Disturb while running). |
 
 Indices: `linked_task_id`, `started_at` and `status`.
 
@@ -329,6 +367,153 @@ reordered:
 
 The type gets 4 bits (`TYPE_BITS = 16`), so codes must stay below 16. An index row can be
 upserted or deleted by computed rowid in O(1), without a lookup.
+
+
+### 3.18 `task_reminders` (`TaskReminderEntity`, v3)
+
+Extra reminders of a task. `tasks.reminder_offset_minutes` **stays the primary reminder** and
+keeps working exactly as before (free feature, `AlarmReminderScheduler`); this table holds up to
+**four more**, so a task has at most five reminders. Nothing was migrated: existing reminders
+remain in the column. The limit of four rows is enforced in code by the reminders work package.
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| `id` | INTEGER | NN | PK, autoincrement |
+| `task_id` | INTEGER | NN | FK → `tasks.id`, **CASCADE** |
+| `kind` | TEXT | NN | `OFFSET` (minutes before the due moment) or `ABSOLUTE` (fixed instant) |
+| `offset_minutes` | INTEGER | null | for `OFFSET` |
+| `at` | INTEGER | null | epoch ms, for `ABSOLUTE` |
+
+Index: `task_id`. Completing a recurring task copies `OFFSET` rows to the next occurrence;
+duplicating a task copies them too (`OfflineTaskRepository.copyRelativeReminders`).
+
+### 3.19 `task_dependencies` (`TaskDependencyEntity`, v3)
+
+`task_id` waits for `depends_on_task_id`. PK `(task_id, depends_on_task_id)`; both FK →
+`tasks.id` **CASCADE**; index `depends_on_task_id`. Self-dependencies and cycles must be
+rejected in code before inserting (`TaskDependencyDao.insert` ignores duplicates only).
+
+### 3.20 `saved_filters` (`SavedFilterEntity`, v3)
+
+Custom smart lists: `id` (PK), `name`, `icon` (`PlannerIcon.key`), `color` (`AccentColor.key`),
+`query` (TEXT NN, a JSON filter document with its own `version` field, owned by the smart-lists
+work package), `sort_order`, `created_at`, `updated_at`. Index: `sort_order`.
+
+### 3.21 `note_versions` (`NoteVersionEntity`, v3)
+
+Snapshots for note history: `id` (PK), `note_id` (FK → `notes.id` **CASCADE**), `created_at`
+(epoch ms), `title`, `content` (JSON `NoteDocument`), `size` (UTF-8 bytes of `content`).
+Index: `(note_id, created_at)`. `NoteVersionDao.prune(noteId, keep)` keeps the newest rows.
+
+### 3.22 `note_links` (`NoteLinkEntity`, v3)
+
+Links between notes (backlinks and the graph view). PK `(from_note_id, to_note_id)`, both FK →
+`notes.id` **CASCADE**, index `to_note_id`. The note editor rewrites a note's outgoing links on
+save with `NoteLinkDao.replaceOutgoing` (self-links are dropped). Backlink and graph queries
+leave out notes in the trash.
+
+### 3.23 `attachments` (`AttachmentEntity`, v3)
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| `id` | INTEGER | NN | PK, autoincrement |
+| `owner_type` | TEXT | NN | `TASK`, `NOTE`, `EVENT` or `MOOD` |
+| `owner_id` | INTEGER | NN | id in the owner's table |
+| `kind` | TEXT | NN | `IMAGE`, `FILE`, `AUDIO`, `DRAWING` or `SCAN` |
+| `file_name` | TEXT | NN | **unique**. A flat file name inside the app-private `files/attachments/` folder. Never a path. |
+| `display_name` | TEXT | NN, `DEFAULT ''` | name shown to the user (e.g. the original file name) |
+| `mime_type` | TEXT | NN | |
+| `size_bytes` | INTEGER | NN | |
+| `duration_ms` | INTEGER | null | audio |
+| `width`, `height` | INTEGER | null | images, drawings, scans |
+| `ocr_text` | TEXT | null | text recognized in an image or scan |
+| `transcript` | TEXT | null | transcript of a recording |
+| `sort_order` | INTEGER | NN, `DEFAULT 0` | |
+| `created_at` | INTEGER | NN | epoch ms |
+
+Indices: `(owner_type, owner_id)` and unique `file_name`. The owner is polymorphic, so there is
+no foreign key: every transaction that deletes tasks, notes, notebooks or events also runs
+`AttachmentDao.deleteOrphans()`, which removes rows whose owner is gone (a notebook delete
+cascades to its notes, so orphans are found by query rather than by id). Files without a row
+are removed by the attachment file sweep. Work packages that make OCR text or transcripts
+searchable add them to the **owner's** search row (no new `SearchEntityType`).
+
+### 3.24 `journal_entries` (`JournalEntryEntity`, v3)
+
+The daily journal (#25): one row per date (`date`, epoch day, **unique**), whose text lives in
+a regular note `note_id` (FK → `notes.id` **CASCADE**; rich content, search and attachments
+come for free), plus `prompt_id` (TEXT null, key of the prompt shown), `created_at`,
+`updated_at`. Indices: unique `date`, `note_id`.
+
+### 3.25 `mood_entries` (`MoodEntryEntity`, v3)
+
+Mood and energy check-ins (#30, and the journal's mood calendar). Several per day are allowed.
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| `id` | INTEGER | NN | PK |
+| `date` | INTEGER | NN | epoch day |
+| `time` | INTEGER | null | second of day |
+| `mood` | INTEGER | null | 1..5 |
+| `energy` | INTEGER | null | 1..5 (at least one of `mood`/`energy` is set, checked in code) |
+| `tags` | TEXT | NN, `DEFAULT ''` | comma-separated tag keys |
+| `note_id` | INTEGER | null | FK → `notes.id` **SET NULL** (e.g. the day's journal note) |
+| `created_at`, `updated_at` | INTEGER | NN | epoch ms |
+
+Indices: `date`, `note_id`. The mood calendar aggregates entries per `date`.
+
+### 3.26 `challenges` and `badges` (v3)
+
+`challenges` (`ChallengeEntity`): `id`, `kind` (`HABIT_STREAK`, `TASKS_PER_DAY`,
+`FOCUS_MINUTES`, …), `title`, `target_days`, `start_date` (epoch day), `habit_id` (null, FK →
+`habits.id` **SET NULL** so finished challenges stay in the history), `status` (NN,
+`DEFAULT 'ACTIVE'`; `ACTIVE`, `COMPLETED`, `FAILED`, `ABANDONED`), `completed_at`,
+`created_at`, `updated_at`. Indices: `habit_id`, `status`.
+
+`badges` (`BadgeEntity`): `id`, `key` (**unique**, a resource-backed badge definition),
+`earned_at`. `ChallengeDao.award` ignores a second award of the same badge.
+
+### 3.27 `activity_log` (`ActivityLogEntity`, v3)
+
+`id`, `entity_type` (`TASK`, `PROJECT`, `NOTE`, `NOTEBOOK`, `HABIT`, `GOAL`, `EVENT`),
+`entity_id`, `action` (`CREATED`, `UPDATED`, `COMPLETED`, `REOPENED`, `DELETED`, `RESTORED`,
+`ARCHIVED`), `at` (epoch ms), `summary` (NN, `DEFAULT ''`). Indices: `(entity_type, entity_id)`
+and `at`. **`summary` is a short label such as the title; it never contains note bodies.**
+`ActivityLogDao.deleteOlderThan` implements retention.
+
+### 3.28 `calendar_links` (`CalendarLinkEntity`, v3)
+
+Two-way sync with device calendars (CalendarContract): `id`, `local_type` (`EVENT` or
+`TASK`), `local_id`, `calendar_id` (device calendar `_ID`), `external_event_id` (device event
+`_ID`), `last_synced_at` (epoch ms), `local_version` (the local `updated_at` at the last sync),
+`remote_version` (a fingerprint of the remote event at the last sync). Unique indices
+`(local_type, local_id)` and `(calendar_id, external_event_id)`. Links are restored from
+backups; the sync must treat a link whose calendar or event no longer exists on the device as
+stale (re-create or drop it) instead of failing.
+
+### 3.29 New columns in existing tables (v3)
+
+See the tables above: `tasks.deadline`, `scheduled_start`, `scheduled_end`, `nag`,
+`deleted_at`; `notes.deleted_at`, `locked`, `encrypted_payload`; `habits.health_metric`,
+`health_threshold`; `focus_sessions.sound_id`, `strict`. `estimated_minutes` already existed
+(v1) and is used for auto-scheduling.
+
+**Recurrence "after completion" and ordinal weekdays** need no column: they are encoded in the
+`recurrence` text. Reserved keys: `BASIS=COMPLETION` (the next occurrence is computed from the
+completion date instead of the schedule; absent means `SCHEDULE`) and `BYSETPOS=n` together with
+`BYDAY` (`FREQ=MONTHLY;BYDAY=MO;BYSETPOS=2` = second Monday; `-1` = last). The current decoder
+ignores unknown keys, so such rules degrade to a plain schedule in code that does not know them.
+
+### 3.30 Soft delete (trash, v3)
+
+`tasks.deleted_at` and `notes.deleted_at` mark items in the trash. **Every existing list,
+count and statistic excludes them**: `TaskQueryBuilder` (all task views), subtask lists and
+counts, project task counts, reminders (`tasksWithReminders`, `ReminderPlanner`, the reminder
+receiver), Today/Weekly Review statistics, notebook note counts, notes lists (notebook, pinned,
+recent, archived), search (index rebuild and results) and CSV/JSON/Markdown exports. Lookups
+by id still return trashed rows so they can be restored. Trash queries:
+`TaskDao.observeTrash()` / `setDeletedAt()` / `trashedBefore()` and the same on `NoteDao`.
+Backups include trashed rows. Purging after 30 days is a hard delete through the repositories.
 
 ---
 
@@ -393,7 +578,8 @@ upserted or deleted by computed rowid in O(1), without a lookup.
 | `FocusDao` | Active session (`RUNNING` or `PAUSED`), history, focused milliseconds in a range. |
 | `TemplateDao` | User templates. |
 | `SearchDao` | FTS upsert (`REPLACE`), delete by rowid, clear, `MATCH` search. |
-| `BackupDao` | Whole-table reads and inserts for backup and restore. Tasks are read parents first (`ORDER BY parent_task_id IS NOT NULL, id`). `clearAll()` deletes children before parents: tag joins, focus sessions, tasks, milestones, goals, projects, notes, sections, notebooks, completions, habits, events, templates, tags, then the search index. |
+| `TaskReminderDao`, `TaskDependencyDao`, `SavedFilterDao`, `NoteVersionDao`, `NoteLinkDao`, `AttachmentDao`, `JournalDao` (journal + mood), `ChallengeDao` (challenges + badges), `ActivityLogDao`, `CalendarLinkDao` | v3 tables (`dao/ProDaos.kt`): CRUD and observe queries for the Pro work packages. |
+| `BackupDao` | Whole-table reads and inserts for backup and restore. Tasks are read parents first (`ORDER BY parent_task_id IS NOT NULL, id`). `clearAll()` deletes children before parents: the v3 tables, tag joins, focus sessions, tasks, milestones, goals, projects, notes, sections, notebooks, completions, habits, events, templates, tags, then the search index. |
 
 Date and time parameters in DAO queries are raw canonical numbers (`Long` epoch day or epoch
 ms), matching the converters.
@@ -419,9 +605,17 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
 val ALL: Array<Migration> = arrayOf(MIGRATION_1_2)
 ```
 
+`MIGRATION_2_3` runs the statements in `Migrations.SCHEMA_3_STATEMENTS`: `ALTER TABLE … ADD
+COLUMN` for the new columns (nullable, or `NOT NULL DEFAULT 0`), the new indices, and the
+`CREATE TABLE` / `CREATE INDEX` statements of the new tables copied from `3.json`.
+
 | From → To | Change |
 |---|---|
 | 1 → 2 | Adds the `note_drafts` table. No existing table changes. |
+| 2 → 3 | Plan-B Pro foundation, in one step: new columns on `tasks`, `notes`, `habits`, `focus_sessions` (all nullable or defaulted, so existing rows stay valid) and the tables `task_reminders`, `task_dependencies`, `saved_filters`, `note_versions`, `note_links`, `attachments`, `journal_entries`, `mood_entries`, `challenges`, `badges`, `activity_log`, `calendar_links`. Existing data is not rewritten. |
+
+**Work packages build on schema 3 without changing it.** A future change still follows the
+policy below (a new version and migration).
 
 ### Policy
 
@@ -445,6 +639,7 @@ val ALL: Array<Migration> = arrayOf(MIGRATION_1_2)
 |---|---|---|
 | `1.json` | 1 | `2ca68356df6b1f60c661703acc92faac` |
 | `2.json` | 2 | `29f654a642df58f65793d504ff234ee0` |
+| `3.json` | 3 | `e430d9592d48c89706043e87581b9315` |
 
 The Room Gradle plugin writes these files (`schemaDirectory("$projectDir/schemas")`) and they
 are committed. `core/database/build.gradle.kts` adds the directory as **assets** for both the
@@ -459,6 +654,12 @@ through the Room convention plugin as `testImplementation`.
 | Test | What it checks |
 |---|---|
 | `migrate1To2_preservesDataAndAddsDrafts` | Creates a v1 database from `1.json` and inserts a notebook, a note with a Persian title, and a task. Runs `MIGRATION_1_2` with schema validation. Checks that the note survived, that a draft can be inserted, and that deleting the note cascades to its draft (with `PRAGMA foreign_keys = ON`). |
+| `migrate2To3_preservesDataAndAddsProSchema` | Creates a v2 database with a Persian note and draft, tasks with reminder and recurrence, a habit with a check-in, a focus session and an index row. Runs `MIGRATION_2_3` with validation; checks that every row survived unchanged, that new columns read as null/0, that new tables accept rows, that SQL defaults apply, and that the new foreign keys cascade or set null. |
+| `migrate1To3_runsEveryStep` | Migrates a v1 database through all migrations to 3 with validation. |
 | `openLatestThroughAllMigrations` | Creates an empty v1 database, opens it through `Room.databaseBuilder(...).addMigrations(*Migrations.ALL)`, and runs a DAO query. |
 
-`DaoTest.kt` in the same folder covers DAO behaviour on an in-memory database.
+`DaoTest.kt` in the same folder covers DAO behaviour on an in-memory database, including the
+soft-delete filters of every list query and the v3 DAOs. `core/data/.../ProSchemaRepositoryTest.kt`
+checks that the repositories keep the new fields, that trashed items leave lists and search,
+that locked notes are found by title only, and that recurring tasks carry their extra
+reminders.

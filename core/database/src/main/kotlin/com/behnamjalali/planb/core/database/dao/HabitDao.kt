@@ -26,6 +26,10 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE archived = 0")
     suspend fun activeHabits(): List<HabitEntity>
 
+    /** Active habits checked off automatically from Health Connect. */
+    @Query("SELECT * FROM habits WHERE archived = 0 AND health_metric IS NOT NULL")
+    suspend fun habitsWithHealthMetric(): List<HabitEntity>
+
     @Insert
     suspend fun insert(habit: HabitEntity): Long
 

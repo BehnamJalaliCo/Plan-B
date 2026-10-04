@@ -44,6 +44,10 @@ data class Note(
     val updatedAt: Instant = Instant.EPOCH,
     val archived: Boolean = false,
     val tags: List<Tag> = emptyList(),
+    /** Set while the note is in the trash. */
+    val deletedAt: Instant? = null,
+    /** Shown only after unlocking; its body may be stored encrypted. */
+    val locked: Boolean = false,
 ) {
     val contentFormat: NoteFormat get() = NoteFormat.BLOCKS_V1
 }

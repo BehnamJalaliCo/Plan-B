@@ -4,6 +4,28 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.behnamjalali.planb.core.database.dao.BackupDao
+import com.behnamjalali.planb.core.database.dao.TaskReminderDao
+import com.behnamjalali.planb.core.database.dao.TaskDependencyDao
+import com.behnamjalali.planb.core.database.dao.SavedFilterDao
+import com.behnamjalali.planb.core.database.dao.NoteVersionDao
+import com.behnamjalali.planb.core.database.dao.NoteLinkDao
+import com.behnamjalali.planb.core.database.dao.AttachmentDao
+import com.behnamjalali.planb.core.database.dao.JournalDao
+import com.behnamjalali.planb.core.database.dao.ChallengeDao
+import com.behnamjalali.planb.core.database.dao.ActivityLogDao
+import com.behnamjalali.planb.core.database.dao.CalendarLinkDao
+import com.behnamjalali.planb.core.database.entity.TaskReminderEntity
+import com.behnamjalali.planb.core.database.entity.TaskDependencyEntity
+import com.behnamjalali.planb.core.database.entity.SavedFilterEntity
+import com.behnamjalali.planb.core.database.entity.NoteVersionEntity
+import com.behnamjalali.planb.core.database.entity.NoteLinkEntity
+import com.behnamjalali.planb.core.database.entity.AttachmentEntity
+import com.behnamjalali.planb.core.database.entity.JournalEntryEntity
+import com.behnamjalali.planb.core.database.entity.MoodEntryEntity
+import com.behnamjalali.planb.core.database.entity.ChallengeEntity
+import com.behnamjalali.planb.core.database.entity.BadgeEntity
+import com.behnamjalali.planb.core.database.entity.ActivityLogEntity
+import com.behnamjalali.planb.core.database.entity.CalendarLinkEntity
 import com.behnamjalali.planb.core.database.dao.EventDao
 import com.behnamjalali.planb.core.database.dao.FocusDao
 import com.behnamjalali.planb.core.database.dao.GoalDao
@@ -58,6 +80,19 @@ import com.behnamjalali.planb.core.database.entity.TaskTagCrossRef
         PlannerTemplateEntity::class,
         SearchIndexEntity::class,
         NoteDraftEntity::class,
+        // Schema v3 (Plan-B Pro foundation).
+        TaskReminderEntity::class,
+        TaskDependencyEntity::class,
+        SavedFilterEntity::class,
+        NoteVersionEntity::class,
+        NoteLinkEntity::class,
+        AttachmentEntity::class,
+        JournalEntryEntity::class,
+        MoodEntryEntity::class,
+        ChallengeEntity::class,
+        BadgeEntity::class,
+        ActivityLogEntity::class,
+        CalendarLinkEntity::class,
     ],
 )
 @TypeConverters(Converters::class)
@@ -74,9 +109,19 @@ abstract class PlanBDatabase : RoomDatabase() {
     abstract fun searchDao(): SearchDao
     abstract fun backupDao(): BackupDao
     abstract fun noteDraftDao(): NoteDraftDao
+    abstract fun taskReminderDao(): TaskReminderDao
+    abstract fun taskDependencyDao(): TaskDependencyDao
+    abstract fun savedFilterDao(): SavedFilterDao
+    abstract fun noteVersionDao(): NoteVersionDao
+    abstract fun noteLinkDao(): NoteLinkDao
+    abstract fun attachmentDao(): AttachmentDao
+    abstract fun journalDao(): JournalDao
+    abstract fun challengeDao(): ChallengeDao
+    abstract fun activityLogDao(): ActivityLogDao
+    abstract fun calendarLinkDao(): CalendarLinkDao
 
     companion object {
-        const val VERSION = 2
+        const val VERSION = 3
 
         /** Internal file name; intentionally independent of the display name. */
         const val NAME = "planb.db"

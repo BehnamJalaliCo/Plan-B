@@ -50,7 +50,25 @@ data class Habit(
     val createdAt: Instant = Instant.EPOCH,
     val updatedAt: Instant = Instant.EPOCH,
     val archived: Boolean = false,
+    /** Health Connect metric that checks the habit off automatically. */
+    val healthMetric: HealthMetric? = null,
+    /** Daily amount of [healthMetric] that counts as done. */
+    val healthThreshold: Long? = null,
 )
+
+/** Health Connect data a habit can be checked off with; stored by [name]. */
+enum class HealthMetric {
+    STEPS,
+    SLEEP_MINUTES,
+    HYDRATION_ML,
+    ACTIVE_MINUTES,
+    DISTANCE_METERS,
+    ;
+
+    companion object {
+        fun fromKey(key: String?): HealthMetric? = entries.firstOrNull { it.name == key }
+    }
+}
 
 data class HabitCompletion(
     val id: EntityId = NEW_ID,

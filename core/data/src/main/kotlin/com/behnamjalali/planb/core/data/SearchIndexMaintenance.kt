@@ -12,9 +12,10 @@ class SearchIndexMaintenance @Inject constructor(
     /** Call inside the same transaction as the data change so the index never drifts. */
     suspend fun rebuild() {
         searchDao.clear()
-        backupDao.tasks().chunked(CHUNK).forEach { list -> searchDao.upsertAll(list.map(SearchIndexer::task)) }
+        // Items in the trash are not searchable.
+        backupDao.tasks().filter { it.deletedAt == null }.chunked(CHUNK).forEach { list -> searchDao.upsertAll(list.map(SearchIndexer::task)) }
         searchDao.upsertAll(backupDao.projects().map(SearchIndexer::project))
-        backupDao.notes().chunked(CHUNK).forEach { list -> searchDao.upsertAll(list.map(SearchIndexer::note)) }
+        backupDao.notes().filter { it.deletedAt == null }.chunked(CHUNK).forEach { list -> searchDao.upsertAll(list.map(SearchIndexer::note)) }
         searchDao.upsertAll(backupDao.notebooks().map(SearchIndexer::notebook))
         searchDao.upsertAll(backupDao.habits().map(SearchIndexer::habit))
         searchDao.upsertAll(backupDao.goals().map(SearchIndexer::goal))

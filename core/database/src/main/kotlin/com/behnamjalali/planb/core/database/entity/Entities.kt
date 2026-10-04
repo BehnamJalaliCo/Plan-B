@@ -31,6 +31,9 @@ import java.time.LocalTime
         Index("parent_task_id"),
         Index("completed", "archived", "due_date"),
         Index("completed_at"),
+        Index("deadline"),
+        Index("scheduled_start"),
+        Index("deleted_at"),
     ],
 )
 data class TaskEntity(
@@ -57,6 +60,15 @@ data class TaskEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Instant,
     @ColumnInfo(name = "completed_at") val completedAt: Instant?,
     val archived: Boolean,
+    /** Hard deadline (epoch day), distinct from [dueDate], which is the planned date (v3). */
+    val deadline: LocalDate? = null,
+    /** Time-blocked or auto-scheduled slot (epoch ms, v3). */
+    @ColumnInfo(name = "scheduled_start") val scheduledStart: Instant? = null,
+    @ColumnInfo(name = "scheduled_end") val scheduledEnd: Instant? = null,
+    /** Repeat the reminder until the task is done (v3). */
+    @ColumnInfo(defaultValue = "0") val nag: Boolean = false,
+    /** Set when the task is in the trash; every regular list excludes such rows (v3). */
+    @ColumnInfo(name = "deleted_at") val deletedAt: Instant? = null,
 )
 
 @Entity(tableName = "tags", indices = [Index(value = ["name"], unique = true)])
@@ -156,7 +168,7 @@ data class NotebookSectionEntity(
         ForeignKey(NotebookEntity::class, ["id"], ["notebook_id"], onDelete = ForeignKey.CASCADE),
         ForeignKey(NotebookSectionEntity::class, ["id"], ["section_id"], onDelete = ForeignKey.SET_NULL),
     ],
-    indices = [Index("notebook_id", "archived"), Index("section_id"), Index("updated_at")],
+    indices = [Index("notebook_id", "archived"), Index("section_id"), Index("updated_at"), Index("deleted_at")],
 )
 data class NoteEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -171,7 +183,25 @@ data class NoteEntity(
     @ColumnInfo(name = "created_at") val createdAt: Instant,
     @ColumnInfo(name = "updated_at") val updatedAt: Instant,
     val archived: Boolean,
-)
+    /** Set when the note is in the trash; every regular list excludes such rows (v3). */
+    @ColumnInfo(name = "deleted_at") val deletedAt: Instant? = null,
+    /** Requires unlocking (biometrics) before it is shown (v3). */
+    @ColumnInfo(defaultValue = "0") val locked: Boolean = false,
+    /**
+     * Encrypted note body (v3). While it is set, [content] holds no readable text and
+     * [title] is the only indexed text. See DATABASE.md for the envelope format.
+     */
+    @ColumnInfo(name = "encrypted_payload", typeAffinity = ColumnInfo.BLOB) val encryptedPayload: ByteArray? = null,
+) {
+    // Value semantics for the payload (a plain data class compares arrays by identity).
+    override fun equals(other: Any?): Boolean = other is NoteEntity && id == other.id && notebookId == other.notebookId &&
+        sectionId == other.sectionId && title == other.title && content == other.content && contentFormat == other.contentFormat &&
+        pinned == other.pinned && favorite == other.favorite && sortOrder == other.sortOrder && createdAt == other.createdAt &&
+        updatedAt == other.updatedAt && archived == other.archived && deletedAt == other.deletedAt && locked == other.locked &&
+        encryptedPayload.contentEquals(other.encryptedPayload)
+
+    override fun hashCode(): Int = 31 * id.hashCode() + title.hashCode() + content.hashCode() + encryptedPayload.contentHashCode()
+}
 
 @Entity(
     tableName = "note_tags",
@@ -201,6 +231,10 @@ data class HabitEntity(
     @ColumnInfo(name = "created_at") val createdAt: Instant,
     @ColumnInfo(name = "updated_at") val updatedAt: Instant,
     val archived: Boolean,
+    /** Health Connect metric that checks the habit off automatically, e.g. STEPS (v3). */
+    @ColumnInfo(name = "health_metric") val healthMetric: String? = null,
+    /** Daily amount of [healthMetric] that counts as done (v3). */
+    @ColumnInfo(name = "health_threshold") val healthThreshold: Long? = null,
 )
 
 /** One row per habit per day; [amount] accumulates check-ins for that day. */
@@ -283,6 +317,10 @@ data class FocusSessionEntity(
     val status: String,
     @ColumnInfo(name = "running_since") val runningSince: Instant?,
     @ColumnInfo(name = "accumulated_ms") val accumulatedMillis: Long,
+    /** Ambient sound played during the session (v3). */
+    @ColumnInfo(name = "sound_id") val soundId: String? = null,
+    /** Strict mode: Do Not Disturb while running (v3). */
+    @ColumnInfo(defaultValue = "0") val strict: Boolean = false,
 )
 
 @Entity(tableName = "planner_templates")

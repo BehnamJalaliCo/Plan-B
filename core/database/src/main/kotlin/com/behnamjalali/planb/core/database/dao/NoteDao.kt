@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NoteDao {
     @Query(
-        "SELECT n.*, (SELECT COUNT(*) FROM notes x WHERE x.notebook_id = n.id AND x.archived = 0) AS note_count " +
+        "SELECT n.*, (SELECT COUNT(*) FROM notes x WHERE x.notebook_id = n.id AND x.archived = 0 AND x.deleted_at IS NULL) AS note_count " +
             "FROM notebooks n WHERE n.archived = :archived ORDER BY n.sort_order, n.id",
     )
     fun observeNotebooks(archived: Boolean): Flow<List<NotebookWithCount>>
@@ -69,7 +69,7 @@ interface NoteDao {
 
     @Transaction
     @Query(
-        "SELECT * FROM notes WHERE notebook_id = :notebookId AND archived = 0 " +
+        "SELECT * FROM notes WHERE notebook_id = :notebookId AND archived = 0 AND deleted_at IS NULL " +
             "AND (:sectionId IS NULL OR section_id = :sectionId) " +
             "ORDER BY pinned DESC, sort_order, updated_at DESC",
     )
@@ -78,17 +78,20 @@ interface NoteDao {
     /** Notes in an archived notebook are archived with it, so they are left out like archived notes. */
     @Transaction
     @Query(
-        "SELECT * FROM notes WHERE archived = 0 AND (pinned = 1 OR favorite = 1) AND $IN_ACTIVE_NOTEBOOK " +
+        "SELECT * FROM notes WHERE archived = 0 AND deleted_at IS NULL AND (pinned = 1 OR favorite = 1) AND $IN_ACTIVE_NOTEBOOK " +
             "ORDER BY pinned DESC, updated_at DESC LIMIT :limit",
     )
     fun observePinnedOrFavorite(limit: Int): Flow<List<NoteWithTags>>
 
     @Transaction
-    @Query("SELECT * FROM notes WHERE archived = 0 AND $IN_ACTIVE_NOTEBOOK ORDER BY updated_at DESC LIMIT :limit")
+    @Query(
+        "SELECT * FROM notes WHERE archived = 0 AND deleted_at IS NULL AND $IN_ACTIVE_NOTEBOOK " +
+            "ORDER BY updated_at DESC LIMIT :limit",
+    )
     fun observeRecent(limit: Int): Flow<List<NoteWithTags>>
 
     @Transaction
-    @Query("SELECT * FROM notes WHERE archived = 1 ORDER BY updated_at DESC")
+    @Query("SELECT * FROM notes WHERE archived = 1 AND deleted_at IS NULL ORDER BY updated_at DESC")
     fun observeArchived(): Flow<List<NoteWithTags>>
 
     @Transaction
@@ -127,6 +130,23 @@ interface NoteDao {
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNote(id: Long)
 
+    /** Moves a note to the trash (a time) or restores it (null). Lists never show trashed notes. */
+    @Query("UPDATE notes SET deleted_at = :deletedAt WHERE id = :id")
+    suspend fun setDeletedAt(id: Long, deletedAt: Long?)
+
+    /** The trash, most recently deleted first. */
+    @Transaction
+    @Query("SELECT * FROM notes WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")
+    fun observeTrash(): Flow<List<NoteWithTags>>
+
+    /** Ids of notes trashed before [before] (epoch ms), for purging after the retention period. */
+    @Query("SELECT id FROM notes WHERE deleted_at IS NOT NULL AND deleted_at < :before")
+    suspend fun trashedBefore(before: Long): List<Long>
+
+    /** Lock state and encrypted body only; never rewrites (or undoes) a concurrent content save. */
+    @Query("UPDATE notes SET locked = :locked, encrypted_payload = :payload, content = :content, updated_at = :now WHERE id = :id")
+    suspend fun setLocked(id: Long, locked: Boolean, payload: ByteArray?, content: String, now: Long)
+
     @Query("SELECT COALESCE(MAX(sort_order), 0) FROM notes WHERE notebook_id = :notebookId")
     suspend fun maxNoteOrder(notebookId: Long): Long
 
@@ -139,7 +159,7 @@ interface NoteDao {
     @Query("SELECT tag_id FROM note_tags WHERE note_id = :noteId")
     suspend fun tagIds(noteId: Long): List<Long>
 
-    @Query("SELECT COUNT(*) FROM notes WHERE created_at >= :from AND created_at < :to")
+    @Query("SELECT COUNT(*) FROM notes WHERE deleted_at IS NULL AND created_at >= :from AND created_at < :to")
     suspend fun countCreatedBetween(from: Long, to: Long): Int
 
     companion object {

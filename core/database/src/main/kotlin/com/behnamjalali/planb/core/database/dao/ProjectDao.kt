@@ -67,8 +67,8 @@ interface ProjectDao {
     companion object {
         const val SELECT_WITH_COUNTS =
             "SELECT p.*, " +
-                "(SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.parent_task_id IS NULL AND t.archived = 0) AS total_tasks, " +
-                "(SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.parent_task_id IS NULL AND t.archived = 0 AND t.completed = 1) AS completed_tasks, " +
+                "(SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.parent_task_id IS NULL AND t.archived = 0 AND t.deleted_at IS NULL) AS total_tasks, " +
+                "(SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.parent_task_id IS NULL AND t.archived = 0 AND t.deleted_at IS NULL AND t.completed = 1) AS completed_tasks, " +
                 "(SELECT COUNT(*) FROM project_milestones m WHERE m.project_id = p.id) AS total_milestones, " +
                 "(SELECT COUNT(*) FROM project_milestones m WHERE m.project_id = p.id AND m.completed = 1) AS completed_milestones " +
                 "FROM projects p"

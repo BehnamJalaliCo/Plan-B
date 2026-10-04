@@ -17,7 +17,7 @@ enum class ReminderKind(val code: Int) { TASK(1), EVENT(2), HABIT(3), FOCUS(4) }
 
 /**
  * Pure calculation of the next reminder for an item. Returns null when no
- * future reminder exists (completed, archived, past, or no reminder set).
+ * future reminder exists (completed, archived, in the trash, past, or no reminder set).
  */
 object ReminderPlanner {
     private const val EVENT_LOOKAHEAD_DAYS = 400L
@@ -25,7 +25,7 @@ object ReminderPlanner {
     fun forTask(task: Task, now: Instant, zone: ZoneId): PlannedReminder? {
         val offset = task.reminderOffsetMinutes ?: return null
         val due = task.dueDate ?: return null
-        if (task.isCompleted || task.archived) return null
+        if (task.isCompleted || task.archived || task.deletedAt != null) return null
         val at = ReminderTime.triggerAt(due, task.dueTime, offset, zone)
         return if (at.isAfter(now)) PlannedReminder(ReminderKind.TASK, task.id, at, due) else null
     }

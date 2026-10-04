@@ -27,7 +27,12 @@ internal object SearchIndexer {
 
     fun task(e: TaskEntity) = entry(SearchEntityType.TASK, e.id, e.title, e.description, e.notes)
     fun project(e: ProjectEntity) = entry(SearchEntityType.PROJECT, e.id, e.title, e.description)
-    fun note(e: NoteEntity) = entry(SearchEntityType.NOTE, e.id, e.title, NoteDocument.decode(e.content).plainText())
+    /** A locked note is found by its title only: its body never enters the index. */
+    fun note(e: NoteEntity) = if (e.locked || e.encryptedPayload != null) {
+        entry(SearchEntityType.NOTE, e.id, e.title)
+    } else {
+        entry(SearchEntityType.NOTE, e.id, e.title, NoteDocument.decode(e.content).plainText())
+    }
     fun notebook(e: NotebookEntity) = entry(SearchEntityType.NOTEBOOK, e.id, e.title)
     fun habit(e: HabitEntity) = entry(SearchEntityType.HABIT, e.id, e.title, e.unit)
     fun goal(e: GoalEntity) = entry(SearchEntityType.GOAL, e.id, e.title, e.description, e.notes)
