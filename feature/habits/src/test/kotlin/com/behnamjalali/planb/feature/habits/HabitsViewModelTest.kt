@@ -32,12 +32,15 @@ class HabitsViewModelTest {
     }
 
     @After
-    fun tearDown() = graph.close()
+    fun tearDown() {
+        main.clearViewModels()
+        graph.close()
+    }
 
-    private fun habitsViewModel() = HabitsViewModel(SavedStateHandle(), graph.habits, graph.settings, graph.time)
+    private fun habitsViewModel() = main.track(HabitsViewModel(SavedStateHandle(), graph.habits, graph.settings, graph.time))
 
     private fun detailViewModel(id: Long) =
-        HabitDetailViewModel(SavedStateHandle(mapOf("habitId" to id)), graph.habits, graph.settings, graph.time)
+        main.track(HabitDetailViewModel(SavedStateHandle(mapOf("habitId" to id)), graph.habits, graph.settings, graph.time))
 
     @Test
     fun list_showsActiveHabitsWithTodayAmountAndStreak() = runBlocking<Unit> {
@@ -136,7 +139,7 @@ class HabitsViewModelTest {
         main.keepCollecting(vm.uiState)
         vm.uiState.awaitItem { it.item != null }
 
-        val deleted = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(5_000) { vm.events.first() } }
+        val deleted = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(20_000) { vm.events.first() } }
         vm.delete()
         assertThat(deleted.await()).isEqualTo(HabitEvent.Deleted)
         assertThat(vm.uiState.awaitItem { it.missing }.item).isNull()

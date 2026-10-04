@@ -27,13 +27,16 @@ class TodayViewModelTest {
     @Before
     fun setUp() {
         graph = TestDataGraph()
-        viewModel = TodayViewModel(
-            graph.tasks, graph.events, graph.habits, graph.focus, graph.projects, graph.notes, graph.settings, graph.time,
+        viewModel = main.track(
+            TodayViewModel(graph.tasks, graph.events, graph.habits, graph.focus, graph.projects, graph.notes, graph.settings, graph.time),
         )
     }
 
     @After
-    fun tearDown() = graph.close()
+    fun tearDown() {
+        main.clearViewModels()
+        graph.close()
+    }
 
     private suspend fun awaitData(predicate: (TodayData) -> Boolean = { true }): TodayData =
         (viewModel.uiState.awaitItem { it is TodayUiState.Success && predicate(it.data) } as TodayUiState.Success).data

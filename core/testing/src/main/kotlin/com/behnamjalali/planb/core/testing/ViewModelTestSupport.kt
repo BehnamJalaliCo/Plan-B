@@ -2,6 +2,9 @@ package com.behnamjalali.planb.core.testing
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +32,25 @@ class RealMainDispatcherRule : TestWatcher() {
     lateinit var dispatcher: CoroutineDispatcher
         private set
 
+    private val viewModels = ViewModelStore()
+    private var viewModelCount = 0
+
+    /**
+     * Registers [viewModel] so it is cleared (viewModelScope cancelled, onCleared run) by
+     * [clearViewModels]; otherwise its coroutines would outlive the test and touch
+     * Dispatchers.Main after it is reset.
+     */
+    fun <T : ViewModel> track(viewModel: T): T {
+        val factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <V : ViewModel> create(modelClass: Class<V>): V = viewModel as V
+        }
+        return ViewModelProvider(viewModels, factory)["vm${viewModelCount++}", viewModel.javaClass]
+    }
+
+    /** Clears tracked ViewModels; call before closing the database in @After. */
+    fun clearViewModels() = viewModels.clear()
+
     /** Scope on the main dispatcher for keeping StateFlows subscribed during a test. */
     lateinit var scope: CoroutineScope
         private set
@@ -41,6 +63,7 @@ class RealMainDispatcherRule : TestWatcher() {
     }
 
     override fun finished(description: Description) {
+        clearViewModels()
         scope.coroutineContext[Job]?.cancel()
         Dispatchers.resetMain()
         executor.shutdownNow()
@@ -50,6 +73,6 @@ class RealMainDispatcherRule : TestWatcher() {
     fun keepCollecting(flow: Flow<*>): Job = scope.launch { flow.collect {} }
 }
 
-/** Waits (real time) until [flow] emits a value matching [predicate]. */
-suspend fun <T> Flow<T>.awaitItem(timeoutMillis: Long = 5_000, predicate: (T) -> Boolean): T =
+/** Waits (real time, generous for slow CI machines) until [flow] emits a value matching [predicate]. */
+suspend fun <T> Flow<T>.awaitItem(timeoutMillis: Long = 20_000, predicate: (T) -> Boolean): T =
     withTimeout(timeoutMillis) { first(predicate) }

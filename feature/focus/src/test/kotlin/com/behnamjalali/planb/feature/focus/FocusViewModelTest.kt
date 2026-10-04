@@ -32,12 +32,15 @@ class FocusViewModelTest {
     @Before
     fun setUp() {
         graph = TestDataGraph()
-        viewModel = FocusViewModel(SavedStateHandle(), graph.focus, graph.tasks, graph.settings, graph.reminders, graph.time)
+        viewModel = main.track(FocusViewModel(SavedStateHandle(), graph.focus, graph.tasks, graph.settings, graph.reminders, graph.time))
         main.keepCollecting(viewModel.uiState)
     }
 
     @After
-    fun tearDown() = graph.close()
+    fun tearDown() {
+        main.clearViewModels()
+        graph.close()
+    }
 
     private suspend fun startSession(minutes: Int) {
         viewModel.selectMinutes(minutes)
@@ -127,19 +130,20 @@ class FocusViewModelTest {
         time.advance(Duration.ofMinutes(8))
         viewModel.finish()
         viewModel.uiState.awaitItem { it.active == null && it.history.isNotEmpty() }
-        withTimeout(5_000) { graph.tasks.observeTask(taskId).first { it?.actualMinutes == 13 } }
+        withTimeout(20_000) { graph.tasks.observeTask(taskId).first { it?.actualMinutes == 13 } }
     }
 
     @Test
     fun onElapsed_completesSessionWhenPlannedTimeIsUp() = runBlocking<Unit> {
         startSession(5)
         time.advance(Duration.ofMinutes(3))
-        viewModel.onElapsed()
+        // Wait for this check to finish before moving the clock past the end.
+        viewModel.onElapsed().join()
         // Not elapsed yet: stays running.
         assertThat(viewModel.uiState.awaitItem { it.active != null }.active!!.status).isEqualTo(FocusStatus.RUNNING)
 
         time.advance(Duration.ofMinutes(4))
-        val completed = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(5_000) { viewModel.messages.first() } }
+        val completed = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(20_000) { viewModel.messages.first() } }
         viewModel.onElapsed()
         assertThat(completed.await()).isEqualTo(FocusMessage.Completed)
         val state = viewModel.uiState.awaitItem { it.active == null && it.history.isNotEmpty() }

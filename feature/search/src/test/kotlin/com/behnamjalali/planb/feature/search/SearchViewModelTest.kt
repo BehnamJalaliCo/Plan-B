@@ -30,12 +30,15 @@ class SearchViewModelTest {
     @Before
     fun setUp() {
         graph = TestDataGraph()
-        viewModel = SearchViewModel(SavedStateHandle(), graph.search)
+        viewModel = main.track(SearchViewModel(SavedStateHandle(), graph.search))
         main.keepCollecting(viewModel.uiState)
     }
 
     @After
-    fun tearDown() = graph.close()
+    fun tearDown() {
+        main.clearViewModels()
+        graph.close()
+    }
 
     private suspend fun awaitResults(query: String): SearchUiState.Results =
         viewModel.uiState.awaitItem { it is SearchUiState.Results && it.query == query } as SearchUiState.Results

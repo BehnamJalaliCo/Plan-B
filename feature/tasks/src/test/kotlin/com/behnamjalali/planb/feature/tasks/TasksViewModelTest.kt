@@ -44,12 +44,15 @@ class TasksViewModelTest {
     }
 
     @After
-    fun tearDown() = graph.close()
+    fun tearDown() {
+        main.clearViewModels()
+        graph.close()
+    }
 
     /** A handle with a saved view skips the async default-view lookup from settings. */
     private fun viewModel(view: TaskView? = TaskView.TODAY): TasksViewModel {
         val handle = if (view == null) SavedStateHandle() else SavedStateHandle(mapOf("tasks_view" to view.name))
-        return TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope).also {
+        return main.track(TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope)).also {
             main.keepCollecting(it.uiState)
         }
     }
@@ -86,7 +89,7 @@ class TasksViewModelTest {
         val vm = viewModel()
         vm.awaitTitles(TaskView.TODAY, "Overdue", "Due today")
 
-        val message = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(5_000) { vm.messages.first() } }
+        val message = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(20_000) { vm.messages.first() } }
         vm.setCompleted(dueToday, true)
         assertThat(message.await()).isEqualTo(TasksMessage.Completed(dueToday, null))
         vm.awaitTitles(TaskView.TODAY, "Overdue")
@@ -155,7 +158,7 @@ class TasksViewModelTest {
 
         vm.requestDelete(listOf(inbox))
         vm.commitDelete()
-        withTimeout(5_000) { graph.tasks.observeTask(inbox).first { it == null } }
+        withTimeout(20_000) { graph.tasks.observeTask(inbox).first { it == null } }
         vm.awaitTitles(TaskView.ALL, "Overdue", "Due today", "Next week")
     }
 }

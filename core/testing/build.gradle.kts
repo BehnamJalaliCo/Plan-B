@@ -7,6 +7,7 @@ android {
 }
 
 dependencies {
+    api(libs.androidx.lifecycle.viewModelCompose)
     api(projects.core.model)
     api(projects.core.common)
     api(projects.core.data)
