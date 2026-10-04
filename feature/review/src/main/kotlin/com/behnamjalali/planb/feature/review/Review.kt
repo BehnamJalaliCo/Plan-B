@@ -42,6 +42,7 @@ import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.repository.ReviewRepository
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
+import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.datetime.MonthGrid
 import com.behnamjalali.planb.core.designsystem.component.PlannerCard
 import com.behnamjalali.planb.core.designsystem.component.PlannerErrorState
@@ -75,6 +76,7 @@ sealed interface ReviewUiState {
 class ReviewViewModel @Inject constructor(
     private val savedState: SavedStateHandle,
     private val reviews: ReviewRepository,
+    private val tasks: TaskRepository,
     private val settings: SettingsRepository,
     private val time: TimeProvider,
 ) : ViewModel() {
@@ -95,6 +97,12 @@ class ReviewViewModel @Inject constructor(
             .onFailure { _state.value = ReviewUiState.Error }
     }
 
+    /** Completes or reopens a listed task (as everywhere else) and recomputes the review. */
+    fun setTaskCompleted(id: Long, completed: Boolean) = viewModelScope.launch {
+        runCatchingSafely { tasks.setCompleted(id, completed) }
+        refresh()
+    }
+
     fun page(delta: Int) {
         offset = (offset + delta).coerceAtMost(1)
         refresh()
@@ -109,11 +117,17 @@ fun ReviewDestination(onBack: () -> Unit, onOpenTask: (Long) -> Unit, viewModel:
     val owner = LocalLifecycleOwner.current
     // Recomputed whenever the screen resumes so it reflects the latest data.
     LaunchedEffect(owner) { owner.repeatOnLifecycle(Lifecycle.State.RESUMED) { viewModel.refresh() } }
-    ReviewScreen(state, onBack, viewModel::page, onOpenTask)
+    ReviewScreen(state, onBack, viewModel::page, onOpenTask, viewModel::setTaskCompleted)
 }
 
 @Composable
-fun ReviewScreen(state: ReviewUiState, onBack: () -> Unit, onPage: (Int) -> Unit, onOpenTask: (Long) -> Unit) {
+fun ReviewScreen(
+    state: ReviewUiState,
+    onBack: () -> Unit,
+    onPage: (Int) -> Unit,
+    onOpenTask: (Long) -> Unit,
+    onToggleTask: (Long, Boolean) -> Unit = { _, _ -> },
+) {
     val formatter = PlannerLocals.formatter
     val numbers = PlannerLocals.numbers
     val today = PlannerLocals.today
@@ -165,7 +179,7 @@ fun ReviewScreen(state: ReviewUiState, onBack: () -> Unit, onPage: (Int) -> Unit
                     }
                     item(key = "missed_h") { PlannerSectionHeader(stringResource(R.string.review_missed), trailing = numbers.format(r.missedTasks.size)) }
                     if (r.missedTasks.isEmpty()) item(key = "missed_e") { Text(stringResource(R.string.review_missed_none)) }
-                    items(r.missedTasks.take(10), key = { "m${it.id}" }) { t -> PlannerTaskCard(t, {}, onClick = { onOpenTask(t.id) }) }
+                    items(r.missedTasks.take(10), key = { "m${it.id}" }) { t -> PlannerTaskCard(t, { done -> onToggleTask(t.id, done) }, onClick = { onOpenTask(t.id) }) }
                     item(key = "habits_h") {
                         PlannerSectionHeader(stringResource(R.string.review_habits), trailing = if (r.habits.isEmpty()) null else numbers.percent(r.habitCompletionRate))
                     }
@@ -205,7 +219,7 @@ fun ReviewScreen(state: ReviewUiState, onBack: () -> Unit, onPage: (Int) -> Unit
                     }
                     item(key = "next_h") { PlannerSectionHeader(stringResource(R.string.review_next)) }
                     if (r.nextWeekPriorities.isEmpty()) item(key = "next_e") { Text(stringResource(R.string.review_next_none)) }
-                    items(r.nextWeekPriorities, key = { "n${it.id}" }) { t -> PlannerTaskCard(t, {}, onClick = { onOpenTask(t.id) }) }
+                    items(r.nextWeekPriorities, key = { "n${it.id}" }) { t -> PlannerTaskCard(t, { done -> onToggleTask(t.id, done) }, onClick = { onOpenTask(t.id) }) }
                 }
             }
         }
