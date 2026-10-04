@@ -34,12 +34,14 @@ jobs:
       contents: write # tag and GitHub Release
     environment: release
     env:
-      HAS_SIGNING: ${{ secrets.PLANB_KEYSTORE_BASE64 != '' && secrets.PLANB_KEYSTORE_PASSWORD != '' && secrets.PLANB_KEY_ALIAS != '' && secrets.PLANB_KEY_PASSWORD != '' }}
+      HAS_SIGNING: ${{ secrets.PLANB_KEYSTORE_BASE64 != '' && secrets.PLANB_KEYSTORE_PASSWORD != '' && secrets.PLANB_KEY_ALIAS != '' && secrets.PLANB_KEY_PASSWORD != '' && secrets.PLANB_FONTS_PASSPHRASE != '' }}
+      # Releases must ship the licensed typeface, never the fallback.
+      PLANB_REQUIRE_PRIVATE_FONTS: "true"
     steps:
       - name: Require release signing secrets
         if: env.HAS_SIGNING != 'true'
         run: |
-          echo "::error::Release signing is not configured. Add the repository (or 'release' environment) secrets PLANB_KEYSTORE_BASE64, PLANB_KEYSTORE_PASSWORD, PLANB_KEY_ALIAS and PLANB_KEY_PASSWORD. See RELEASE.md."
+          echo "::error::Release secrets are not configured. Add PLANB_KEYSTORE_BASE64, PLANB_KEYSTORE_PASSWORD, PLANB_KEY_ALIAS, PLANB_KEY_PASSWORD and PLANB_FONTS_PASSPHRASE (repository or 'release' environment secrets). See RELEASE.md and docs/FONTS.md."
           exit 1
 
       - name: Check out
@@ -66,6 +68,11 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "Releasing Plan-B $name ($code)"
 
+      - name: Decrypt licensed fonts
+        env:
+          PLANB_FONTS_PASSPHRASE: ${{ secrets.PLANB_FONTS_PASSPHRASE }}
+        run: tools/fonts.sh decrypt
+
       - name: Quality gates
         run: ./gradlew testDebugUnitTest -Proborazzi.test.verify=true lintDebug
 
@@ -86,9 +93,9 @@ jobs:
           PLANB_KEY_PASSWORD: ${{ secrets.PLANB_KEY_PASSWORD }}
         run: tools/package_cafebazaar.sh
 
-      - name: Remove keystore
+      - name: Remove keystore and fonts
         if: always()
-        run: rm -f "$RUNNER_TEMP/planb-release.jks"
+        run: rm -rf "$RUNNER_TEMP/planb-release.jks" private-fonts
 
       - name: Upload release files (workflow artifact, includes R8 mapping)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

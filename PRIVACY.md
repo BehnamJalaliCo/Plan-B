@@ -55,8 +55,9 @@ project repository.
 
 ## Contact
 
-Questions about privacy: open an issue at https://github.com/BehnamJalaliCo/Plan-B or contact
-the developer through the store listing.
+Plan-B is developed by Behnam Jalali. Questions about privacy, feedback or problem reports:
+**behnamjalali88@gmail.com** (Settings → About → Send feedback), or open an issue at
+https://github.com/BehnamJalaliCo/Plan-B.
 
 ---
 
@@ -105,5 +106,6 @@ Plan-B به مخاطبین، موقعیت مکانی، دوربین، میکرو
 
 ## تماس
 
-برای پرسش دربارهٔ حریم خصوصی در https://github.com/BehnamJalaliCo/Plan-B یک Issue ثبت کنید یا
-از طریق صفحهٔ برنامه در فروشگاه با توسعه‌دهنده در تماس باشید.
+Plan-B را بهنام جلالی طراحی و ساخته است. برای پرسش دربارهٔ حریم خصوصی، نظر، پیشنهاد یا
+گزارش مشکل به **behnamjalali88@gmail.com** ایمیل بزنید (تنظیمات ← درباره ← ارسال نظر) یا در
+https://github.com/BehnamJalaliCo/Plan-B یک Issue ثبت کنید.

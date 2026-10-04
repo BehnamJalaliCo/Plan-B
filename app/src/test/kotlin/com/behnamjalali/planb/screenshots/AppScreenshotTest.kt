@@ -191,19 +191,19 @@ class AppScreenshotTest(private val variant: Variant) {
     private fun click(text: String) {
         val clickable = hasText(text, substring = true) and hasClickAction()
         compose.waitForIdle()
-        // Lazy lists compose rows slightly beyond the viewport (or not at all); scroll the
-        // list so the target is actually on screen before tapping it.
-        val matches = compose.onAllNodes(hasText(text, substring = true), useUnmergedTree = true)
-        val onScreen = matches.fetchSemanticsNodes().indices.any { runCatching { matches[it].assertIsDisplayed() }.isSuccess }
-        if (!onScreen) {
-            val lists = compose.onAllNodes(hasScrollToNodeAction())
-            for (i in lists.fetchSemanticsNodes().indices) {
-                if (runCatching { lists[i].performScrollToNode(hasText(text, substring = true)) }.isSuccess) break
+        // Lazy lists only compose rows near the viewport, and the screen may still be loading:
+        // keep scrolling any list towards the target until it exists and is on screen.
+        compose.waitUntil(15_000) {
+            val matches = compose.onAllNodes(hasText(text, substring = true), useUnmergedTree = true)
+            val onScreen = matches.fetchSemanticsNodes().indices.any { runCatching { matches[it].assertIsDisplayed() }.isSuccess }
+            if (!onScreen) {
+                val lists = compose.onAllNodes(hasScrollToNodeAction())
+                for (i in lists.fetchSemanticsNodes().indices) {
+                    if (runCatching { lists[i].performScrollToNode(hasText(text, substring = true)) }.isSuccess) break
+                }
             }
-        }
-        compose.waitUntil(10_000) {
             compose.onAllNodes(clickable).fetchSemanticsNodes().isNotEmpty() ||
-                compose.onAllNodes(hasText(text, substring = true), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+                matches.fetchSemanticsNodes().isNotEmpty()
         }
         val node = if (compose.onAllNodes(clickable).fetchSemanticsNodes().isNotEmpty()) {
             compose.onAllNodes(clickable).onFirst()
@@ -414,6 +414,15 @@ class AppScreenshotTest(private val variant: Variant) {
         click(s(SettingsR.string.settings_backup_restore))
         waitFor(hasText(s(SettingsR.string.backup_create)))
         capture("settings", "backup")
+    }
+
+    @Test
+    fun about() {
+        launch()
+        openMore(AppR.string.more_settings)
+        click(s(SettingsR.string.settings_about))
+        waitFor(hasText(s(SettingsR.string.about_developer)))
+        capture("settings", "about")
     }
 
     @Test

@@ -92,8 +92,12 @@
     <string name="about_title">درباره</string>
     <string name="about_body">Plan-B یک برنامه‌ریز و دفترچهٔ شخصی است: برنامه‌ریزی روزانه، هفتگی و ماهانه، تقویم، کارها، پروژه‌ها، یادداشت‌ها، عادت‌ها، هدف‌ها و تمرکز — به فارسی و انگلیسی، با تقویم شمسی و میلادی.</string>
     <string name="about_made_with">ساخته‌شده با Kotlin و Jetpack Compose.</string>
+    <string name="about_developer">طراحی و ساخت: بهنام جلالی</string>
+    <string name="about_feedback">ارسال نظر، پیشنهاد یا گزارش مشکل</string>
+    <string name="about_feedback_subject">نظر دربارهٔ Plan-B نسخهٔ %1$s</string>
+    <string name="about_no_email_app">برنامهٔ ایمیلی پیدا نشد. لطفاً به %1$s ایمیل بزنید.</string>
     <string name="licenses_title">مجوزهای متن‌باز</string>
-    <string name="licenses_fonts">قلم وزیرمتن — مجوز SIL Open Font License 1.1، © The Vazirmatn Project Authors</string>
+    <string name="licenses_fonts">قلم انجمن مکس — طراحی هیربد لطفیان (fontiran.com)، استفاده با مجوز</string>
     <string name="licenses_androidx">AndroidX، Jetpack Compose، Room، DataStore، WorkManager، Navigation — مجوز Apache 2.0، © The Android Open Source Project</string>
     <string name="licenses_kotlin">Kotlin، kotlinx.coroutines، kotlinx.serialization — مجوز Apache 2.0، © JetBrains s.r.o.</string>
     <string name="licenses_dagger">Dagger / Hilt — مجوز Apache 2.0، © The Dagger Authors</string>

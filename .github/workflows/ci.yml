@@ -18,6 +18,9 @@ jobs:
     name: Tests, screenshots, lint and builds
     runs-on: ubuntu-latest
     timeout-minutes: 75
+    env:
+      HAS_FONTS: ${{ secrets.PLANB_FONTS_PASSPHRASE != '' }}
+      FROM_FORK: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -33,9 +36,26 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
+      - name: Decrypt licensed fonts
+        if: env.HAS_FONTS == 'true'
+        env:
+          PLANB_FONTS_PASSPHRASE: ${{ secrets.PLANB_FONTS_PASSPHRASE }}
+        run: tools/fonts.sh decrypt
+
       - name: Unit, database, end-to-end and screenshot tests
-        # Screenshots are compared with artifacts/screenshots; any difference fails the build.
-        run: ./gradlew testDebugUnitTest -Proborazzi.test.verify=true --continue
+        # Screenshots are compared with artifacts/screenshots (rendered with the licensed font);
+        # any difference fails the build. Pull requests from forks get no secrets, so they run
+        # every test but cannot compare screenshots.
+        run: |
+          if [ "$HAS_FONTS" = "true" ]; then
+            ./gradlew testDebugUnitTest -Proborazzi.test.verify=true -Pplanb.requirePrivateFonts=true --continue
+          elif [ "$FROM_FORK" = "true" ]; then
+            echo "::warning::Fork pull request: licensed fonts unavailable, screenshots not compared."
+            ./gradlew testDebugUnitTest --continue
+          else
+            echo "::error::The PLANB_FONTS_PASSPHRASE secret is missing, so screenshots cannot be verified. See docs/FONTS.md."
+            exit 1
+          fi
 
       - name: Android Lint
         run: ./gradlew lintDebug --continue

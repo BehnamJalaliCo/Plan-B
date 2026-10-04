@@ -53,7 +53,7 @@ by build only · ⏳ needs an external step (credentials, device lab).
 | Manual release workflow (signing from secrets, GitHub Release, optional Pishkhan) | ☑️ | `.github/workflows/release.yml`; packaging script dry-run verified locally with a throwaway key that was deleted afterwards |
 | Cafe Bazaar packaging with the official bundle-signer | ☑️ | `tools/package_cafebazaar.sh` (pinned version + SHA-256) |
 | Store material (listing fa/en, icon, covers, screenshots, what's new) | ✅ | `store/cafebazaar/` |
-| Signed v1.0.0 binaries, tag and GitHub Release | ⏳ | Needs the owner's release keystore as GitHub secrets (`PLANB_KEYSTORE_BASE64`, `PLANB_KEYSTORE_PASSWORD`, `PLANB_KEY_ALIAS`, `PLANB_KEY_PASSWORD`), then running the Release workflow |
+| Signed v1.0.0 binaries, tag and GitHub Release | ⏳ | Needs the owner's release keystore as GitHub secrets (`PLANB_KEYSTORE_BASE64`, `PLANB_KEYSTORE_PASSWORD`, `PLANB_KEY_ALIAS`, `PLANB_KEY_PASSWORD`) plus the fonts passphrase `PLANB_FONTS_PASSPHRASE`, then running the Release workflow |
 | Upload to Cafe Bazaar | ⏳ | Manual upload of the release artifact, or the workflow's Pishkhan option with `CAFEBAZAAR_PISHKHAN_API_SECRET` |
 
 ## Known limitations

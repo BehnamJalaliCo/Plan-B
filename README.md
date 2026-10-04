@@ -118,6 +118,7 @@ build-logic/          Gradle convention plugins
 | [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | Security review |
 | [docs/CAFE_BAZAAR_RELEASE.md](docs/CAFE_BAZAAR_RELEASE.md) | Cafe Bazaar packaging and publishing |
 | [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) | Dependencies and licenses |
+| [docs/FONTS.md](docs/FONTS.md) | Licensed typeface: how it is supplied to builds |
 | [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | What is implemented and verified |
 
 ## Privacy
@@ -129,5 +130,12 @@ written only to files you choose. See [PRIVACY.md](PRIVACY.md).
 
 No open-source license has been chosen for this repository yet; all rights are reserved by the
 owner. Bundled third-party components keep their own licenses (see
-[docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)); the Vazirmatn font is under the SIL Open Font
-License 1.1.
+[docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)). The Anjoman Max typeface is proprietary
+(fontiran.com) and used under license; it is not part of this repository in usable form — see
+[docs/FONTS.md](docs/FONTS.md).
+
+## Developer and support
+
+Designed and developed by **Behnam Jalali**. Feedback, ideas and bug reports:
+[behnamjalali88@gmail.com](mailto:behnamjalali88@gmail.com) (also available from **Settings →
+About** in the app).

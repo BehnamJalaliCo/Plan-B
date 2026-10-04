@@ -96,8 +96,12 @@
     <string name="about_title">About</string>
     <string name="about_body">Plan-B is a personal planner and notebook: daily, weekly and monthly planning, calendar, tasks, projects, notes, habits, goals and focus — in Persian and English, with Jalali and Gregorian calendars.</string>
     <string name="about_made_with">Built with Kotlin and Jetpack Compose.</string>
+    <string name="about_developer">Designed and developed by Behnam Jalali</string>
+    <string name="about_feedback">Send feedback or report a problem</string>
+    <string name="about_feedback_subject">Plan-B %1$s feedback</string>
+    <string name="about_no_email_app">No email app found. Please write to %1$s.</string>
     <string name="licenses_title">Open-source licenses</string>
-    <string name="licenses_fonts">Vazirmatn font — SIL Open Font License 1.1, © The Vazirmatn Project Authors</string>
+    <string name="licenses_fonts">Anjoman Max typeface — designed by Hirbod Lotfian (fontiran.com), used under license</string>
     <string name="licenses_androidx">AndroidX, Jetpack Compose, Room, DataStore, WorkManager, Navigation — Apache License 2.0, © The Android Open Source Project</string>
     <string name="licenses_kotlin">Kotlin, kotlinx.coroutines, kotlinx.serialization — Apache License 2.0, © JetBrains s.r.o.</string>
     <string name="licenses_dagger">Dagger / Hilt — Apache License 2.0, © The Dagger Authors</string>

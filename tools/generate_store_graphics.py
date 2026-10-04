@@ -17,7 +17,9 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont, features
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHOTS = os.path.join(ROOT, "artifacts", "screenshots")
 OUT = os.path.join(ROOT, "store", "cafebazaar", "graphics")
-FONTS = os.path.join(ROOT, "core", "designsystem", "src", "main", "res", "font")
+# The licensed app typeface (never committed; see docs/FONTS.md).
+FONTS = os.environ.get("PLANB_FONTS_DIR") or os.path.join(ROOT, "private-fonts")
+FONT_FILES = {"regular": "AnjomanMax-Regular.ttf", "medium": "AnjomanMax-Medium.ttf", "semibold": "AnjomanMax-SemiBold.ttf", "bold": "AnjomanMax-Bold.ttf"}
 
 # Listing order: the first screenshots are the ones most people see.
 SCREENS = [
@@ -38,7 +40,7 @@ TEXT = {
 
 
 def font(weight, size):
-    return ImageFont.truetype(os.path.join(FONTS, f"vazirmatn_{weight}.ttf"), size, layout_engine=ImageFont.Layout.RAQM)
+    return ImageFont.truetype(os.path.join(FONTS, FONT_FILES[weight]), size, layout_engine=ImageFont.Layout.RAQM)
 
 
 def gradient(size, start, end):

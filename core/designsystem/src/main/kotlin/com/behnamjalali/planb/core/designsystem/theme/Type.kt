@@ -9,19 +9,19 @@ import androidx.compose.ui.unit.sp
 import com.behnamjalali.planb.core.designsystem.R
 
 /**
- * Vazirmatn (SIL OFL 1.1) covers Persian and Latin with harmonized metrics, so
- * both languages share one family. Sizes are in sp to respect font scaling.
- * No letter spacing is applied: tracking breaks Persian cursive joining.
+ * The app typeface: Anjoman Max (licensed, supplied at build time; see core/designsystem's build
+ * file) covers Persian and Latin, so both languages share one family. Sizes are in sp to respect
+ * font scaling. No letter spacing is applied: tracking breaks Persian cursive joining.
  */
-val Vazirmatn = FontFamily(
-    Font(R.font.vazirmatn_regular, FontWeight.Normal),
-    Font(R.font.vazirmatn_medium, FontWeight.Medium),
-    Font(R.font.vazirmatn_semibold, FontWeight.SemiBold),
-    Font(R.font.vazirmatn_bold, FontWeight.Bold),
+val PlanBFont = FontFamily(
+    Font(R.font.planb_regular, FontWeight.Normal),
+    Font(R.font.planb_medium, FontWeight.Medium),
+    Font(R.font.planb_semibold, FontWeight.SemiBold),
+    Font(R.font.planb_bold, FontWeight.Bold),
 )
 
 private fun style(size: Int, line: Int, weight: FontWeight) = TextStyle(
-    fontFamily = Vazirmatn,
+    fontFamily = PlanBFont,
     fontWeight = weight,
     fontSize = size.sp,
     lineHeight = line.sp,

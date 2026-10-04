@@ -52,6 +52,10 @@ support.
 planner, Jalali calendar, to-do, tasks, notes, notebook, habits, goals, pomodoro, focus,
 productivity, offline
 
+## Developer and support
+
+Designed and developed by Behnam Jalali · Support email: behnamjalali88@gmail.com
+
 ## Privacy policy URL
 
 https://github.com/BehnamJalaliCo/Plan-B/blob/main/PRIVACY.md

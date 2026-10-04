@@ -1,46 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Plan-B launcher foreground: a planner page with a completed check and a "B" badge.
-  All artwork stays inside the 66dp adaptive-icon safe zone (centered in 108dp).
+  Plan-B "B" mark: a cream stem with a warm upper lobe and a cool lower lobe.
+  Artwork is drawn in a 650-unit design space and scaled into the 66dp safe zone.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Soft shadow under the page -->
-    <path
-        android:fillColor="#33241B5E"
-        android:pathData="M39,35h28a8,8 0,0 1,8 8v30a8,8 0,0 1,-8 8h-28a8,8 0,0 1,-8 -8v-30a8,8 0,0 1,8 -8z" />
-    <!-- Page -->
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M38,32h30a8,8 0,0 1,8 8v31a8,8 0,0 1,-8 8h-30a8,8 0,0 1,-8 -8v-31a8,8 0,0 1,8 -8z" />
-    <!-- Header strip -->
-    <path
-        android:fillColor="#FFC9C0FF"
-        android:pathData="M38,32h30a8,8 0,0 1,8 8v3h-46v-3a8,8 0,0 1,8 -8z" />
-    <!-- Binder rings -->
-    <path
-        android:fillColor="#FF241B5E"
-        android:pathData="M44,29.5a2.5,2.5 0,1 1,0 5a2.5,2.5 0,1 1,0 -5zM62,29.5a2.5,2.5 0,1 1,0 5a2.5,2.5 0,1 1,0 -5z" />
-    <!-- Completed check -->
-    <path
-        android:strokeColor="#FF6B5BD2"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:fillColor="#00000000"
-        android:pathData="M41,59l7,7l14,-15" />
-    <!-- "B" badge -->
-    <path
-        android:fillColor="#FF4FBF9A"
-        android:pathData="M69,59a10,10 0,1 1,0 20a10,10 0,1 1,0 -20z" />
-    <path
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="2.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:fillColor="#00000000"
-        android:pathData="M65.8,63.5v11M65.8,63.5h3.6a2.75,2.75 0,0 1,0 5.5h-3.6M65.8,69h4.4a2.75,2.75 0,0 1,0 5.5h-4.4" />
+    <group
+        android:scaleX="0.1075"
+        android:scaleY="0.1075"
+        android:translateX="16.7"
+        android:translateY="18.8">
+        <!-- Soft shadow -->
+        <path
+            android:fillColor="#144B3FA8"
+            android:pathData="M176,101h234c62,0 100,46 100,100c0,40 -18,66 -40,84c38,20 66,62 66,118c0,84 -62,165 -128,165h-232c-8,0 -14,-6 -14,-14v-439c0,-8 6,-14 14,-14z" />
+        <!-- Stem -->
+        <path android:pathData="M176,95h170v465h-170c-8,0 -14,-6 -14,-14v-437c0,-8 6,-14 14,-14z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="200"
+                    android:startY="95"
+                    android:endX="250"
+                    android:endY="520">
+                    <item android:offset="0" android:color="#FFFFFDF9" />
+                    <item android:offset="1" android:color="#FFF1EBF6" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Upper lobe -->
+        <path android:pathData="M172,96L410,96C470,96 503,140 503,192C503,240 485,275 460,290L298,386C326,330 336,290 330,262C322,232 305,215 290,203Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="230"
+                    android:startY="330"
+                    android:endX="500"
+                    android:endY="110">
+                    <item android:offset="0" android:color="#FFEE5FA0" />
+                    <item android:offset="0.45" android:color="#FFF77C74" />
+                    <item android:offset="1" android:color="#FFFFD27C" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:pathData="M172,96L410,96C470,96 503,140 503,192C503,240 485,275 460,290L298,386C326,330 336,290 330,262C322,232 305,215 290,203Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="172"
+                    android:startY="96"
+                    android:endX="330"
+                    android:endY="200">
+                    <item android:offset="0" android:color="#B3DD4A63" />
+                    <item android:offset="1" android:color="#00DD4A63" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Lower lobe -->
+        <path android:pathData="M162,520C165,465 210,430 270,400L410,322C425,312 440,306 455,306C500,306 532,350 532,420C532,500 485,560 420,560L182,560C170,560 162,552 162,540Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="180"
+                    android:startY="545"
+                    android:endX="520"
+                    android:endY="330">
+                    <item android:offset="0" android:color="#FF4A44D6" />
+                    <item android:offset="0.5" android:color="#FF6F8CF2" />
+                    <item android:offset="1" android:color="#FF9FD6FB" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:pathData="M162,520C165,465 210,430 270,400L410,322C425,312 440,306 455,306C500,306 532,350 532,420C532,500 485,560 420,560L182,560C170,560 162,552 162,540Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="450"
+                    android:startY="306"
+                    android:endX="400"
+                    android:endY="430">
+                    <item android:offset="0" android:color="#99D9C8F8" />
+                    <item android:offset="1" android:color="#00D9C8F8" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
 </vector>

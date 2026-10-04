@@ -85,9 +85,9 @@ as a key, the palette can be retuned, dark mode included, without migrating any 
 
 ## 2. Typography (`theme/Type.kt`)
 
-- One family, **Vazirmatn**, covers both Persian and Latin with harmonized metrics. It ships
-  in four weights: Regular (400), Medium (500), SemiBold (600) and Bold (700), as
-  `R.font.vazirmatn_*`.
+- One family, **Anjoman Max** (`PlanBFont`), covers both Persian and Latin. It ships in four
+  weights — Regular (400), Medium (500), SemiBold (600) and Bold (700) — as `R.font.planb_*`,
+  generated at build time from the licensed font files (see [docs/FONTS.md](docs/FONTS.md)).
 - Sizes are in **sp**, so they follow the system font scale. The gallery includes 150%
   screenshots.
 - **Letter spacing is always `0.sp`, on purpose. Tracking breaks Persian cursive joining.**
@@ -114,9 +114,11 @@ as a key, the palette can be retuned, dark mode included, without migrating any 
 
 `PlannerType.caption` is an alias for `bodySmall`.
 
-**Font license:** Vazirmatn is © 2015 The Vazirmatn Project Authors and licensed under the
-**SIL Open Font License 1.1**. The full text is at `licenses/Vazirmatn-OFL.txt` in the
-repository root.
+**Font license:** Anjoman Max is proprietary software by Hirbod Lotfian / fontiran.com, used in
+Plan-B under the owner's registered license. The font files are never committed in plain form
+because the repository is public; see [docs/FONTS.md](docs/FONTS.md). The open-source Vazirmatn
+(SIL OFL 1.1, `licenses/Vazirmatn-OFL.txt`) is kept only as a build fallback for checkouts
+without the licensed files and is never used for releases.
 
 ---
 

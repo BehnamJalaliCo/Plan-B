@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.rounded.CalendarViewWeek
 import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Notifications
@@ -313,7 +315,7 @@ fun SettingsScreen(
             }
             item {
                 SettingsRow(stringResource(R.string.settings_about), icon = Icons.Rounded.Info,
-                    subtitle = stringResource(R.string.settings_version, numbers.localize(versionName), numbers.format(versionCode)), onClick = { onOpen(AboutRoute) })
+                    subtitle = stringResource(R.string.settings_version, ltr(numbers.localize(versionName)), numbers.format(versionCode)), onClick = { onOpen(AboutRoute) })
             }
             item { SettingsRow(stringResource(R.string.settings_licenses), icon = Icons.Rounded.Description, onClick = { onOpen(LicensesRoute) }) }
         }
@@ -407,7 +409,7 @@ fun calendarViewName(view: CalendarView): String = stringResource(
 )
 
 @Composable
-fun TextScreen(title: String, body: List<String>, onBack: () -> Unit) {
+fun TextScreen(title: String, body: List<String>, onBack: () -> Unit, footer: @Composable () -> Unit = {}) {
     Column(Modifier.fillMaxSize()) {
         PlannerTopBar(title, onBack = onBack)
         Column(
@@ -415,6 +417,7 @@ fun TextScreen(title: String, body: List<String>, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
             body.forEach { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            footer()
         }
     }
 }
@@ -430,13 +433,38 @@ fun AboutDestination(onBack: () -> Unit, viewModel: SettingsViewModel = hiltView
         stringResource(R.string.about_title),
         listOf(
             stringResource(R.string.app_display_name),
-            stringResource(R.string.settings_version, numbers.localize(viewModel.version.name), numbers.format(viewModel.version.code)),
+            stringResource(R.string.settings_version, ltr(numbers.localize(viewModel.version.name)), numbers.format(viewModel.version.code)),
             stringResource(R.string.about_body),
-            stringResource(R.string.about_made_with),
+            stringResource(R.string.about_developer),
         ),
         onBack,
-    )
+    ) {
+        val context = LocalContext.current
+        val noEmailApp = stringResource(R.string.about_no_email_app, SUPPORT_EMAIL)
+        val subject = stringResource(R.string.about_feedback_subject, viewModel.version.name)
+        SettingsRow(
+            stringResource(R.string.about_feedback),
+            icon = Icons.Rounded.Email,
+            subtitle = SUPPORT_EMAIL,
+            onClick = {
+                // mailto: opens the user's email app; nothing is sent by Plan-B itself.
+                val intent = Intent(Intent.ACTION_SENDTO, "mailto:$SUPPORT_EMAIL".toUri())
+                    .putExtra(Intent.EXTRA_EMAIL, arrayOf(SUPPORT_EMAIL))
+                    .putExtra(Intent.EXTRA_SUBJECT, subject)
+                runCatching { context.startActivity(intent) }.onFailure {
+                    Toast.makeText(context, noEmailApp, Toast.LENGTH_LONG).show()
+                }
+            },
+        )
+        Text(stringResource(R.string.about_made_with), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }
+
+/** Keeps Latin/number runs such as "1.0.0-debug" in order inside right-to-left text. */
+private fun ltr(text: String) = "\u2066$text\u2069"
+
+/** Support and feedback address shown in About. */
+const val SUPPORT_EMAIL = "behnamjalali88@gmail.com"
 
 @Composable
 fun LicensesDestination(onBack: () -> Unit) = TextScreen(

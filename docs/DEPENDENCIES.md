@@ -35,7 +35,8 @@ network; no library adds the `INTERNET` permission to the merged release manifes
 | androidx.hilt:hilt-lifecycle-viewmodel-compose | 1.4.0 | Apache 2.0 | `hiltViewModel()` |
 | androidx.profileinstaller | 1.4.1 | Apache 2.0 | Installs the baseline profile |
 | Dagger Hilt | 2.60.1 | Apache 2.0 | Dependency injection |
-| Vazirmatn font | 33.003 | SIL OFL 1.1 | Persian/Latin typeface (bundled, `licenses/Vazirmatn-OFL.txt`) |
+| Anjoman Max font (Regular, Medium, SemiBold, Bold) | 3.000 | Proprietary, fontiran.com — used under the owner's license | App typeface (supplied at build time, see [FONTS.md](FONTS.md)) |
+| Vazirmatn font (build fallback only) | 33.003 | SIL OFL 1.1 | Used only when the licensed fonts are absent; never in releases (`licenses/Vazirmatn-OFL.txt`) |
 
 The Jalali calendar uses the platform ICU implementation (`android.icu`), so no calendar
 library is bundled.

@@ -71,6 +71,7 @@ the `release` environment to require approval:
 | `PLANB_KEYSTORE_PASSWORD` | keystore password |
 | `PLANB_KEY_ALIAS` | key alias |
 | `PLANB_KEY_PASSWORD` | key password |
+| `PLANB_FONTS_PASSPHRASE` | passphrase of the encrypted licensed fonts (see [docs/FONTS.md](docs/FONTS.md)); also needed by CI to verify screenshots |
 | `CAFEBAZAAR_PISHKHAN_API_SECRET` | optional: Pishkhan API secret for automated upload |
 
 The workflow decodes the keystore into the runner's temporary directory with mode 600, passes

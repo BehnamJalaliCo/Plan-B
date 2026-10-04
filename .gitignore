@@ -40,3 +40,7 @@ release-signing/
 
 # Roborazzi comparison scratch output
 **/build/outputs/roborazzi/
+
+# Licensed (proprietary) fonts: never committed. Local builds read them from here; CI from the
+# encrypted fonts/planb-fonts.tar.gz.gpg (PLANB_FONTS_PASSPHRASE secret). See docs/FONTS.md.
+/private-fonts/
