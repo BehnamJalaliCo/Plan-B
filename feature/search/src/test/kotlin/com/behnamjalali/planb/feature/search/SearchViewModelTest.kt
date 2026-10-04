@@ -120,4 +120,18 @@ class SearchViewModelTest {
         viewModel.setQuery("")
         assertThat(viewModel.uiState.awaitItem { it == SearchUiState.Idle }).isEqualTo(SearchUiState.Idle)
     }
+
+    @Test
+    fun refresh_dropsResultsDeletedOrRenamedMeanwhile() = runBlocking<Unit> {
+        val gone = graph.tasks.save(Task(title = "Milk run"))
+        val renamed = graph.tasks.save(Task(title = "Milk tea"))
+        viewModel.setQuery("milk")
+        assertThat(awaitResults("milk").results.map { it.id }).containsExactly(gone, renamed)
+
+        // The user opens results, deletes one and renames the other, then comes back.
+        graph.tasks.delete(listOf(gone))
+        graph.tasks.save(graph.tasks.getTask(renamed)!!.copy(title = "Green tea"))
+        viewModel.refresh()
+        viewModel.uiState.awaitItem { it is SearchUiState.Results && it.results.isEmpty() }
+    }
 }

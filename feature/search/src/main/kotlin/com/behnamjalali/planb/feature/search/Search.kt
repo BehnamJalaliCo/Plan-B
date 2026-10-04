@@ -28,7 +28,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -38,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.behnamjalali.planb.core.data.repository.SearchRepository
@@ -58,12 +62,15 @@ import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
 
 @Serializable data object SearchRoute
@@ -84,7 +91,10 @@ class SearchViewModel @Inject constructor(
 ) : ViewModel() {
     val query: StateFlow<String> = savedState.getStateFlow(KEY, "")
 
-    val uiState: StateFlow<SearchUiState> = query.debounce(220).distinctUntilChanged().mapLatest { q ->
+    /** Bumped by [refresh]; re-runs the current query so results never show deleted or renamed items. */
+    private val refreshes = MutableStateFlow(0)
+
+    val uiState: StateFlow<SearchUiState> = combine(query.debounce(220).distinctUntilChanged(), refreshes) { q, _ -> q }.mapLatest { q ->
         if (q.isBlank()) {
             SearchUiState.Idle
         } else {
@@ -99,6 +109,9 @@ class SearchViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState.Idle)
 
     fun setQuery(value: String) { savedState[KEY] = value }
+
+    /** Runs the current query again; called whenever the screen (re)appears, e.g. back from a result. */
+    fun refresh() = refreshes.update { it + 1 }
 
     private companion object { const val KEY = "search_query" }
 }
@@ -130,6 +143,11 @@ private fun icon(type: SearchEntityType) = when (type) {
 fun SearchDestination(onBack: () -> Unit, onOpen: (SearchResult) -> Unit, viewModel: SearchViewModel = hiltViewModel()) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    // The opened result may have been edited or deleted meanwhile.
+    LifecycleStartEffect(viewModel) {
+        viewModel.refresh()
+        onStopOrDispose { }
+    }
     SearchScreen(query, state, viewModel::setQuery, onBack, onOpen)
 }
 
@@ -143,7 +161,14 @@ fun SearchScreen(
     autoFocus: Boolean = true,
 ) {
     val focus = remember { FocusRequester() }
-    if (autoFocus) LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    // Focus (and the keyboard) only on first open, not every time the user comes back to the screen.
+    var focusedOnce by rememberSaveable { mutableStateOf(false) }
+    if (autoFocus && !focusedOnce) {
+        LaunchedEffect(Unit) {
+            runCatching { focus.requestFocus() }
+            focusedOnce = true
+        }
+    }
     Column(Modifier.fillMaxSize()) {
         PlannerTopBar(stringResource(R.string.search_title), onBack = onBack)
         PlannerSearchBar(query, onQueryChange, stringResource(R.string.search_hint), Modifier.padding(horizontal = Spacing.screen), focusRequester = focus)
