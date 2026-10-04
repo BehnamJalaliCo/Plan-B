@@ -12,10 +12,32 @@ class SearchNormalizerTest {
     }
 
     @Test
-    fun halfSpace_isWordSeparator() {
+    fun halfSpace_joinsTheWord() {
         val withZwnj = "می${zwnj}خواهم"
-        assertThat(SearchNormalizer.normalize(withZwnj)).isEqualTo("می خواهم")
-        assertThat(SearchNormalizer.tokens(withZwnj)).containsExactly("می", "خواهم").inOrder()
+        assertThat(SearchNormalizer.normalize(withZwnj)).isEqualTo("میخواهم")
+        assertThat(SearchNormalizer.tokens(withZwnj)).containsExactly("میخواهم")
+        // Written with or without the half-space, the plural is the same token.
+        assertThat(SearchNormalizer.tokens("کتاب${zwnj}ها")).isEqualTo(SearchNormalizer.tokens("کتابها"))
+    }
+
+    @Test
+    fun indexTokens_keepHalfSpaceParts() {
+        assertThat(SearchNormalizer.indexTokens("می${zwnj}خواهم بروم"))
+            .containsExactly("میخواهم", "بروم", "می", "خواهم")
+        assertThat(SearchNormalizer.indexTokens("بدون نیم فاصله")).isEqualTo(SearchNormalizer.tokens("بدون نیم فاصله"))
+    }
+
+    @Test
+    fun zeroWidthSpace_separatesWords() {
+        assertThat(SearchNormalizer.tokens("a\u200Bb")).containsExactly("a", "b").inOrder()
+    }
+
+    @Test
+    fun hamzaSeats_fold() {
+        assertThat(SearchNormalizer.normalize("مسئله")).isEqualTo(SearchNormalizer.normalize("مسیله"))
+        assertThat(SearchNormalizer.normalize("مؤسسه")).isEqualTo("موسسه")
+        assertThat(SearchNormalizer.normalize("أإآ")).isEqualTo("ااا")
+        assertThat(SearchNormalizer.normalize("مدرسة")).isEqualTo("مدرسه")
     }
 
     @Test

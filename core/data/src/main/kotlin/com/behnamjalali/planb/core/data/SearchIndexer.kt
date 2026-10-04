@@ -22,7 +22,7 @@ internal object SearchIndexer {
         rowId = rowId(type, id),
         entityType = type.code,
         entityId = id,
-        content = SearchNormalizer.tokens(parts.joinToString(" ")).joinToString(" "),
+        content = SearchNormalizer.indexTokens(parts.joinToString(" ")).joinToString(" "),
     )
 
     fun task(e: TaskEntity) = entry(SearchEntityType.TASK, e.id, e.title, e.description, e.notes)
