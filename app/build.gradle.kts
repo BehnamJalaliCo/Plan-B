@@ -20,7 +20,8 @@ val releaseSigning: ReleaseSigning? = run {
         rootProject.file("keystore.properties").takeIf { it.isFile }?.inputStream()?.use(::load)
     }
     fun value(env: String, prop: String): String? =
-        System.getenv(env)?.takeIf { it.isNotBlank() } ?: props.getProperty(prop)?.takeIf { it.isNotBlank() }
+        (System.getenv(env)?.trim()?.takeIf { it.isNotEmpty() } ?: props.getProperty(prop)?.trim())
+            ?.takeIf { it.isNotEmpty() }
     val path = value("PLANB_KEYSTORE_PATH", "storeFile") ?: return@run null
     val file = rootProject.file(path).takeIf { it.isFile } ?: file(path).takeIf { it.isFile } ?: return@run null
     ReleaseSigning(

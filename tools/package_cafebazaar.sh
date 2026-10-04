@@ -35,12 +35,21 @@ fail() { echo "error: $*" >&2; exit 1; }
 
 missing=()
 for name in PLANB_KEYSTORE_PATH PLANB_KEYSTORE_PASSWORD PLANB_KEY_ALIAS PLANB_KEY_PASSWORD; do
-  [[ -n "${!name:-}" ]] || missing+=("$name")
+  # Secrets pasted into a web form often end with a newline; strip surrounding whitespace.
+  value="${!name:-}"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  export "$name=$value"
+  [[ -n "$value" ]] || missing+=("$name")
 done
+unset value
 if ((${#missing[@]})); then
   fail "release signing is not configured; missing: ${missing[*]}. See RELEASE.md."
 fi
 [[ -f "$PLANB_KEYSTORE_PATH" ]] || fail "PLANB_KEYSTORE_PATH does not point to a file"
+keytool -list -keystore "$PLANB_KEYSTORE_PATH" -storepass:env PLANB_KEYSTORE_PASSWORD \
+  -alias "$PLANB_KEY_ALIAS" >/dev/null 2>&1 ||
+  fail "the keystore cannot be opened with PLANB_KEYSTORE_PASSWORD or has no key named PLANB_KEY_ALIAS"
 
 VERSION="$(sed -n 's/^ *versionName = "\(.*\)"/\1/p' app/build.gradle.kts | head -1)"
 [[ -n "$VERSION" ]] || fail "could not read versionName from app/build.gradle.kts"
