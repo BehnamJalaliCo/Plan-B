@@ -47,15 +47,16 @@ import org.robolectric.RobolectricTestRunner
 
 private class NoOpReminders : ReminderScheduler {
     var rescheduled = 0
+    val cancelled = mutableListOf<String>()
     override suspend fun syncTask(taskId: EntityId) = Unit
     override suspend fun syncEvent(eventId: EntityId) = Unit
     override suspend fun syncHabit(habitId: EntityId) = Unit
-    override suspend fun cancelTask(taskId: EntityId) = Unit
-    override suspend fun cancelEvent(eventId: EntityId) = Unit
-    override suspend fun cancelHabit(habitId: EntityId) = Unit
+    override suspend fun cancelTask(taskId: EntityId) { cancelled += "task:$taskId" }
+    override suspend fun cancelEvent(eventId: EntityId) { cancelled += "event:$eventId" }
+    override suspend fun cancelHabit(habitId: EntityId) { cancelled += "habit:$habitId" }
     override suspend fun rescheduleAll() { rescheduled++ }
     override fun scheduleFocusEnd(at: Instant) = Unit
-    override fun cancelFocusEnd() = Unit
+    override fun cancelFocusEnd() { cancelled += "focus" }
 }
 
 @RunWith(RobolectricTestRunner::class)
@@ -194,6 +195,47 @@ class BackupTest {
     }
 
     @Test
+    fun outOfMemoryWhileReading_isReportedAsDamaged() {
+        val exhausting = object : java.io.InputStream() {
+            override fun read(): Int = throw OutOfMemoryError("test")
+            override fun read(b: ByteArray, off: Int, len: Int): Int = throw OutOfMemoryError("test")
+        }
+        val error = assertThrows(BackupException.Corrupt::class.java) { BackupCodec.read(exhausting) }
+        assertThat(error.message).contains("too large")
+        assertThat(BackupFormat.MAX_ENTRY_BYTES).isAtMost(32L * 1024 * 1024)
+    }
+
+    @Test
+    fun newerDatabaseSchema_isRejected() {
+        val newer = PlanBDatabase.VERSION + 1
+        val bytes = zip(
+            "manifest.json" to """{"backupFormatVersion":1,"appVersion":"9","createdAt":1,"databaseSchemaVersion":$newer}""",
+            "database.json" to "{}",
+        )
+        val e = assertThrows(BackupException.NewerDatabase::class.java) { BackupCodec.read(ByteArrayInputStream(bytes)) }
+        assertThat(e.schemaVersion).isEqualTo(newer)
+        // The current and older schemas are accepted.
+        val current = zip(
+            "manifest.json" to """{"backupFormatVersion":1,"appVersion":"1","createdAt":1,"databaseSchemaVersion":${PlanBDatabase.VERSION}}""",
+            "database.json" to "{}",
+        )
+        assertThat(BackupCodec.read(ByteArrayInputStream(current)).manifest.databaseSchemaVersion).isEqualTo(PlanBDatabase.VERSION)
+    }
+
+    @Test
+    fun deleteAllData_cancelsRemindersOfDeletedItems() = runBlocking {
+        val dao = db.backupDao()
+        dao.insertTasks(listOf(task(1, "with reminder").copy(reminderOffsetMinutes = 10), task(2, "without")))
+        dao.insertHabits(listOf(HabitEntity(3, "آب", "water", "powder_blue", "DAILY", 1, "", java.time.LocalTime.of(9, 0), LocalDate.of(2026, 1, 1), t0, t0, false)))
+
+        manager.deleteAllData()
+
+        assertThat(db.taskDao().count()).isEqualTo(0)
+        assertThat(reminders.cancelled).containsAtLeast("task:1", "habit:3", "focus")
+        assertThat(reminders.cancelled).doesNotContain("task:2")
+    }
+
+    @Test
     fun corruptZip_isRejected() {
         val good = zip("manifest.json" to manifestV1, "database.json" to "{}")
         val truncated = good.copyOf(good.size / 2)
@@ -224,8 +266,11 @@ class BackupTest {
         assertThrows(BackupException.Invalid::class.java) { BackupValidator.validate(cycle) }
         val sameTagName = BackupDatabase(tags = listOf(TagDto(1, "کار"), TagDto(2, "کار")))
         assertThrows(BackupException.Invalid::class.java) { BackupValidator.validate(sameTagName) }
+        // The database compares tag names with COLLATE NOCASE (ASCII letters only).
         val caseVariants = BackupDatabase(tags = listOf(TagDto(1, "Work"), TagDto(2, "work")))
-        BackupValidator.validate(caseVariants) // allowed, like in the database
+        assertThrows(BackupException.Invalid::class.java) { BackupValidator.validate(caseVariants) }
+        val nonAsciiCase = BackupDatabase(tags = listOf(TagDto(1, "Äpfel"), TagDto(2, "äpfel")))
+        BackupValidator.validate(nonAsciiCase) // distinct for NOCASE, like in the database
         val duplicateLink = BackupDatabase(tasks = listOf(TaskDto(1, "a")), tags = listOf(TagDto(1, "x")), taskTags = listOf(RefDto(1, 1), RefDto(1, 1)))
         assertThrows(BackupException.Invalid::class.java) { BackupValidator.validate(duplicateLink) }
     }
@@ -234,10 +279,14 @@ class BackupTest {
     fun restoreFailure_rollsBack_andKeepsCurrentData() = runBlocking {
         seed()
         val before = db.backupDao().tasks()
-        // Passes validation but violates the unique (case-insensitive) tag name index during insert.
+        // Valid data whose insert fails half-way through the transaction (a test-only trigger
+        // stands in for any database error).
+        db.openHelper.writableDatabase.execSQL(
+            "CREATE TRIGGER fail_restore BEFORE INSERT ON tasks WHEN NEW.title = 'boom' BEGIN SELECT RAISE(ABORT, 'boom'); END",
+        )
         val bad = BackupArchive(
             BackupManifest(1, "1.0.0", createdAt = 1),
-            BackupDatabase(tags = listOf(TagDto(1, "Work"), TagDto(2, "work")), tasks = listOf(TaskDto(1, "x"))),
+            BackupDatabase(tags = listOf(TagDto(1, "Work")), tasks = listOf(TaskDto(1, "x"), TaskDto(2, "boom"))),
             emptyMap(),
             BackupMetadata(),
         )
@@ -256,6 +305,42 @@ class BackupTest {
         )
         manager.restore(archive)
         assertThat(db.taskDao().count()).isEqualTo(2)
+    }
+
+    @Test
+    fun csv_guardsFormulaCells_andRoundTripsThem() {
+        val values = listOf("=HYPERLINK(\"x\")", "+1", "-5", "@SUM(A1)", "\tTab", "'=already quoted", "'plain apostrophe", "safe")
+        val text = Csv.write(listOf("title"), values.map { listOf(it) })
+        val lines = text.removePrefix(0xFEFF.toChar().toString()).split("\r\n")
+        // Quoted because of the inner quotes; the cell content still starts with the apostrophe.
+        assertThat(lines[1]).startsWith("\"'=")
+        assertThat(lines[2]).isEqualTo("'+1")
+        assertThat(lines[3]).isEqualTo("'-5")
+        assertThat(lines[4]).isEqualTo("'@SUM(A1)")
+        assertThat(lines.map { it.trimStart('"') }.none { it.startsWith("=") || it.startsWith("+") || it.startsWith("@") }).isTrue()
+        assertThat(Csv.parse(text).drop(1).map { it.single() }).isEqualTo(values)
+    }
+
+    @Test
+    fun markdownZip_entryNamesCannotEscapeTheirFolder() = runBlocking {
+        val dao = db.backupDao()
+        dao.insertNotebooks(listOf(NotebookEntity(1, "..", "book", "lavender", 0, t0, t0, false)))
+        dao.insertNotes(
+            listOf(
+                NoteEntity(1, 1, null, "../../evil", NoteDocument().encode(), "blocks-v1", false, false, 0, t0, t0, false),
+                NoteEntity(2, 1, null, "...", NoteDocument().encode(), "blocks-v1", false, false, 1, t0, t0, false),
+            ),
+        )
+        val file = File(Files.createTempDirectory("export").toFile(), "notes.zip")
+        transfer().exportNotesMarkdownZip(Uri.fromFile(file))
+        val names = java.util.zip.ZipFile(file).use { zip -> zip.entries().toList().map { it.name } }
+        assertThat(names).hasSize(2)
+        names.forEach { name ->
+            val segments = name.split('/')
+            assertThat(segments).hasSize(2)
+            segments.forEach { assertThat(it).doesNotContain("..") }
+            assertThat(segments.none { it.isBlank() || it.startsWith(".") }).isTrue()
+        }
     }
 
     @Test

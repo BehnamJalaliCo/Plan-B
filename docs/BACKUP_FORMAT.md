@@ -150,7 +150,7 @@ empty, current preferences are left alone.
 | Rule | Constant or behaviour |
 |---|---|
 | Max entries iterated in the ZIP | `MAX_ENTRIES = 16`. More raises `Corrupt("too many entries")`. Ignored entries count too. |
-| Max uncompressed bytes | `MAX_ENTRY_BYTES = 128 MiB` per entry and `MAX_TOTAL_BYTES = 128 MiB` for all entries together, counted while streaming (header sizes are never trusted). More raises `Corrupt("entry too large")`. This keeps a zip bomb from exhausting memory. |
+| Max uncompressed bytes | `MAX_ENTRY_BYTES = 32 MiB` per entry and `MAX_TOTAL_BYTES = 40 MiB` for all entries together, counted while streaming (header sizes are never trusted). More raises `Corrupt("entry too large")`. This keeps a zip bomb from exhausting memory. Running out of memory anyway while reading raises `Corrupt("too large to open")` instead of crashing. |
 | Entry names | Directories and names containing `/`, `\` or `..` are skipped. Only the four known names are read. Everything else is ignored. |
 | Invalid ZIP or truncated stream | `ZipException` or `EOFException` raises `Corrupt` |
 | No known entries | `NotABackup("empty or not a ZIP archive")` |
@@ -158,6 +158,7 @@ empty, current preferences are left alone.
 | `application` ≠ `com.behnamjalali.planb` | `NotABackup("created by another application")` |
 | `database.json` missing | `Corrupt` |
 | JSON that fails to decode (manifest, database, preferences) | `Corrupt("<name> is not valid (…)")` |
+| `databaseSchemaVersion` > this app's schema version | `NewerDatabase(schemaVersion)`: the backup was made by a newer app |
 | `metadata.json` that fails to decode | silently replaced by empty metadata |
 
 ---
@@ -178,7 +179,8 @@ defensively inside `restore()`. Any failure raises `BackupException.Invalid`.
      point at a task, if set.
 3. **One habit check-in per habit and day** (mirrors the unique index on
    `habit_completions(habit_id, date)`).
-4. **Unique tag names** (exact match, like the unique index on `tags.name`) and no duplicate
+4. **Unique tag names**, compared like the unique `COLLATE NOCASE` index on `tags.name`
+   (ASCII letters case-insensitively, everything else exactly), and no duplicate
    task/project/note tag links.
 5. **No cycles** in the task parent hierarchy.
 
@@ -219,16 +221,20 @@ DataViewModel.confirmRestore() ── BackupManager.restore(archive)
       milestones → events → focus sessions → templates.
    3. `SearchIndexMaintenance.rebuild()`.
 4. If any exception occurs, the transaction **rolls back** and current data is untouched.
-   The exception is wrapped as `BackupException.RestoreFailed`. `CancellationException` is
-   re-thrown unchanged.
-5. After commit, cancel the old alarms (each one is best-effort).
+   The exception (or an `OutOfMemoryError`) is wrapped as `BackupException.RestoreFailed`.
+   `CancellationException` is re-thrown unchanged.
+5. After commit, cancel the old alarms and their posted notifications (each one is
+   best-effort).
 6. **Preferences** are imported only after the data has committed, and only if the map is
    non-empty. This step is best-effort.
 7. `ReminderScheduler.rescheduleAll()` re-creates alarms from the restored data
    (best-effort).
 
-`deleteAllData()` (*Settings › Data management*) runs `clearAll()` in a transaction and then
-reschedules reminders. It does not touch preferences.
+`deleteAllData()` (*Settings › Data management*) records the items with reminders, runs
+`clearAll()` in a transaction, then cancels their alarms and posted notifications and the
+focus end alarm, and reschedules reminders. It does not touch preferences. Alarms also carry
+their planned trigger time, and the receiver drops one that no longer matches the item, so a
+leftover alarm can never notify for a restored item that reuses an id.
 
 ---
 
@@ -242,6 +248,7 @@ reschedules reminders. It does not touch preferences.
 | `NotABackup` | Not a ZIP, no known entries, no manifest, or a foreign `application` | `backup_error_not_backup`: "This file is not a Plan-B backup." |
 | `Corrupt` | Invalid or truncated ZIP, too many entries, an entry too large, bad JSON, `database.json` missing, format < 1 | `backup_error_corrupt`: "This backup is damaged and cannot be restored." |
 | `UnsupportedVersion(version)` | `backupFormatVersion > CURRENT` | `backup_error_version`: "This backup was made by a newer version of Plan-B. Please update the app." |
+| `NewerDatabase(schemaVersion)` | `databaseSchemaVersion` newer than this app's database | `backup_error_version` (same message) |
 | `Invalid` | Validator failure (duplicate ids, broken references, duplicate check-ins, cycles) | `backup_error_invalid`: "This backup contains inconsistent data and was not restored." |
 | `RestoreFailed(cause)` or anything else | A database error during the replace transaction (rolled back) | `backup_error_restore`: "Restore failed. Your current data was kept." |
 
@@ -273,6 +280,9 @@ restored as a backup.
 - RFC 4180 CSV, UTF-8 **with BOM** (`U+FEFF`) so spreadsheet apps detect Persian text, and
   `\r\n` line endings.
 - A field is quoted when it contains `,`, `"`, CR or LF. Quotes are doubled.
+- A field that a spreadsheet would treat as a formula (starting with `=`, `+`, `-`, `@`, tab
+  or CR) gets a leading apostrophe, as are fields that already start with an apostrophe
+  followed by such a character. Import removes exactly that apostrophe, so exports round-trip.
 - Every task is exported. Each top-level task is followed by its subtasks, which carry the
   parent's title in the `parent` column.
 - Header and column order:
@@ -303,8 +313,9 @@ title, subtasks only). Null fields are omitted.
 
 - One `.md` file per note (archived notes included), in a folder named after its notebook:
   `<Notebook>/<Note title>.md`.
-- In folder and file names, `\ / : * ? " < > |` and control characters become spaces.
-  Whitespace is collapsed and names are cut to 60 characters. A blank name becomes
+- In folder and file names, `\ / : * ? " < > |` and control characters become spaces, runs
+  of dots become one dot and leading/trailing dots are removed (so no entry name contains
+  `..`). Whitespace is collapsed and names are cut to 60 characters. A blank name becomes
   `untitled`. A blank note title becomes `Note <id>`. A name collision gets ` (<id>)`
   appended.
 - The body comes from `Markdown.export(title, document)` in `core/model`:

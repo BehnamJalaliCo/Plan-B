@@ -1,5 +1,6 @@
 package com.behnamjalali.planb.core.backup
 
+import com.behnamjalali.planb.core.database.PlanBDatabase
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
@@ -47,7 +48,22 @@ object BackupCodec {
         }
     }
 
-    fun read(input: InputStream, maxTotalBytes: Long = BackupFormat.MAX_TOTAL_BYTES): BackupArchive {
+    /**
+     * Decodes an archive. A backup whose database schema is newer than [maxSchemaVersion] is
+     * rejected: this app cannot know what the newer fields mean. Running out of memory while
+     * reading counts as a damaged archive rather than crashing the app.
+     */
+    fun read(
+        input: InputStream,
+        maxTotalBytes: Long = BackupFormat.MAX_TOTAL_BYTES,
+        maxSchemaVersion: Int = PlanBDatabase.VERSION,
+    ): BackupArchive = try {
+        readUnchecked(input, maxTotalBytes, maxSchemaVersion)
+    } catch (e: OutOfMemoryError) {
+        throw BackupException.Corrupt("too large to open")
+    }
+
+    private fun readUnchecked(input: InputStream, maxTotalBytes: Long, maxSchemaVersion: Int): BackupArchive {
         val entries = mutableMapOf<String, ByteArray>()
         try {
             ZipInputStream(input).use { zip ->
@@ -79,6 +95,7 @@ object BackupCodec {
         if (manifest.application != BackupFormat.APPLICATION_ID) throw BackupException.NotABackup("created by another application")
         if (manifest.backupFormatVersion > BackupFormat.CURRENT) throw BackupException.UnsupportedVersion(manifest.backupFormatVersion)
         if (manifest.backupFormatVersion < 1) throw BackupException.Corrupt("invalid format version ${manifest.backupFormatVersion}")
+        if (manifest.databaseSchemaVersion > maxSchemaVersion) throw BackupException.NewerDatabase(manifest.databaseSchemaVersion)
         val dbBytes = entries[BackupFormat.DATABASE] ?: throw BackupException.Corrupt("database.json missing")
         val database = decode("database.json") { json.decodeFromString(BackupDatabase.serializer(), dbBytes.utf8()) }
         val preferences = entries[BackupFormat.PREFERENCES]?.let { bytes ->
@@ -124,6 +141,11 @@ object BackupCodec {
 
 /** Checks referential integrity and id uniqueness before anything is written. */
 object BackupValidator {
+    /** SQLite's NOCASE collation: only ASCII A-Z are folded. */
+    private fun nocase(value: String): String = buildString(value.length) {
+        value.forEach { c -> append(if (c in 'A'..'Z') c + ('a' - 'A') else c) }
+    }
+
     fun validate(db: BackupDatabase) {
         fun <T> unique(name: String, items: List<T>, id: (T) -> Long): Set<Long> {
             val ids = items.map(id)
@@ -153,8 +175,9 @@ object BackupValidator {
             check(t.projectId == null || t.projectId in projects) { "task ${t.id} references missing project" }
             check(t.parentTaskId == null || (t.parentTaskId in tasks && t.parentTaskId != t.id)) { "task ${t.id} references missing parent" }
         }
-        // Tag names are unique (the database has a unique index on the exact name), and so are links.
-        check(db.tags.map { it.name }.let { it.toSet().size == it.size }) { "duplicate tag names" }
+        // Tag names are unique the way the database compares them (COLLATE NOCASE, which folds
+        // ASCII letters only), and so are links.
+        check(db.tags.map { nocase(it.name) }.let { it.toSet().size == it.size }) { "duplicate tag names" }
         for ((name, links) in listOf("task" to db.taskTags, "project" to db.projectTags, "note" to db.noteTags)) {
             check(links.map { it.a to it.b }.toSet().size == links.size) { "duplicate $name tag links" }
         }

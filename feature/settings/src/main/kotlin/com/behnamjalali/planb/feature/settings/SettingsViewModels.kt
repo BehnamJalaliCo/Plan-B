@@ -144,7 +144,7 @@ class DataViewModel @Inject constructor(
 fun restoreErrorMessage(error: Throwable): Int = when (error) {
     is BackupException.NotABackup -> R.string.backup_error_not_backup
     is BackupException.Corrupt -> R.string.backup_error_corrupt
-    is BackupException.UnsupportedVersion -> R.string.backup_error_version
+    is BackupException.UnsupportedVersion, is BackupException.NewerDatabase -> R.string.backup_error_version
     is BackupException.Invalid -> R.string.backup_error_invalid
     else -> R.string.backup_error_restore
 }

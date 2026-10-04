@@ -3,6 +3,7 @@ package com.behnamjalali.planb.core.backup
 import android.net.Uri
 import androidx.room.withTransaction
 import com.behnamjalali.planb.core.common.TimeProvider
+import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.DocumentFiles
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.SearchIndexMaintenance
@@ -90,11 +91,7 @@ class BackupManager @Inject constructor(
         BackupValidator.validate(archive.database)
         val d = archive.database
         // Remember which alarms exist now so they can be cancelled once the data is replaced.
-        val oldReminders = Triple(
-            dao.tasks().filter { it.reminderOffsetMinutes != null }.map { it.id },
-            dao.events().filter { it.reminderOffsetMinutes != null }.map { it.id },
-            dao.habits().filter { it.reminderTime != null }.map { it.id },
-        )
+        val oldReminders = currentReminders()
         try {
             db.withTransaction {
                 dao.clearAll()
@@ -121,10 +118,11 @@ class BackupManager @Inject constructor(
             throw e
         } catch (e: Exception) {
             throw BackupException.RestoreFailed(e)
+        } catch (e: OutOfMemoryError) {
+            // The transaction rolled back; report it like any other failed restore.
+            throw BackupException.RestoreFailed(e)
         }
-        oldReminders.first.forEach { runCatching { reminders.cancelTask(it) } }
-        oldReminders.second.forEach { runCatching { reminders.cancelEvent(it) } }
-        oldReminders.third.forEach { runCatching { reminders.cancelHabit(it) } }
+        cancel(oldReminders)
         // Preferences are restored only after the data committed successfully.
         if (archive.preferences.isNotEmpty()) runCatching { preferences.import(archive.preferences) }
         runCatching { reminders.rescheduleAll() }
@@ -143,9 +141,31 @@ class BackupManager @Inject constructor(
         return result.values.toList()
     }
 
-    /** Permanently deletes all user data (Settings › Data management). */
+    /**
+     * Permanently deletes all user data (Settings › Data management). Alarms and posted
+     * notifications of the deleted items are cancelled too, so none of them can fire later
+     * for a restored item that reuses the same id.
+     */
     suspend fun deleteAllData() {
+        val oldReminders = currentReminders()
         db.withTransaction { dao.clearAll() }
+        cancel(oldReminders)
+        runCatching { reminders.cancelFocusEnd() }
         runCatching { reminders.rescheduleAll() }
+    }
+
+    private class Reminders(val tasks: List<Long>, val events: List<Long>, val habits: List<Long>)
+
+    private suspend fun currentReminders() = Reminders(
+        dao.tasks().filter { it.reminderOffsetMinutes != null }.map { it.id },
+        dao.events().filter { it.reminderOffsetMinutes != null }.map { it.id },
+        dao.habits().filter { it.reminderTime != null }.map { it.id },
+    )
+
+    /** Cancels alarms and posted notifications; one failure never stops the rest. */
+    private suspend fun cancel(old: Reminders) {
+        old.tasks.forEach { runCatchingSafely { reminders.cancelTask(it) } }
+        old.events.forEach { runCatchingSafely { reminders.cancelEvent(it) } }
+        old.habits.forEach { runCatchingSafely { reminders.cancelHabit(it) } }
     }
 }

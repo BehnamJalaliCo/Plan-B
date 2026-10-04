@@ -163,10 +163,11 @@ object BackupFormat {
 
     /**
      * Hard limits protecting against zip bombs and corrupt archives. Entries are read into
-     * memory, so the uncompressed total is capped well below a phone's heap.
+     * memory and then decoded as text (about three times their size at peak), so the caps
+     * stay well below a phone's heap while leaving room for very large real backups.
      */
-    const val MAX_ENTRY_BYTES = 128L * 1024 * 1024
-    const val MAX_TOTAL_BYTES = 128L * 1024 * 1024
+    const val MAX_ENTRY_BYTES = 32L * 1024 * 1024
+    const val MAX_TOTAL_BYTES = 40L * 1024 * 1024
     const val MAX_ENTRIES = 16
 }
 
@@ -175,6 +176,9 @@ sealed class BackupException(message: String) : Exception(message) {
     class NotABackup(detail: String) : BackupException("Not a Plan-B backup: $detail")
     class Corrupt(detail: String) : BackupException("Backup is damaged: $detail")
     class UnsupportedVersion(val version: Int) : BackupException("Backup format $version is newer than this app supports")
+
+    /** The backup's database schema is newer than this app's: it was made by a newer version. */
+    class NewerDatabase(val schemaVersion: Int) : BackupException("Backup was made by a newer version of the app (database schema $schemaVersion)")
     class Invalid(detail: String) : BackupException("Backup data is inconsistent: $detail")
     class RestoreFailed(cause: Throwable) : BackupException("Restore failed; your current data was kept (${cause.message})")
 }

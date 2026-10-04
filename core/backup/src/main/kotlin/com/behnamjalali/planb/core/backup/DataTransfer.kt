@@ -23,17 +23,36 @@ import javax.inject.Singleton
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 
-/** RFC 4180 CSV with UTF-8 BOM so spreadsheet apps detect Persian text correctly. */
+/**
+ * RFC 4180 CSV with UTF-8 BOM so spreadsheet apps detect Persian text correctly.
+ *
+ * Cells that a spreadsheet would run as a formula (starting with = + - @, tab or CR) are
+ * written with a leading apostrophe (OWASP CSV injection advice); [parse] removes it again,
+ * so our own exports import unchanged.
+ */
 object Csv {
     private val BOM = 0xFEFF.toChar().toString()
+    private const val GUARD = '\''
+    private val FORMULA_STARTS = setOf('=', '+', '-', '@', '\t', '\r')
+
+    /** True when [value] needs the apostrophe (also when it already starts with one, so it round-trips). */
+    private fun needsGuard(value: String): Boolean {
+        val first = value.firstOrNull() ?: return false
+        return first in FORMULA_STARTS || (first == GUARD && needsGuard(value.substring(1)))
+    }
+
+    fun guard(value: String): String = if (needsGuard(value)) GUARD + value else value
+
+    fun unguard(value: String): String =
+        if (value.firstOrNull() == GUARD && needsGuard(value.substring(1))) value.substring(1) else value
 
     fun escape(value: String): String =
         if (value.any { it == ',' || it == '"' || it == '\n' || it == '\r' }) "\"" + value.replace("\"", "\"\"") + "\"" else value
 
     fun write(header: List<String>, rows: List<List<String>>): String = buildString {
         append(BOM)
-        append(header.joinToString(",") { escape(it) }).append("\r\n")
-        rows.forEach { row -> append(row.joinToString(",") { escape(it) }).append("\r\n") }
+        append(header.joinToString(",") { escape(guard(it)) }).append("\r\n")
+        rows.forEach { row -> append(row.joinToString(",") { escape(guard(it)) }).append("\r\n") }
     }
 
     fun parse(text: String): List<List<String>> {
@@ -48,10 +67,10 @@ object Csv {
             when {
                 quoted && c == '"' && i + 1 < input.length && input[i + 1] == '"' -> { field.append('"'); i++ }
                 c == '"' -> quoted = !quoted
-                !quoted && c == ',' -> { row += field.toString(); field.clear() }
+                !quoted && c == ',' -> { row += unguard(field.toString()); field.clear() }
                 !quoted && (c == '\n' || c == '\r') -> {
                     if (c == '\r' && i + 1 < input.length && input[i + 1] == '\n') i++
-                    row += field.toString(); field.clear()
+                    row += unguard(field.toString()); field.clear()
                     if (row.any { it.isNotEmpty() }) rows += row
                     row = mutableListOf()
                 }
@@ -60,7 +79,7 @@ object Csv {
             i++
         }
         if (field.isNotEmpty() || row.isNotEmpty()) {
-            row += field.toString()
+            row += unguard(field.toString())
             if (row.any { it.isNotEmpty() }) rows += row
         }
         return rows
@@ -262,6 +281,16 @@ class DataTransfer @Inject constructor(
 
     private fun parseDate(raw: String): LocalDate? = runCatching { LocalDate.parse(Digits.toLatin(raw.trim())) }.getOrNull()
 
-    private fun safeName(name: String): String =
-        name.replace(Regex("""[\\/:*?"<>|\p{Cntrl}]"""), " ").replace(Regex("\\s+"), " ").trim().take(60).ifBlank { "untitled" }
+    /**
+     * A single, harmless path segment: no separators or reserved characters, no ".." (or any
+     * run of dots) and no leading/trailing dots, so an entry can never point outside its folder.
+     */
+    internal fun safeName(name: String): String =
+        name.replace(Regex("""[\\/:*?"<>|\p{Cntrl}]"""), " ")
+            .replace(Regex("""\.{2,}"""), ".")
+            .replace(Regex("\\s+"), " ")
+            .trim(' ', '.')
+            .take(60)
+            .trim(' ', '.')
+            .ifBlank { "untitled" }
 }
