@@ -3,6 +3,45 @@
 All notable changes to Plan-B are documented here. The project follows
 [Semantic Versioning](https://semver.org/); `versionCode` increases with every store upload.
 
+## [1.0.1] — 2026-10-04
+
+Reliability update after a full code and screenshot review.
+
+### Fixed
+- One-time event reminders were dismissed as soon as they were posted; habits repeating every
+  15+ days got no reminders; stale alarms could fire after delete-all/restore; the focus end
+  alarm was not restored after a reboot; reminder failures could crash the app.
+- On Android 8–12 the app switched back to Persian on every cold start.
+- Recurring tasks: saving as Done from the editor ended the series; changing the date or rule
+  kept the old anchor; reopening a completed occurrence left a duplicate; subtasks of the next
+  occurrence kept stale dates and had no reminders; archiving a parent left subtask reminders.
+- Undo of a swipe-delete affected other pending deletes; deletes could stay half-done after
+  leaving the screen; multi-select acted on items hidden by a filter; manual reorder in a
+  filtered view broke the global order.
+- Project tags were erased on edit and on notes autosave; project notes lost the last edits.
+- Notes editor: stale field values while typing, multi-line blocks split on the first keystroke,
+  Enter at the start of a block moved its text, toolbar acted on a block while the title was
+  focused, a new note could be created twice after process death; added "join with the block
+  above". Notes in archived notebooks no longer show in recent/pinned lists.
+- Search: words with and without the half-space (ZWNJ) and hamza variants now match (the index
+  is rebuilt once after updating).
+- A corrupt preferences file crashed the app; restore/delete-all could be cancelled halfway;
+  safer backup limits, case-insensitive tag validation, safe export file names, CSV formula
+  guard, and backups from newer versions are rejected clearly.
+- Today: completed count included subtasks and other days; greeting went stale. Calendar: fast
+  paging skipped taps; completing a task can now be undone. Focus: minutes recorded when a
+  session ends in the background, midnight rollover, no duplicate session on double tap.
+- Goals: "10,000" was saved as 10, Infinity crashed, pace was wrong on the deadline day, very
+  large goals showed as done early, rapid +/- taps were lost. Number and percent rounding fixed.
+- Habits: weekly-review rate ignored the start date and counted today as missed; best streak for
+  "times per week" habits was always 0 and the streak unit now says weeks.
+- Markdown export now escapes block markers so notes round-trip.
+- Display: Persian separators next to digits looked like a zero (now "،"); status-bar icons
+  follow the app theme; 48dp touch targets; 12-hour time picker in English when the device uses
+  12-hour time; bottom navigation labels fit at large font sizes; numbered-list icon mirrored in
+  RTL; board column counts sit next to their titles; templates use the week/month start date.
+- Double taps on Save or Back no longer create duplicates or leave a blank screen.
+
 ## [1.0.0] — 2026-10-04
 
 First public release.
