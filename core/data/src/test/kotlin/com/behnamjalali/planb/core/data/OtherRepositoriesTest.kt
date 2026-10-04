@@ -257,7 +257,12 @@ class OtherRepositoriesTest {
         assertThat(review.completedPerDay[2]).isEqualTo(1)
         assertThat(review.missedTasks.map { it.title }).containsExactly("Missed")
         assertThat(review.nextWeekPriorities.map { it.title }).containsExactly("Next week")
-        // 1 of 3 elapsed days done
-        assertThat(review.habits.single().rate).isWithin(0.01f).of(1f / 3f)
+        // 1 of the 2 finished days done; today is still open, so it is not counted as missed yet.
+        assertThat(review.habits.single().rate).isWithin(0.01f).of(1f / 2f)
+        // Once today is done it counts: 2 of 3 days.
+        habits.checkIn(habitId, weekStart.plusDays(2))
+        val updated = OfflineReviewRepository(db.taskDao(), db.habitDao(), db.focusDao(), db.noteDao(), db.goalDao(), projects, time)
+            .weeklyReview(weekStart)
+        assertThat(updated.habits.single().rate).isWithin(0.01f).of(2f / 3f)
     }
 }
