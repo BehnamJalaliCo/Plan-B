@@ -236,7 +236,6 @@ class TasksViewModel @Inject constructor(
         // A pending delete the user did not undo is committed on a scope that outlives the screen.
         val ids = pendingDelete.value
         if (ids.isNotEmpty()) appScope.launch { runCatchingSafely { tasks.delete(ids.toList()) } }
-        super.onCleared()
     }
 
     private companion object {

@@ -20,9 +20,9 @@ import androidx.compose.material.icons.rounded.Event
 import androidx.compose.material.icons.rounded.EventAvailable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,7 +61,7 @@ fun ProjectEditorDestination(
 ) {
     val form by viewModel.form.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val resources = LocalResources.current
     var discard by rememberSaveable { mutableStateOf(false) }
     var picker by rememberSaveable { mutableStateOf<String?>(null) }
     val formatter = PlannerLocals.formatter
@@ -69,7 +69,7 @@ fun ProjectEditorDestination(
     LaunchedEffect(viewModel) {
         viewModel.saved.collect { id ->
             if (id != null) onSaved(id, viewModel.isNew)
-            else snackbar.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+            else snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
         }
     }
     val requestClose = { if (viewModel.isDirty) discard = true else onClose() }

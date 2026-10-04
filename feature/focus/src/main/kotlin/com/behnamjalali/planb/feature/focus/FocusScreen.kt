@@ -35,13 +35,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextDirection
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -82,7 +82,7 @@ data class FocusCallbacks(
 @Composable
 fun FocusDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, viewModel: FocusViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val haptics = rememberPlannerHaptics()
     val requestNotifications = rememberNotificationPermissionRequest()
     LaunchedEffect(viewModel) {
@@ -90,9 +90,9 @@ fun FocusDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, v
             when (m) {
                 FocusMessage.Completed -> {
                     haptics.success()
-                    snackbarHostState.showSnackbar(context.getString(R.string.focus_completed_message))
+                    snackbarHostState.showSnackbar(resources.getString(R.string.focus_completed_message))
                 }
-                FocusMessage.Failed -> snackbarHostState.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+                FocusMessage.Failed -> snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
             }
         }
     }

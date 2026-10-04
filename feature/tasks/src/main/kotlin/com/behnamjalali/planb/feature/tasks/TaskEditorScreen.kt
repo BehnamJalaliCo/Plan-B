@@ -54,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -104,15 +105,16 @@ fun TaskEditorDestination(
     val calendarSystem by viewModel.calendarSystem.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val resources = LocalResources.current
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 is EditorEvent.Saved, EditorEvent.Deleted -> onClose()
-                EditorEvent.Failed -> snackbar.showSnackbar(context.getString(R.string.tasks_error))
+                EditorEvent.Failed -> snackbar.showSnackbar(resources.getString(R.string.tasks_error))
                 EditorEvent.NotFound -> {
-                    snackbar.showSnackbar(context.getString(R.string.task_editor_not_found))
+                    snackbar.showSnackbar(resources.getString(R.string.task_editor_not_found))
                     onClose()
                 }
             }

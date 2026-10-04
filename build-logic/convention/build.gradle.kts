@@ -51,10 +51,6 @@ gradlePlugin {
             id = "planb.hilt"
             implementationClass = "HiltConventionPlugin"
         }
-        register("jvmLibrary") {
-            id = "planb.jvm.library"
-            implementationClass = "JvmLibraryConventionPlugin"
-        }
         register("roborazzi") {
             id = "planb.roborazzi"
             implementationClass = "RoborazziConventionPlugin"

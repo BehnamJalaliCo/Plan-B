@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.core.content.ContextCompat
@@ -79,14 +80,15 @@ fun EventEditorDestination(onClose: () -> Unit, viewModel: EventEditorViewModel 
     val calendarSystem by viewModel.calendarSystem.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val resources = LocalResources.current
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(viewModel) {
         viewModel.editorEvents.collect { event ->
             when (event) {
                 EventEditorEvent.Saved, EventEditorEvent.Deleted -> onClose()
-                EventEditorEvent.Failed -> snackbar.showSnackbar(context.getString(R.string.event_editor_failed))
+                EventEditorEvent.Failed -> snackbar.showSnackbar(resources.getString(R.string.event_editor_failed))
                 EventEditorEvent.NotFound -> {
-                    snackbar.showSnackbar(context.getString(R.string.event_editor_not_found))
+                    snackbar.showSnackbar(resources.getString(R.string.event_editor_not_found))
                     onClose()
                 }
             }

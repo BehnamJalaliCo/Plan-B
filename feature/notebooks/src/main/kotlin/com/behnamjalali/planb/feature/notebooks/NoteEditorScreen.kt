@@ -25,6 +25,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
+import androidx.compose.material.icons.automirrored.rounded.Subject
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.CheckBox
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.DeleteOutline
@@ -37,9 +39,7 @@ import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
-import androidx.compose.material.icons.automirrored.rounded.Subject
 import androidx.compose.material.icons.rounded.Title
-import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -71,8 +71,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -85,6 +84,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.behnamjalali.planb.core.designsystem.component.PlannerDialog
 import com.behnamjalali.planb.core.designsystem.component.PlannerIconButton
@@ -136,7 +136,7 @@ fun NoteEditorDestination(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val notebooks by viewModel.notebooks.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val resources = LocalResources.current
 
     // Commit edits whenever the screen stops (backgrounding, navigation, process death risk).
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -150,16 +150,16 @@ fun NoteEditorDestination(
             when (event) {
                 NoteEditorEvent.Deleted -> onClose()
                 is NoteEditorEvent.Duplicated -> onOpenNote(event.id)
-                NoteEditorEvent.Exported -> snackbar.showSnackbar(context.getString(R.string.note_exported))
-                NoteEditorEvent.ExportFailed -> snackbar.showSnackbar(context.getString(R.string.note_export_failed))
-                NoteEditorEvent.TemplateSaved -> snackbar.showSnackbar(context.getString(R.string.note_template_saved))
-                NoteEditorEvent.Failed -> snackbar.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+                NoteEditorEvent.Exported -> snackbar.showSnackbar(resources.getString(R.string.note_exported))
+                NoteEditorEvent.ExportFailed -> snackbar.showSnackbar(resources.getString(R.string.note_export_failed))
+                NoteEditorEvent.TemplateSaved -> snackbar.showSnackbar(resources.getString(R.string.note_template_saved))
+                NoteEditorEvent.Failed -> snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
             }
         }
     }
     LaunchedEffect(state.missing) {
         if (state.missing) {
-            snackbar.showSnackbar(context.getString(R.string.note_not_found))
+            snackbar.showSnackbar(resources.getString(R.string.note_not_found))
             onClose()
         }
     }

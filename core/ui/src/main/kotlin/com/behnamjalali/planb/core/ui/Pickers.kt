@@ -32,6 +32,8 @@ import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -161,9 +163,9 @@ fun PlannerDatePickerDialog(
 ) {
     val formatter = PlannerLocals.formatter
     val today = PlannerLocals.today
-    var selectedEpoch by rememberSaveable { mutableStateOf((initial ?: today).toEpochDay()) }
+    var selectedEpoch by rememberSaveable { mutableLongStateOf((initial ?: today).toEpochDay()) }
     val selected = LocalDate.ofEpochDay(selectedEpoch)
-    var monthOffset by rememberSaveable { mutableStateOf(0) }
+    var monthOffset by rememberSaveable { mutableIntStateOf(0) }
     val baseMonth = formatter.monthOf(initial ?: today)
     val month = baseMonth.plus(monthOffset)
     AlertDialog(

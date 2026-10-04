@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,10 +16,10 @@ import javax.inject.Singleton
 /** Deep links understood by the app's navigation. */
 object DeepLinks {
     const val SCHEME = "planb"
-    fun task(id: Long): Uri = Uri.parse("$SCHEME://open/task/$id")
-    fun event(id: Long): Uri = Uri.parse("$SCHEME://open/event/$id")
-    fun habit(id: Long): Uri = Uri.parse("$SCHEME://open/habit/$id")
-    fun focus(): Uri = Uri.parse("$SCHEME://open/focus")
+    fun task(id: Long): Uri = "$SCHEME://open/task/$id".toUri()
+    fun event(id: Long): Uri = "$SCHEME://open/event/$id".toUri()
+    fun habit(id: Long): Uri = "$SCHEME://open/habit/$id".toUri()
+    fun focus(): Uri = "$SCHEME://open/focus".toUri()
 }
 
 @Singleton

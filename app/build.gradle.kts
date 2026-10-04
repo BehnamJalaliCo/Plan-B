@@ -73,6 +73,12 @@ android {
         }
     }
 
+    bundle {
+        // The language can be switched inside the app, so every install needs both
+        // Persian and English resources rather than only the device language split.
+        language { enableSplit = false }
+    }
+
     packaging {
         resources.excludes += listOf("/META-INF/{AL2.0,LGPL2.1}", "DebugProbesKt.bin", "kotlin-tooling-metadata.json")
     }

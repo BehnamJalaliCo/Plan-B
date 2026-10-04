@@ -26,11 +26,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -38,8 +38,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.behnamjalali.planb.R
 import com.behnamjalali.planb.core.designsystem.component.PlannerFAB
-import com.behnamjalali.planb.core.designsystem.component.PlannerNavigationBar
 import com.behnamjalali.planb.core.designsystem.component.PlannerNavItem
+import com.behnamjalali.planb.core.designsystem.component.PlannerNavigationBar
 import com.behnamjalali.planb.core.model.UserSettings
 import com.behnamjalali.planb.feature.today.capture.CaptureType
 import com.behnamjalali.planb.feature.today.capture.QuickCaptureSheet
@@ -61,7 +61,7 @@ fun PlanBApp(
 ) {
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     var capturing by rememberSaveable { mutableStateOf(false) }
     var customizeToday by rememberSaveable { mutableStateOf(false) }
     if (!settings.onboardingCompleted) {
@@ -129,15 +129,15 @@ fun PlanBApp(
                 capturing = false
                 scope.launch {
                     val result = snackbar.showSnackbar(
-                        message = context.getString(captureSavedMessage(type)),
-                        actionLabel = context.getString(com.behnamjalali.planb.feature.today.R.string.capture_open),
+                        message = resources.getString(captureSavedMessage(type)),
+                        actionLabel = resources.getString(com.behnamjalali.planb.feature.today.R.string.capture_open),
                         duration = SnackbarDuration.Short,
                     )
                     if (result == SnackbarResult.ActionPerformed) navController.openCaptured(type, id)
                 }
             },
             onFailed = {
-                scope.launch { snackbar.showSnackbar(context.getString(com.behnamjalali.planb.feature.today.R.string.capture_failed)) }
+                scope.launch { snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.feature.today.R.string.capture_failed)) }
             },
         )
     }

@@ -125,5 +125,4 @@ planb-android-library-compose = { id = "planb.android.library.compose" }
 planb-android-feature = { id = "planb.android.feature" }
 planb-android-room = { id = "planb.android.room" }
 planb-hilt = { id = "planb.hilt" }
-planb-jvm-library = { id = "planb.jvm.library" }
 planb-roborazzi = { id = "planb.roborazzi" }

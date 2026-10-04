@@ -23,6 +23,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -228,7 +229,7 @@ fun CustomRecurrenceDialog(
             },
         )
     }
-    var untilEpoch by rememberSaveable { mutableStateOf((initial?.until ?: anchor.plusMonths(3)).toEpochDay()) }
+    var untilEpoch by rememberSaveable { mutableLongStateOf((initial?.until ?: anchor.plusMonths(3)).toEpochDay()) }
     var countText by rememberSaveable { mutableStateOf((initial?.count ?: 10).toString()) }
     var pickingUntil by rememberSaveable { mutableStateOf(false) }
 

@@ -48,7 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -157,12 +157,12 @@ private fun PaceBar(progress: Float, expected: Float, description: String) {
 @Composable
 fun GoalDetailDestination(onBack: () -> Unit, onEdit: (EntityId) -> Unit, snackbarHostState: SnackbarHostState, viewModel: GoalDetailViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(viewModel) {
         viewModel.events.collect { e ->
             when (e) {
                 GoalEvent.Deleted -> onBack()
-                GoalEvent.Failed -> snackbarHostState.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+                GoalEvent.Failed -> snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
             }
         }
     }
@@ -288,13 +288,13 @@ fun GoalEditorDestination(onClose: () -> Unit, viewModel: GoalEditorViewModel = 
     val form by viewModel.form.collectAsStateWithLifecycle()
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val resources = LocalResources.current
     var discard by rememberSaveable { mutableStateOf(false) }
     var picking by rememberSaveable { mutableStateOf(false) }
     var projectMenu by remember { mutableStateOf(false) }
     val formatter = PlannerLocals.formatter
     LaunchedEffect(viewModel) {
-        viewModel.saved.collect { ok -> if (ok) onClose() else snackbar.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic)) }
+        viewModel.saved.collect { ok -> if (ok) onClose() else snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic)) }
     }
     val requestClose = { if (viewModel.isDirty) discard = true else onClose() }
     BackHandler(onBack = requestClose)

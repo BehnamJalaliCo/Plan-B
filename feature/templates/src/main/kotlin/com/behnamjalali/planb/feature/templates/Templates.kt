@@ -39,7 +39,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -131,7 +131,7 @@ fun TemplatesDestination(
     viewModel: TemplatesViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val formatter = PlannerLocals.formatter
     val today = PlannerLocals.today
     val notebookTitle = stringResource(com.behnamjalali.planb.core.data.R.string.data_planner_notebook)
@@ -140,13 +140,13 @@ fun TemplatesDestination(
             when (e) {
                 is TemplatesEvent.Applied -> {
                     val r = snackbarHostState.showSnackbar(
-                        context.getString(R.string.templates_applied),
-                        actionLabel = context.getString(R.string.templates_open),
+                        resources.getString(R.string.templates_applied),
+                        actionLabel = resources.getString(R.string.templates_open),
                         duration = SnackbarDuration.Short,
                     )
                     if (r == SnackbarResult.ActionPerformed) onOpenResult(e.result)
                 }
-                TemplatesEvent.Failed -> snackbarHostState.showSnackbar(context.getString(R.string.templates_failed))
+                TemplatesEvent.Failed -> snackbarHostState.showSnackbar(resources.getString(R.string.templates_failed))
             }
         }
     }

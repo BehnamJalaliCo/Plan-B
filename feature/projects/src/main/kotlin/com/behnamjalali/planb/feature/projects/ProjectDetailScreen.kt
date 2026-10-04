@@ -41,7 +41,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -107,12 +107,12 @@ fun ProjectDetailDestination(
     viewModel: ProjectDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 ProjectEvent.Deleted -> onBack()
-                ProjectEvent.Failed -> snackbarHostState.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+                ProjectEvent.Failed -> snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
                 ProjectEvent.NotesSaved -> Unit
             }
         }

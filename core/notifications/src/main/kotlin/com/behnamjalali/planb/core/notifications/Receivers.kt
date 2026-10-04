@@ -1,8 +1,11 @@
 package com.behnamjalali.planb.core.notifications
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.text.format.DateFormat
 import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.common.NumberFormatter
 import com.behnamjalali.planb.core.common.TimeProvider
@@ -14,8 +17,6 @@ import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.datetime.PlannerDateFormatter
 import com.behnamjalali.planb.core.datetime.ReminderTime
 import dagger.hilt.android.AndroidEntryPoint
-import android.content.res.Configuration
-import android.text.format.DateFormat
 import java.time.LocalDate
 import java.util.Locale
 import javax.inject.Inject
@@ -50,6 +51,8 @@ class ReminderReceiver : BroadcastReceiver() {
         }
     }
 
+    // Both languages are always installed: the app bundle disables language splits (app/build.gradle.kts).
+    @SuppressLint("AppBundleLocaleChanges")
     private suspend fun handle(appContext: Context, kind: ReminderKind, id: Long, occurrence: LocalDate) {
         // Receivers run without an activity, so apply the user's language explicitly (pre-API 33
         // the application context does not carry the per-app locale).
@@ -110,10 +113,22 @@ class ReminderReceiver : BroadcastReceiver() {
 /** Restores reminders after reboot, app update, clock or time-zone changes. */
 @AndroidEntryPoint
 class RescheduleReceiver : BroadcastReceiver() {
+    private companion object {
+        val HANDLED_ACTIONS = setOf(
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED",
+        )
+    }
+
     @Inject lateinit var scheduler: AlarmReminderScheduler
     @Inject @ApplicationScope lateinit var scope: CoroutineScope
 
     override fun onReceive(context: Context, intent: Intent) {
+        // Only react to the system broadcasts declared in the manifest.
+        if (intent.action !in HANDLED_ACTIONS) return
         val pending = goAsync()
         scope.launch {
             try {

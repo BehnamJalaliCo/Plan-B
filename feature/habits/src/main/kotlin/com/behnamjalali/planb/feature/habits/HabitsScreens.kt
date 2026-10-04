@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,7 +47,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -115,9 +114,9 @@ fun HabitsDestination(
     viewModel: HabitsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(viewModel) {
-        viewModel.failed.collect { snackbarHostState.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic)) }
+        viewModel.failed.collect { snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic)) }
     }
     HabitsScreen(state, onBack, onOpenHabit, onNewHabit, viewModel::checkIn, viewModel::toggleArchived)
 }
@@ -177,12 +176,12 @@ fun HabitDetailDestination(
     viewModel: HabitDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 HabitEvent.Deleted -> onBack()
-                HabitEvent.Failed -> snackbarHostState.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+                HabitEvent.Failed -> snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
             }
         }
     }
@@ -292,14 +291,14 @@ private fun StatTile(label: String, value: String, modifier: Modifier) {
 fun HabitEditorDestination(onClose: () -> Unit, viewModel: HabitEditorViewModel = hiltViewModel()) {
     val form by viewModel.form.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val formatter = PlannerLocals.formatter
     var discard by rememberSaveable { mutableStateOf(false) }
     var picker by rememberSaveable { mutableStateOf<String?>(null) }
     val requestNotifications = rememberNotificationPermissionRequest()
     LaunchedEffect(viewModel) {
         viewModel.saved.collect { ok ->
-            if (ok) onClose() else snackbar.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+            if (ok) onClose() else snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
         }
     }
     val requestClose = { if (viewModel.isDirty) discard = true else onClose() }

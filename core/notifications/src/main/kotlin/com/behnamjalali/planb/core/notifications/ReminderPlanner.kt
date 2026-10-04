@@ -33,7 +33,7 @@ object ReminderPlanner {
 
     fun forEvent(event: CalendarEvent, now: Instant, zone: ZoneId): PlannedReminder? {
         val offset = event.reminderOffsetMinutes ?: return null
-        val today = LocalDate.ofInstant(now, zone)
+        val today = now.atZone(zone).toLocalDate()
         val time = if (event.allDay) null else event.startTime
         val rule = event.recurrence
         val dates = if (rule == null) {
@@ -51,7 +51,7 @@ object ReminderPlanner {
     fun forHabit(habit: Habit, todayAmount: Int, now: Instant, zone: ZoneId): PlannedReminder? {
         val time = habit.reminderTime ?: return null
         if (habit.archived) return null
-        val today = LocalDate.ofInstant(now, zone)
+        val today = now.atZone(zone).toLocalDate()
         for (offset in 0..HABIT_LOOKAHEAD_DAYS) {
             val date = today.plusDays(offset)
             if (!HabitStats.isScheduled(habit, date)) continue

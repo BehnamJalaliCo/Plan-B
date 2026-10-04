@@ -23,10 +23,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.behnamjalali.planb.core.designsystem.component.PlannerBottomSheet
@@ -52,9 +52,9 @@ fun TodayDestination(
             onCustomizerOpened()
         }
     }
-    val context = LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(viewModel) {
-        viewModel.messages.collect { snackbarHostState.showSnackbar(context.getString(R.string.capture_failed)) }
+        viewModel.messages.collect { snackbarHostState.showSnackbar(resources.getString(R.string.capture_failed)) }
     }
     TodayScreen(
         state = state,

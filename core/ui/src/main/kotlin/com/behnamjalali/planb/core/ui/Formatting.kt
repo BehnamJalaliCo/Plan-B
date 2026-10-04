@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import com.behnamjalali.planb.core.common.NumberFormatter
 import com.behnamjalali.planb.core.datetime.PlannerDateFormatter
 import com.behnamjalali.planb.core.model.CalendarSystem
@@ -35,10 +36,11 @@ fun rememberDateFormatter(
     persianDigits: Boolean,
 ): PlannerDateFormatter {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val configuration = LocalConfiguration.current
-    return remember(context, configuration, calendarSystem, firstDayOfWeek, persianDigits) {
+    return remember(resources, configuration, calendarSystem, firstDayOfWeek, persianDigits) {
         PlannerDateFormatter(
-            resources = context.resources,
+            resources = resources,
             calendarSystem = calendarSystem,
             firstDayOfWeek = firstDayOfWeek,
             numbers = NumberFormatter(persianDigits),

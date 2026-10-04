@@ -428,7 +428,6 @@ class NoteEditorViewModel @Inject constructor(
                 if (createdNew && s.title.text.isBlank() && document(s).isBlank() && !s.missing) notes.deleteNote(s.noteId)
             }
         }
-        super.onCleared()
     }
 
     companion object {

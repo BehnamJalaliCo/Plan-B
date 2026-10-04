@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.core.net.toUri
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.repository.EventRepository
@@ -95,7 +96,7 @@ class AlarmReminderScheduler @Inject constructor(
         val intent = Intent(context, ReminderReceiver::class.java)
             .setAction(ReminderReceiver.ACTION_REMIND)
             // The data URI makes each item's PendingIntent distinct for cancellation.
-            .setData(android.net.Uri.parse("planb-alarm://${kind.name.lowercase()}/$id"))
+            .setData("planb-alarm://${kind.name.lowercase()}/$id".toUri())
             .putExtra(ReminderReceiver.EXTRA_KIND, kind.name)
             .putExtra(ReminderReceiver.EXTRA_ID, id)
             .putExtra(ReminderReceiver.EXTRA_DATE, occurrenceEpochDay)

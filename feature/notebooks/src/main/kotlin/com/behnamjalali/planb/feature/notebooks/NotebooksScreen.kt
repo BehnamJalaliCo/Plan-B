@@ -40,7 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -94,7 +94,7 @@ fun NotebooksDestination(
     viewModel: NotebooksViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val untitled = stringResource(com.behnamjalali.planb.core.ui.R.string.ui_untitled)
     val defaultNotebook = stringResource(com.behnamjalali.planb.core.data.R.string.data_default_notebook)
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -104,9 +104,9 @@ fun NotebooksDestination(
         viewModel.events.collect { event ->
             when (event) {
                 is NotebooksEvent.OpenNote -> onOpenNote(event.id)
-                NotebooksEvent.Imported -> snackbarHostState.showSnackbar(context.getString(R.string.notebook_imported))
-                NotebooksEvent.ImportFailed -> snackbarHostState.showSnackbar(context.getString(R.string.notebook_import_failed))
-                NotebooksEvent.Failed -> snackbarHostState.showSnackbar(context.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+                NotebooksEvent.Imported -> snackbarHostState.showSnackbar(resources.getString(R.string.notebook_imported))
+                NotebooksEvent.ImportFailed -> snackbarHostState.showSnackbar(resources.getString(R.string.notebook_import_failed))
+                NotebooksEvent.Failed -> snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
             }
         }
     }

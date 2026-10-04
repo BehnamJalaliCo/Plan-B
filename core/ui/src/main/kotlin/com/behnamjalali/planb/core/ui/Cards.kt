@@ -515,7 +515,7 @@ fun PlannerNoteCard(
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.height(Spacing.sm))
-        val edited = LocalDate.ofInstant(note.updatedAt, java.time.ZoneId.systemDefault())
+        val edited = note.updatedAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
         Text(
             stringResource(R.string.ui_updated, formatter.relativeDate(edited, today)),
             style = MaterialTheme.typography.labelSmall,

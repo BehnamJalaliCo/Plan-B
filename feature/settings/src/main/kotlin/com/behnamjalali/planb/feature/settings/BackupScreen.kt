@@ -28,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -46,6 +47,7 @@ import java.time.ZoneId
 fun BackupDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, viewModel: DataViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val resources = LocalResources.current
     val numbers = PlannerLocals.numbers
     val formatter = PlannerLocals.formatter
     var exportKind by rememberSaveable { mutableStateOf<ExportKind?>(null) }
@@ -54,15 +56,15 @@ fun BackupDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { m ->
             val text = when (m) {
-                DataMessage.BackupCreated -> context.getString(R.string.backup_created)
-                DataMessage.BackupFailed -> context.getString(R.string.backup_failed)
-                DataMessage.Restored -> context.getString(R.string.backup_restored)
-                is DataMessage.RestoreError -> context.getString(restoreErrorMessage(m.error))
-                is DataMessage.Exported -> context.resources.getQuantityString(R.plurals.export_done, m.count, numbers.format(m.count))
-                DataMessage.ExportFailed -> context.getString(R.string.export_failed)
-                is DataMessage.Imported -> context.getString(R.string.import_done, numbers.format(m.imported), numbers.format(m.skipped))
-                DataMessage.ImportFailed -> context.getString(R.string.import_failed)
-                DataMessage.Deleted -> context.getString(R.string.data_deleted)
+                DataMessage.BackupCreated -> resources.getString(R.string.backup_created)
+                DataMessage.BackupFailed -> resources.getString(R.string.backup_failed)
+                DataMessage.Restored -> resources.getString(R.string.backup_restored)
+                is DataMessage.RestoreError -> resources.getString(restoreErrorMessage(m.error))
+                is DataMessage.Exported -> resources.getQuantityString(R.plurals.export_done, m.count, numbers.format(m.count))
+                DataMessage.ExportFailed -> resources.getString(R.string.export_failed)
+                is DataMessage.Imported -> resources.getString(R.string.import_done, numbers.format(m.imported), numbers.format(m.skipped))
+                DataMessage.ImportFailed -> resources.getString(R.string.import_failed)
+                DataMessage.Deleted -> resources.getString(R.string.data_deleted)
             }
             snackbarHostState.showSnackbar(text)
         }

@@ -58,10 +58,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -171,6 +173,7 @@ fun SettingsScreen(
     onLanguage: (AppLanguage) -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val formatter = PlannerLocals.formatter
     val numbers = PlannerLocals.numbers
     var dialog by rememberSaveable { mutableStateOf<String?>(null) }
@@ -185,7 +188,7 @@ fun SettingsScreen(
 
     val jalali = stringResource(R.string.settings_calendar_jalali)
     val gregorian = stringResource(R.string.settings_calendar_gregorian)
-    fun minutes(m: Int) = context.getString(R.string.settings_minutes, numbers.format(m))
+    fun minutes(m: Int) = resources.getString(R.string.settings_minutes, numbers.format(m))
     val themeLabel = stringResource(
         when (settings.themeMode) {
             ThemeMode.SYSTEM -> R.string.settings_theme_system
@@ -280,7 +283,7 @@ fun SettingsScreen(
                         onClick = {
                             runCatching {
                                 context.startActivity(
-                                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${context.packageName}"))
+                                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, "package:${context.packageName}".toUri())
                                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                                 )
                             }

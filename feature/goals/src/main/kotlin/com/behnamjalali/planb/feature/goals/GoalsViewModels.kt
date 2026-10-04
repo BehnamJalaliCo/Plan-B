@@ -81,7 +81,7 @@ class GoalDetailViewModel @Inject constructor(
         if (goal == null) {
             GoalDetailUiState(loading = false, missing = true)
         } else {
-            val start = LocalDate.ofInstant(goal.createdAt, time.zone())
+            val start = goal.createdAt.atZone(time.zone()).toLocalDate()
             GoalDetailUiState(
                 loading = false,
                 goal = goal,

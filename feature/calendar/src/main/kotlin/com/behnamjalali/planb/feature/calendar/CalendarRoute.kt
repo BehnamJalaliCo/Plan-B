@@ -5,7 +5,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.behnamjalali.planb.core.model.EntityId
@@ -21,9 +21,9 @@ fun CalendarDestination(
     viewModel: CalendarViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(viewModel) {
-        viewModel.failures.collect { snackbarHostState.showSnackbar(context.getString(R.string.calendar_error)) }
+        viewModel.failures.collect { snackbarHostState.showSnackbar(resources.getString(R.string.calendar_error)) }
     }
     CalendarScreen(
         state = state,

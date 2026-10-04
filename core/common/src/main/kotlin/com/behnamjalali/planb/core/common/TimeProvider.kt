@@ -12,8 +12,9 @@ import javax.inject.Singleton
 interface TimeProvider {
     fun now(): Instant
     fun zone(): ZoneId
-    fun today(): LocalDate = LocalDate.ofInstant(now(), zone())
-    fun localNow(): LocalDateTime = LocalDateTime.ofInstant(now(), zone())
+    // LocalDate.ofInstant needs API 34; atZone() works on every supported API level.
+    fun today(): LocalDate = now().atZone(zone()).toLocalDate()
+    fun localNow(): LocalDateTime = now().atZone(zone()).toLocalDateTime()
 
     /** Monotonic milliseconds (unaffected by wall-clock changes) for in-process timing. */
     fun monotonicMillis(): Long
