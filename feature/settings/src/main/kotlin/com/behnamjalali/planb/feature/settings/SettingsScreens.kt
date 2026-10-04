@@ -1,8 +1,12 @@
 package com.behnamjalali.planb.feature.settings
 
 import android.Manifest
+import android.app.Activity
 import android.app.AlarmManager
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -64,7 +68,10 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -266,13 +273,27 @@ fun SettingsScreen(
                     stringResource(R.string.settings_notifications), icon = Icons.Rounded.Notifications,
                     subtitle = stringResource(if (notificationsOn) R.string.settings_notifications_on else R.string.settings_notifications_off),
                     onClick = {
-                        if (!notificationsOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            permission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            context.startActivity(
-                                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                            )
+                        val action = notificationRowAction(
+                            sdkInt = Build.VERSION.SDK_INT,
+                            notificationsEnabled = notificationsOn,
+                            permissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED,
+                            requestedBefore = NotificationPermissionMemory.wasRequested(context),
+                            showRationale = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && context.findActivity()?.let {
+                                ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.POST_NOTIFICATIONS)
+                            } == true,
+                        )
+                        when (action) {
+                            NotificationRowAction.REQUEST_PERMISSION -> {
+                                NotificationPermissionMemory.markRequested(context)
+                                permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                            NotificationRowAction.OPEN_SETTINGS -> runCatching {
+                                context.startActivity(
+                                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                )
+                            }
                         }
                     },
                 )
@@ -478,3 +499,43 @@ fun LicensesDestination(onBack: () -> Unit) = TextScreen(
     ),
     onBack,
 )
+
+/** What tapping the notifications row does. */
+internal enum class NotificationRowAction { REQUEST_PERMISSION, OPEN_SETTINGS }
+
+/**
+ * The permission dialog is only useful while Android will still show it: before the first
+ * request, or after a single denial (when it asks for a rationale). After "Don't allow" a
+ * second time, or when notifications are blocked in the system settings although the
+ * permission is granted, only the app's notification settings can turn them on.
+ */
+internal fun notificationRowAction(
+    sdkInt: Int,
+    notificationsEnabled: Boolean,
+    permissionGranted: Boolean,
+    requestedBefore: Boolean,
+    showRationale: Boolean,
+): NotificationRowAction = when {
+    notificationsEnabled || sdkInt < Build.VERSION_CODES.TIRAMISU || permissionGranted -> NotificationRowAction.OPEN_SETTINGS
+    requestedBefore && !showRationale -> NotificationRowAction.OPEN_SETTINGS
+    else -> NotificationRowAction.REQUEST_PERMISSION
+}
+
+/** Remembers that the notification permission was requested (Android cannot tell "never asked" from "denied for good"). */
+internal object NotificationPermissionMemory {
+    private const val FILE = "planb_permission_requests"
+    private const val KEY = "post_notifications_requested"
+
+    fun wasRequested(context: Context): Boolean =
+        runCatching { context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getBoolean(KEY, false) }.getOrDefault(false)
+
+    fun markRequested(context: Context) {
+        runCatching { context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit { putBoolean(KEY, true) } }
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}

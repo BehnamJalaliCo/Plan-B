@@ -1,8 +1,8 @@
 package com.behnamjalali.planb.feature.settings
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,7 +32,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.os.LocaleListCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.behnamjalali.planb.core.backup.BackupFormat
@@ -55,29 +54,25 @@ fun BackupDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, 
     var exportKind by rememberSaveable { mutableStateOf<ExportKind?>(null) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(viewModel) {
-        viewModel.messages.collect { m ->
-            val text = when (m) {
-                DataMessage.BackupCreated -> resources.getString(R.string.backup_created)
-                DataMessage.BackupFailed -> resources.getString(R.string.backup_failed)
-                is DataMessage.Restored -> {
-                    // The restored language must also become the app's language (it drives
-                    // resources, not just the stored preference).
-                    val tag = m.language.tag
-                    if (AppCompatDelegate.getApplicationLocales().toLanguageTags() != tag) {
-                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tag))
-                    }
-                    resources.getString(R.string.backup_restored)
-                }
-                is DataMessage.RestoreError -> resources.getString(restoreErrorMessage(m.error))
-                is DataMessage.Exported -> resources.getQuantityString(R.plurals.export_done, m.count, numbers.format(m.count))
-                DataMessage.ExportFailed -> resources.getString(R.string.export_failed)
-                is DataMessage.Imported -> resources.getString(R.string.import_done, numbers.format(m.imported), numbers.format(m.skipped))
-                DataMessage.ImportFailed -> resources.getString(R.string.import_failed)
-                DataMessage.Deleted -> resources.getString(R.string.data_deleted)
-            }
-            snackbarHostState.showSnackbar(text)
+    // Restore or delete-all must finish (and report) before the screen can be left.
+    BackHandler(enabled = state.busy) {}
+    val message = state.message
+    LaunchedEffect(message) {
+        val m = message ?: return@LaunchedEffect
+        val text = when (m) {
+            DataMessage.BackupCreated -> resources.getString(R.string.backup_created)
+            DataMessage.BackupFailed -> resources.getString(R.string.backup_failed)
+            // The restored language itself is applied by MainActivity, which follows the stored preference.
+            is DataMessage.Restored -> resources.getString(R.string.backup_restored)
+            is DataMessage.RestoreError -> resources.getString(restoreErrorMessage(m.error))
+            is DataMessage.Exported -> resources.getQuantityString(R.plurals.export_done, m.count, numbers.format(m.count))
+            DataMessage.ExportFailed -> resources.getString(R.string.export_failed)
+            is DataMessage.Imported -> resources.getString(R.string.import_done, numbers.format(m.imported), numbers.format(m.skipped))
+            DataMessage.ImportFailed -> resources.getString(R.string.import_failed)
+            DataMessage.Deleted -> resources.getString(R.string.data_deleted)
         }
+        viewModel.messageShown(m)
+        snackbarHostState.showSnackbar(text)
     }
 
     val createBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(BackupFormat.MIME)) { uri ->
@@ -97,7 +92,7 @@ fun BackupDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, 
     val stamp = PlannerLocals.today.toString()
 
     Column(Modifier.fillMaxSize()) {
-        PlannerTopBar(stringResource(R.string.backup_title), onBack = onBack)
+        PlannerTopBar(stringResource(R.string.backup_title), onBack = { if (!state.busy) onBack() })
         if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         LazyColumn(
             contentPadding = PaddingValues(start = Spacing.screen, end = Spacing.screen, bottom = 48.dp),
@@ -137,7 +132,7 @@ fun BackupDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, 
             item { Text(stringResource(R.string.data_archived_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             item {
                 SettingsRow(stringResource(R.string.data_delete_all), icon = Icons.Rounded.DeleteForever, subtitle = stringResource(R.string.data_delete_all_summary),
-                    onClick = { confirmDelete = true })
+                    onClick = { if (!state.busy) confirmDelete = true })
             }
         }
     }

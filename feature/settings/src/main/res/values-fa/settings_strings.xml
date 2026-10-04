@@ -10,7 +10,7 @@
     <string name="settings_calendar_system">نوع تقویم</string>
     <string name="settings_calendar_jalali">هجری شمسی</string>
     <string name="settings_calendar_gregorian">میلادی</string>
-    <string name="settings_calendar_auto">پیش‌فرض زبان · %1$s</string>
+    <string name="settings_calendar_auto">پیش‌فرض زبان، %1$s</string>
     <string name="settings_first_day">اولین روز هفته</string>
     <string name="settings_first_day_auto">پیش‌فرض تقویم (%1$s)</string>
     <string name="settings_number_format">اعداد</string>
