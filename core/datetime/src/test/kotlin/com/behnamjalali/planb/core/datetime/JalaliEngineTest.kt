@@ -104,4 +104,14 @@ class JalaliEngineTest {
         assertThat(cells.count { it.inMonth }).isEqualTo(28)
         assertThat(cells.last().date.dayOfWeek).isEqualTo(DayOfWeek.SUNDAY)
     }
+
+    @Test
+    fun monthGrid_fourWeekMonth_stillHasFiveRows() {
+        // February 2021 starts on Monday and has 28 days: exactly four weeks.
+        val grid = MonthGrid.build(GregorianEngine, CalendarMonth(2021, 2), DayOfWeek.MONDAY)
+        assertThat(grid).hasSize(5)
+        assertThat(grid.first().first().date).isEqualTo(LocalDate.of(2021, 2, 1))
+        assertThat(grid.last().none { it.inMonth }).isTrue()
+        assertThat(grid.last().last().date).isEqualTo(LocalDate.of(2021, 3, 7))
+    }
 }

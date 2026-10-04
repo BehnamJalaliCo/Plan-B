@@ -69,16 +69,22 @@ object GregorianEngine : CalendarEngine {
 
 /** Builds the visible weeks of a month grid starting on [firstDayOfWeek]. */
 object MonthGrid {
+    private const val MIN_ROWS = 5
+
     data class Cell(val date: LocalDate, val inMonth: Boolean)
 
-    /** Always returns full weeks (5 or 6 rows) including adjacent-month days. */
+    /**
+     * Always returns full weeks (5 or 6 rows) including adjacent-month days. A 28-day month
+     * that starts on [firstDayOfWeek] fits in 4 weeks; it gets a fifth row of next-month days
+     * so the grid height stays stable.
+     */
     fun build(engine: CalendarEngine, month: CalendarMonth, firstDayOfWeek: DayOfWeek): List<List<Cell>> {
         val first = engine.firstDayOfMonth(month)
         val last = engine.lastDayOfMonth(month)
         val leading = Math.floorMod(first.dayOfWeek.value - firstDayOfWeek.value, 7)
         var cursor = first.minusDays(leading.toLong())
         val weeks = ArrayList<List<Cell>>(6)
-        while (cursor <= last) {
+        while (cursor <= last || weeks.size < MIN_ROWS) {
             val week = ArrayList<Cell>(7)
             repeat(7) {
                 week += Cell(cursor, cursor in first..last)
