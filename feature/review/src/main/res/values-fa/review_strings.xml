@@ -20,4 +20,9 @@
     <string name="review_next_none">هنوز برای هفتهٔ بعد چیزی برنامه‌ریزی نشده.</string>
     <string name="review_error">ساخت مرور ممکن نشد.</string>
     <string name="review_habit_average">میانگین انجام عادت‌ها</string>
+    <string name="review_export_pdf">خروجی PDF</string>
+    <string name="review_pdf_saved">فایل PDF ذخیره شد</string>
+    <string name="review_pdf_failed">ذخیرهٔ فایل PDF ممکن نشد.</string>
+    <string name="review_file_name">مرور هفتگی Plan-B %1$s.pdf</string>
+    <string name="review_pdf_footer">Plan-B · ساخته‌شده روی دستگاه شما</string>
 </resources>

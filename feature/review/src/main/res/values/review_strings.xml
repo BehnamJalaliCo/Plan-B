@@ -20,4 +20,9 @@
     <string name="review_next_none">Nothing scheduled yet for next week.</string>
     <string name="review_error">Could not build the review.</string>
     <string name="review_habit_average">Average habit completion</string>
+    <string name="review_export_pdf">Export as PDF</string>
+    <string name="review_pdf_saved">PDF saved</string>
+    <string name="review_pdf_failed">The PDF could not be saved.</string>
+    <string name="review_file_name">Plan-B weekly review %1$s.pdf</string>
+    <string name="review_pdf_footer">Plan-B · made on your device</string>
 </resources>

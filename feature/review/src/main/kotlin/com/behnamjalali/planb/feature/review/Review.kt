@@ -14,7 +14,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import android.widget.Toast
+import androidx.compose.material.icons.rounded.PictureAsPdf
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalResources
+import com.behnamjalali.planb.core.designsystem.component.PlannerButton
+import com.behnamjalali.planb.core.designsystem.component.PlannerButtonStyle
+import com.behnamjalali.planb.core.ui.LocalProAccess
+import com.behnamjalali.planb.core.ui.ProBadge
+import com.behnamjalali.planb.core.ui.ProFeature
+import com.behnamjalali.planb.core.ui.pdf.rememberPdfExport
+import com.behnamjalali.planb.core.ui.rememberProGuard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -117,7 +129,21 @@ fun ReviewDestination(onBack: () -> Unit, onOpenTask: (Long) -> Unit, viewModel:
     val owner = LocalLifecycleOwner.current
     // Recomputed whenever the screen resumes so it reflects the latest data.
     LaunchedEffect(owner) { owner.repeatOnLifecycle(Lifecycle.State.RESUMED) { viewModel.refresh() } }
-    ReviewScreen(state, onBack, viewModel::page, onOpenTask, viewModel::setTaskCompleted)
+    // PDF export of the review (Plan-B Pro #31); saved where the user chooses (no permission).
+    val context = LocalContext.current
+    val resources = LocalResources.current
+    val formatter = PlannerLocals.formatter
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val guard = rememberProGuard()
+    val export = rememberPdfExport(
+        report = { (state as? ReviewUiState.Ready)?.let { ReviewPdf.build(resources, it.review, formatter, rtl) } },
+        onResult = { ok -> Toast.makeText(context, if (ok) R.string.review_pdf_saved else R.string.review_pdf_failed, Toast.LENGTH_SHORT).show() },
+    )
+    ReviewScreen(state, onBack, viewModel::page, onOpenTask, viewModel::setTaskCompleted) {
+        (state as? ReviewUiState.Ready)?.let { ready ->
+            guard.run(ProFeature.REPORTS) { export(resources.getString(R.string.review_file_name, ReviewPdf.weekRange(ready.review, formatter))) }
+        }
+    }
 }
 
 @Composable
@@ -127,6 +153,7 @@ fun ReviewScreen(
     onPage: (Int) -> Unit,
     onOpenTask: (Long) -> Unit,
     onToggleTask: (Long, Boolean) -> Unit = { _, _ -> },
+    onExportPdf: () -> Unit = {},
 ) {
     val formatter = PlannerLocals.formatter
     val numbers = PlannerLocals.numbers
@@ -220,6 +247,12 @@ fun ReviewScreen(
                     item(key = "next_h") { PlannerSectionHeader(stringResource(R.string.review_next)) }
                     if (r.nextWeekPriorities.isEmpty()) item(key = "next_e") { Text(stringResource(R.string.review_next_none)) }
                     items(r.nextWeekPriorities, key = { "n${it.id}" }) { t -> PlannerTaskCard(t, { done -> onToggleTask(t.id, done) }, onClick = { onOpenTask(t.id) }) }
+                    item(key = "export") {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                            PlannerButton(stringResource(R.string.review_export_pdf), onExportPdf, style = PlannerButtonStyle.Tonal, icon = Icons.Rounded.PictureAsPdf)
+                            if (!LocalProAccess.current.isPro) ProBadge()
+                        }
+                    }
                 }
             }
         }
