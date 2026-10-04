@@ -431,6 +431,8 @@ class AppScreenshotTest(private val variant: Variant) {
         capture("settings", "settings")
         click(s(SettingsR.string.settings_backup_restore))
         waitFor(hasText(s(SettingsR.string.backup_create)))
+        // The automatic-backup section appears once its device-only settings are read.
+        waitFor(hasText(s(SettingsR.string.auto_backup_summary)))
         capture("settings", "backup")
     }
 
