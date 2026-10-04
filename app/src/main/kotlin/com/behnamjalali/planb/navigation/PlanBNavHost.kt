@@ -41,6 +41,8 @@ import com.behnamjalali.planb.feature.notebooks.NotebookDetailDestination
 import com.behnamjalali.planb.feature.notebooks.NotebookDetailRoute
 import com.behnamjalali.planb.feature.notebooks.NotebooksDestination
 import com.behnamjalali.planb.feature.notebooks.NotebooksRoute
+import com.behnamjalali.planb.feature.pro.PaywallDestination
+import com.behnamjalali.planb.feature.pro.PaywallRoute
 import com.behnamjalali.planb.feature.projects.ProjectDetailDestination
 import com.behnamjalali.planb.feature.projects.ProjectDetailRoute
 import com.behnamjalali.planb.feature.projects.ProjectEditorDestination
@@ -248,8 +250,14 @@ fun PlanBNavHost(
         }
         composable<SettingsRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
-            SettingsDestination(onBack = nav.back, onOpen = { nav.navigate(it) }, onCustomizeToday = onCustomizeToday)
+            SettingsDestination(
+                onBack = nav.back,
+                onOpen = { nav.navigate(it) },
+                onOpenPro = { nav.navigate(PaywallRoute()) },
+                onCustomizeToday = onCustomizeToday,
+            )
         }
+        composable<PaywallRoute> { entry -> PaywallDestination(onBack = rememberScreenNavigator(navController, entry).back) }
         composable<BackupRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
             BackupDestination(onBack = nav.back, snackbarHostState = snackbarHostState)

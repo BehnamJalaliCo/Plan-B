@@ -36,7 +36,14 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.behnamjalali.planb.ProStatusViewModel
 import com.behnamjalali.planb.R
+import com.behnamjalali.planb.core.ui.LocalProAccess
+import com.behnamjalali.planb.core.ui.ProAccess
+import com.behnamjalali.planb.feature.pro.PaywallRoute
 import com.behnamjalali.planb.core.designsystem.component.PlannerFAB
 import com.behnamjalali.planb.core.designsystem.component.PlannerNavItem
 import com.behnamjalali.planb.core.designsystem.component.PlannerNavigationBar
@@ -58,6 +65,7 @@ fun PlanBApp(
     onLinkHandled: () -> Unit,
     onOnboardingDone: () -> Unit,
     navController: NavHostController = rememberNavController(),
+    proStatus: ProStatusViewModel = hiltViewModel(),
 ) {
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -79,66 +87,73 @@ fun PlanBApp(
         }
     }
 
-    Scaffold(
-        // Test tags double as resource ids so UiAutomator (benchmarks, baseline profiles) can find them.
-        modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true },
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0),
-        snackbarHost = { SnackbarHost(snackbar) },
-        floatingActionButton = {
-            AnimatedVisibility(current != null && current.showsCapture, enter = scaleIn() + fadeIn(), exit = scaleOut() + fadeOut()) {
-                PlannerFAB(Icons.Rounded.Add, stringResource(R.string.quick_capture), { capturing = true }, Modifier.testTag("quick_capture"))
-            }
-        },
-        bottomBar = {
-            if (current != null) {
-                PlannerNavigationBar(
-                    items = TopLevelDestination.entries.map {
-                        PlannerNavItem(stringResource(it.label), it.icon, it.selectedIcon, testTag = "nav_${it.name.lowercase()}")
-                    },
-                    selectedIndex = current.ordinal,
-                    onSelect = { index ->
-                        val target = TopLevelDestination.entries[index]
-                        navController.navigate(target.route) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                )
-            }
-        },
-    ) { padding ->
-        PlanBNavHost(
-            navController = navController,
-            snackbarHostState = snackbar,
-            contentPadding = PaddingValues(bottom = padding.calculateBottomPadding()),
-            openTodayCustomizer = customizeToday,
-            onTodayCustomizerOpened = { customizeToday = false },
-            onCustomizeToday = {
-                customizeToday = true
-                navController.navigateTopLevel(TopLevelDestination.TODAY)
-            },
-        )
+    val isPro by proStatus.isPro.collectAsStateWithLifecycle()
+    // Feature screens gate Pro actions through this; the Pro screen opens only on the user's tap.
+    val proAccess = remember(isPro, navController) {
+        ProAccess(isPro = isPro, openPaywall = { feature -> navController.navigate(PaywallRoute(feature?.id)) })
     }
-
-    if (capturing) {
-        QuickCaptureSheet(
-            onDismiss = { capturing = false },
-            onSaved = { type: CaptureType, id ->
-                capturing = false
-                scope.launch {
-                    val result = snackbar.showSnackbar(
-                        message = resources.getString(captureSavedMessage(type)),
-                        actionLabel = resources.getString(com.behnamjalali.planb.feature.today.R.string.capture_open),
-                        duration = SnackbarDuration.Short,
-                    )
-                    if (result == SnackbarResult.ActionPerformed) navController.openCaptured(type, id)
+    CompositionLocalProvider(LocalProAccess provides proAccess) {
+        Scaffold(
+            // Test tags double as resource ids so UiAutomator (benchmarks, baseline profiles) can find them.
+            modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true },
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0),
+            snackbarHost = { SnackbarHost(snackbar) },
+            floatingActionButton = {
+                AnimatedVisibility(current != null && current.showsCapture, enter = scaleIn() + fadeIn(), exit = scaleOut() + fadeOut()) {
+                    PlannerFAB(Icons.Rounded.Add, stringResource(R.string.quick_capture), { capturing = true }, Modifier.testTag("quick_capture"))
                 }
             },
-            onFailed = {
-                scope.launch { snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.feature.today.R.string.capture_failed)) }
+            bottomBar = {
+                if (current != null) {
+                    PlannerNavigationBar(
+                        items = TopLevelDestination.entries.map {
+                            PlannerNavItem(stringResource(it.label), it.icon, it.selectedIcon, testTag = "nav_${it.name.lowercase()}")
+                        },
+                        selectedIndex = current.ordinal,
+                        onSelect = { index ->
+                            val target = TopLevelDestination.entries[index]
+                            navController.navigate(target.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                    )
+                }
             },
-        )
+        ) { padding ->
+            PlanBNavHost(
+                navController = navController,
+                snackbarHostState = snackbar,
+                contentPadding = PaddingValues(bottom = padding.calculateBottomPadding()),
+                openTodayCustomizer = customizeToday,
+                onTodayCustomizerOpened = { customizeToday = false },
+                onCustomizeToday = {
+                    customizeToday = true
+                    navController.navigateTopLevel(TopLevelDestination.TODAY)
+                },
+            )
+        }
+
+        if (capturing) {
+            QuickCaptureSheet(
+                onDismiss = { capturing = false },
+                onSaved = { type: CaptureType, id ->
+                    capturing = false
+                    scope.launch {
+                        val result = snackbar.showSnackbar(
+                            message = resources.getString(captureSavedMessage(type)),
+                            actionLabel = resources.getString(com.behnamjalali.planb.feature.today.R.string.capture_open),
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) navController.openCaptured(type, id)
+                    }
+                },
+                onFailed = {
+                    scope.launch { snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.feature.today.R.string.capture_failed)) }
+                },
+            )
+        }
     }
 }

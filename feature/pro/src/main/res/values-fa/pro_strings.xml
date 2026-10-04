@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pro_title">Plan-B Pro</string>
+    <string name="pro_hero_title">با Plan-B Pro کارهای بیشتری انجام دهید</string>
+    <string name="pro_hero_body">هر چه امروز استفاده می‌کنید برای همیشه رایگان می‌ماند. نسخهٔ پرو %1$s ابزار تازه برای برنامه‌ریزی، یادداشت، عادت‌ها و بیشتر اضافه می‌کند.</string>
+    <string name="pro_focus_label">با نسخهٔ پرو فعال می‌شود</string>
+    <string name="pro_plan_lifetime">مادام‌العمر</string>
+    <string name="pro_plan_lifetime_sub">یک بار پرداخت، برای همیشه</string>
+    <string name="pro_plan_monthly">ماهانه</string>
+    <string name="pro_plan_monthly_sub">هر ماه تمدید می‌شود · لغو در هر زمان</string>
+    <string name="pro_recommended">به‌صرفه‌ترین</string>
+    <string name="pro_price_toman">%1$s تومان</string>
+    <string name="pro_buy_lifetime">خرید نسخهٔ پرو مادام‌العمر</string>
+    <string name="pro_buy_monthly">خرید اشتراک ماهانه</string>
+    <string name="pro_purchasing">در انتظار کافه‌بازار…</string>
+    <string name="pro_restore">بازیابی خریدها</string>
+    <string name="pro_legal">پرداخت از طریق کافه‌بازار انجام می‌شود. اشتراک ماهانه هر ماه تمدید می‌شود تا وقتی آن را در برنامهٔ کافه‌بازار لغو کنید.</string>
+    <string name="pro_features_title">امکانات نسخهٔ پرو</string>
+    <string name="pro_state_loading">در حال اتصال به کافه‌بازار…</string>
+    <string name="pro_state_no_bazaar_title">برای خرید به کافه‌بازار نیاز است</string>
+    <string name="pro_state_no_bazaar_body">برای خرید Plan-B Pro برنامهٔ کافه‌بازار را نصب یا به‌روز کنید. بقیهٔ امکانات مثل قبل کار می‌کنند.</string>
+    <string name="pro_state_not_configured_title">خرید در این نسخه در دسترس نیست</string>
+    <string name="pro_state_not_configured_body">این نسخه از Plan-B امکان خرید ندارد. برای دریافت نسخهٔ پرو، Plan-B را از کافه‌بازار نصب کنید.</string>
+    <string name="pro_state_unavailable_title">در این لحظه ارتباط با کافه‌بازار برقرار نشد</string>
+    <string name="pro_state_unavailable_body">کمی بعد دوباره امتحان کنید. قیمت‌های زیر برای راهنمایی است.</string>
+    <string name="pro_retry">تلاش دوباره</string>
+    <string name="pro_success_title">به Plan-B Pro خوش آمدید</string>
+    <string name="pro_success_body">از حمایت شما از Plan-B سپاسگزاریم. همهٔ امکانات پرو اکنون فعال است.</string>
+    <string name="pro_active_title">Plan-B Pro شما فعال است</string>
+    <string name="pro_active_lifetime">مادام‌العمر — از حمایت شما سپاسگزاریم</string>
+    <string name="pro_active_monthly">اشتراک ماهانه</string>
+    <string name="pro_manage_monthly">برای تغییر یا لغو اشتراک، بخش برنامه‌های من را در کافه‌بازار باز کنید.</string>
+    <string name="pro_msg_restored">خرید شما بازیابی شد.</string>
+    <string name="pro_msg_nothing">برای این حساب کافه‌بازار خریدی از Plan-B Pro پیدا نشد.</string>
+    <string name="pro_msg_cancelled">خرید لغو شد.</string>
+    <string name="pro_msg_error">خرید انجام نشد. لطفاً دوباره امتحان کنید.</string>
+    <string name="pro_msg_verification">خرید تأیید نشد. اگر مبلغی پرداخت کرده‌اید، «بازیابی خریدها» را بزنید.</string>
+    <string name="pro_dismiss">باشه</string>
+    <string name="pro_feature_unlocked">فعال</string>
+    <string name="pro_msg_restore_failed">در این لحظه بررسی خریدها ممکن نشد. مطمئن شوید کافه‌بازار نصب است و دوباره امتحان کنید.</string>
+</resources>

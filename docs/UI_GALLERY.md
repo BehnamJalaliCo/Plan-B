@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **164**.
+Total screenshots: **170**.
 
 
 ## Today
@@ -215,3 +215,11 @@ Total screenshots: **164**.
 | launcher icon themed |
 |---|
 | <img src="../artifacts/screenshots/icon/launcher_icon_themed.png" width="220"/> |
+
+## Pro
+
+### `paywall`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/pro/paywall_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_en_light.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/pro/paywall_en_light_font150.png" width="220"/> |

@@ -122,6 +122,7 @@ dependencies {
     implementation(projects.feature.templates)
     implementation(projects.feature.review)
     implementation(projects.feature.settings)
+    implementation(projects.feature.pro)
     implementation(projects.core.backup)
     implementation(projects.core.billing)
     implementation(projects.core.ai)

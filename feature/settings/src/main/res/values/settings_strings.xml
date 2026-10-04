@@ -115,4 +115,10 @@
     <string name="settings_cal_month">Month</string>
     <string name="settings_cal_agenda">Agenda</string>
     <string name="app_display_name" translatable="false">Plan-B</string>
+    <string name="settings_pro">Plan-B Pro</string>
+    <string name="settings_pro_upgrade">Upgrade · %1$s new tools, free features stay free</string>
+    <string name="settings_pro_monthly">Active · monthly subscription</string>
+    <string name="settings_pro_lifetime">Active · lifetime</string>
+    <string name="settings_developer_title">Developer: Plan-B Pro (debug builds only)</string>
+    <string name="settings_developer_none">Not Pro</string>
 </resources>

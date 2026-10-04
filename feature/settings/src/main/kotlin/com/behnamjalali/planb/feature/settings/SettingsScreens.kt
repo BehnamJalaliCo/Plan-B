@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -49,6 +50,7 @@ import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.ViewDay
+import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
@@ -93,10 +95,15 @@ import com.behnamjalali.planb.core.model.NumberFormatMode
 import com.behnamjalali.planb.core.model.TaskView
 import com.behnamjalali.planb.core.model.ThemeMode
 import com.behnamjalali.planb.core.model.UserSettings
+import com.behnamjalali.planb.core.billing.ProProduct
 import com.behnamjalali.planb.core.ui.PlannerLocals
+import com.behnamjalali.planb.core.ui.ProFeature
 import com.behnamjalali.planb.core.ui.ReminderOffsets
 import com.behnamjalali.planb.core.ui.reminderLabel
 import java.time.DayOfWeek
+
+/** Plan-B Pro status shown in the first Settings row. */
+enum class ProStatus { FREE, MONTHLY, LIFETIME }
 
 /** A single-choice option for [ChoiceDialog]. */
 data class Choice<T>(val value: T, val label: String)
@@ -146,10 +153,12 @@ private fun SwitchRow(title: String, subtitle: String, icon: androidx.compose.ui
 fun SettingsDestination(
     onBack: () -> Unit,
     onOpen: (Any) -> Unit,
+    onOpenPro: () -> Unit,
     onCustomizeToday: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.state.collectAsStateWithLifecycle()
+    val entitlement by viewModel.entitlement.collectAsStateWithLifecycle()
     val s = settings
     if (s == null) {
         PlannerLoadingState()
@@ -163,6 +172,12 @@ fun SettingsDestination(
         onOpen = onOpen,
         onCustomizeToday = onCustomizeToday,
         onUpdate = viewModel::update,
+        proStatus = when {
+            !entitlement.isPro -> ProStatus.FREE
+            entitlement.product == ProProduct.LIFETIME -> ProStatus.LIFETIME
+            else -> ProStatus.MONTHLY
+        },
+        onOpenPro = onOpenPro,
         onLanguage = { language ->
             viewModel.update { it.copy(language = language) }
             AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.tag))
@@ -180,6 +195,8 @@ fun SettingsScreen(
     onCustomizeToday: () -> Unit,
     onUpdate: ((UserSettings) -> UserSettings) -> Unit,
     onLanguage: (AppLanguage) -> Unit,
+    proStatus: ProStatus = ProStatus.FREE,
+    onOpenPro: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -212,6 +229,18 @@ fun SettingsScreen(
             contentPadding = PaddingValues(start = Spacing.screen, end = Spacing.screen, bottom = 48.dp),
             verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
+            item {
+                SettingsRow(
+                    stringResource(R.string.settings_pro),
+                    icon = Icons.Rounded.WorkspacePremium,
+                    subtitle = when (proStatus) {
+                        ProStatus.FREE -> stringResource(R.string.settings_pro_upgrade, numbers.format(ProFeature.entries.size))
+                        ProStatus.MONTHLY -> stringResource(R.string.settings_pro_monthly)
+                        ProStatus.LIFETIME -> stringResource(R.string.settings_pro_lifetime)
+                    },
+                    onClick = onOpenPro,
+                )
+            }
             item { PlannerSectionHeader(stringResource(R.string.settings_language)) }
             item {
                 SettingsRow(
@@ -431,14 +460,20 @@ fun calendarViewName(view: CalendarView): String = stringResource(
 )
 
 @Composable
-fun TextScreen(title: String, body: List<String>, onBack: () -> Unit, footer: @Composable () -> Unit = {}) {
+fun TextScreen(
+    title: String,
+    body: List<String>,
+    onBack: () -> Unit,
+    bodyModifier: (index: Int) -> Modifier = { Modifier },
+    footer: @Composable () -> Unit = {},
+) {
     Column(Modifier.fillMaxSize()) {
         PlannerTopBar(title, onBack = onBack)
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.screen),
             verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
-            body.forEach { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            body.forEachIndexed { index, text -> Text(text, style = MaterialTheme.typography.bodyLarge, modifier = bodyModifier(index)) }
             footer()
         }
     }
@@ -451,6 +486,20 @@ fun PrivacyDestination(onBack: () -> Unit) =
 @Composable
 fun AboutDestination(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
     val numbers = PlannerLocals.numbers
+    var developerDialog by rememberSaveable { mutableStateOf(false) }
+    if (developerDialog) {
+        val entitlement by viewModel.entitlement.collectAsStateWithLifecycle()
+        ChoiceDialog(
+            stringResource(R.string.settings_developer_title),
+            listOf<Choice<ProProduct?>>(
+                Choice(null, stringResource(R.string.settings_developer_none)),
+                Choice(ProProduct.MONTHLY, stringResource(R.string.settings_pro_monthly)),
+                Choice(ProProduct.LIFETIME, stringResource(R.string.settings_pro_lifetime)),
+            ),
+            entitlement.product.takeIf { entitlement.isPro },
+            viewModel::setDeveloperPro,
+        ) { developerDialog = false }
+    }
     TextScreen(
         stringResource(R.string.about_title),
         listOf(
@@ -460,6 +509,14 @@ fun AboutDestination(onBack: () -> Unit, viewModel: SettingsViewModel = hiltView
             stringResource(R.string.about_developer),
         ),
         onBack,
+        // Debug builds only: a long press on the version opens the developer section.
+        bodyModifier = { index ->
+            if (index == 1 && viewModel.developerOptions) {
+                Modifier.combinedClickable(onClick = {}, onLongClick = { developerDialog = true })
+            } else {
+                Modifier
+            }
+        },
     ) {
         val context = LocalContext.current
         val noEmailApp = stringResource(R.string.about_no_email_app, SUPPORT_EMAIL)

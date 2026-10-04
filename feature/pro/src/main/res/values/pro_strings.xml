@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pro_title">Plan-B Pro</string>
+    <string name="pro_hero_title">Do more with Plan-B Pro</string>
+    <string name="pro_hero_body">Everything you use today stays free, forever. Pro adds %1$s new tools for planning, notes, habits and more.</string>
+    <string name="pro_focus_label">Unlocks with Pro</string>
+    <string name="pro_plan_lifetime">Lifetime</string>
+    <string name="pro_plan_lifetime_sub">Pay once, yours for good</string>
+    <string name="pro_plan_monthly">Monthly</string>
+    <string name="pro_plan_monthly_sub">Renews every month · cancel anytime</string>
+    <string name="pro_recommended">Best value</string>
+    <string name="pro_price_toman">%1$s Toman</string>
+    <string name="pro_buy_lifetime">Buy lifetime Pro</string>
+    <string name="pro_buy_monthly">Subscribe monthly</string>
+    <string name="pro_purchasing">Waiting for Cafe Bazaar…</string>
+    <string name="pro_restore">Restore purchases</string>
+    <string name="pro_legal">Payment is made through Cafe Bazaar. The monthly plan renews every month until you cancel it in the Cafe Bazaar app.</string>
+    <string name="pro_features_title">What Pro includes</string>
+    <string name="pro_state_loading">Connecting to Cafe Bazaar…</string>
+    <string name="pro_state_no_bazaar_title">Cafe Bazaar is needed</string>
+    <string name="pro_state_no_bazaar_body">Install or update the Cafe Bazaar app to buy Plan-B Pro. Everything else keeps working as before.</string>
+    <string name="pro_state_not_configured_title">Purchases aren’t available in this version</string>
+    <string name="pro_state_not_configured_body">This build of Plan-B can’t make purchases. Install Plan-B from Cafe Bazaar to get Pro.</string>
+    <string name="pro_state_unavailable_title">Cafe Bazaar can’t be reached right now</string>
+    <string name="pro_state_unavailable_body">Please try again in a moment. The prices below are for reference.</string>
+    <string name="pro_retry">Try again</string>
+    <string name="pro_success_title">Welcome to Plan-B Pro</string>
+    <string name="pro_success_body">Thank you for supporting Plan-B. Every Pro feature is now unlocked.</string>
+    <string name="pro_active_title">You have Plan-B Pro</string>
+    <string name="pro_active_lifetime">Lifetime — thank you for your support</string>
+    <string name="pro_active_monthly">Monthly subscription</string>
+    <string name="pro_manage_monthly">To change or cancel the subscription, open My apps in Cafe Bazaar.</string>
+    <string name="pro_msg_restored">Your purchase has been restored.</string>
+    <string name="pro_msg_nothing">No Plan-B Pro purchase was found for this Cafe Bazaar account.</string>
+    <string name="pro_msg_cancelled">The purchase was cancelled.</string>
+    <string name="pro_msg_error">The purchase couldn’t be completed. Please try again.</string>
+    <string name="pro_msg_verification">The purchase couldn’t be verified. If you were charged, tap Restore purchases.</string>
+    <string name="pro_dismiss">OK</string>
+    <string name="pro_feature_unlocked">Included</string>
+    <string name="pro_msg_restore_failed">Purchases couldn’t be checked right now. Make sure Cafe Bazaar is installed and try again.</string>
+</resources>

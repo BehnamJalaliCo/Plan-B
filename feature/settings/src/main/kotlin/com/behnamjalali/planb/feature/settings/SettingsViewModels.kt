@@ -8,6 +8,10 @@ import com.behnamjalali.planb.core.backup.BackupArchive
 import com.behnamjalali.planb.core.backup.BackupException
 import com.behnamjalali.planb.core.backup.BackupManager
 import com.behnamjalali.planb.core.backup.DataTransfer
+import com.behnamjalali.planb.core.billing.DeveloperBilling
+import com.behnamjalali.planb.core.billing.Entitlement
+import com.behnamjalali.planb.core.billing.EntitlementRepository
+import com.behnamjalali.planb.core.billing.ProProduct
 import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
@@ -35,8 +39,18 @@ import kotlinx.serialization.Serializable
 class SettingsViewModel @Inject constructor(
     private val settings: SettingsRepository,
     val version: AppVersion,
+    entitlements: EntitlementRepository,
+    private val developer: DeveloperBilling,
 ) : ViewModel() {
     val state: StateFlow<UserSettings?> = settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** Plan-B Pro status for the row at the top of Settings. */
+    val entitlement: StateFlow<Entitlement> = entitlements.entitlement.stateIn(viewModelScope, SharingStarted.Eagerly, Entitlement.NONE)
+
+    /** True only in debug builds: the hidden developer section can switch Pro on and off. */
+    val developerOptions: Boolean get() = developer.enabled
+
+    fun setDeveloperPro(product: ProProduct?) = developer.setOwned(product)
 
     fun update(transform: (UserSettings) -> UserSettings) {
         viewModelScope.launch { settings.update(transform) }

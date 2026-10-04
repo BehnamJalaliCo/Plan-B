@@ -36,4 +36,7 @@
     <string name="onboarding_3_title">یادآورهای ملایم</string>
     <string name="onboarding_3_body">برای هر کار، رویداد یا عادت یادآور بگذارید. Plan-B فقط وقتی اولین یادآور را تنظیم می‌کنید اجازهٔ اعلان می‌خواهد.</string>
     <string name="onboarding_page">صفحهٔ %1$s از %2$s</string>
+    <string name="more_section_pro">Plan-B Pro</string>
+    <string name="more_pro">Plan-B Pro</string>
+    <string name="more_pro_sub">ابزارهای تازه برای برنامه‌ریزی، یادداشت و عادت‌ها</string>
 </resources>

@@ -69,6 +69,7 @@ import com.behnamjalali.planb.feature.calendar.R as CalendarR
 import com.behnamjalali.planb.feature.notebooks.R as NotesR
 import com.behnamjalali.planb.feature.focus.R as FocusR
 import com.behnamjalali.planb.feature.habits.R as HabitsR
+import com.behnamjalali.planb.feature.pro.R as ProR
 import com.behnamjalali.planb.feature.projects.R as ProjectsR
 import com.behnamjalali.planb.feature.review.R as ReviewR
 import com.behnamjalali.planb.feature.settings.R as SettingsR
@@ -423,6 +424,18 @@ class AppScreenshotTest(private val variant: Variant) {
         click(s(SettingsR.string.settings_about))
         waitFor(hasText(s(SettingsR.string.about_developer)))
         capture("settings", "about")
+    }
+
+    @Test
+    fun paywall() {
+        launch()
+        click(s(AppR.string.nav_more))
+        waitFor(hasText(s(AppR.string.more_projects_sub)))
+        click(s(AppR.string.more_pro_sub))
+        waitFor(hasText(s(ProR.string.pro_hero_title)))
+        // Wait until the (fake) store has answered, so the plans are enabled.
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText(s(ProR.string.pro_state_loading))).fetchSemanticsNodes().isEmpty() }
+        capture("pro", "paywall")
     }
 
     @Test

@@ -37,4 +37,7 @@
     <string name="onboarding_3_title">Gentle reminders</string>
     <string name="onboarding_3_body">Add a reminder to any task, event or habit. Plan-B asks for notification permission only when you set your first reminder.</string>
     <string name="onboarding_page">Page %1$s of %2$s</string>
+    <string name="more_section_pro">Plan-B Pro</string>
+    <string name="more_pro">Plan-B Pro</string>
+    <string name="more_pro_sub">New tools for planning, notes and habits</string>
 </resources>

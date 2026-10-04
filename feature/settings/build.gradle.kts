@@ -8,5 +8,6 @@ android {
 
 dependencies {
     implementation(projects.core.backup)
+    implementation(projects.core.billing)
     implementation(libs.androidx.appcompat)
 }

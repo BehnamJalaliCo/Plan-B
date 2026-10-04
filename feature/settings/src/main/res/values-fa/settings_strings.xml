@@ -110,4 +110,10 @@
     <string name="settings_cal_week">هفته</string>
     <string name="settings_cal_month">ماه</string>
     <string name="settings_cal_agenda">برنامه</string>
+    <string name="settings_pro">Plan-B Pro</string>
+    <string name="settings_pro_upgrade">ارتقا · %1$s ابزار تازه؛ امکانات فعلی همچنان رایگان</string>
+    <string name="settings_pro_monthly">فعال · اشتراک ماهانه</string>
+    <string name="settings_pro_lifetime">فعال · مادام‌العمر</string>
+    <string name="settings_developer_title">توسعه‌دهنده: Plan-B Pro (فقط نسخهٔ آزمایشی)</string>
+    <string name="settings_developer_none">بدون پرو</string>
 </resources>

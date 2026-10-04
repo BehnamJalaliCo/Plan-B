@@ -10,10 +10,12 @@ import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.behnamjalali.planb.R
 import com.behnamjalali.planb.feature.focus.FocusRoute
 import com.behnamjalali.planb.feature.goals.GoalsRoute
+import com.behnamjalali.planb.feature.pro.PaywallRoute
 import com.behnamjalali.planb.feature.habits.HabitsRoute
 import com.behnamjalali.planb.feature.projects.ProjectsRoute
 import com.behnamjalali.planb.feature.review.ReviewRoute
@@ -32,6 +34,7 @@ data class MoreEntry(
 /** Secondary destinations, grouped by section. */
 object MoreEntries {
     val all: List<MoreEntry> = listOf(
+        MoreEntry(R.string.more_section_pro, R.string.more_pro, Icons.Rounded.WorkspacePremium, PaywallRoute(), R.string.more_pro_sub),
         MoreEntry(R.string.more_section_plan, R.string.more_projects, Icons.Rounded.RocketLaunch, ProjectsRoute, R.string.more_projects_sub),
         MoreEntry(R.string.more_section_plan, R.string.more_templates, Icons.Rounded.Dashboard, TemplatesRoute, R.string.more_templates_sub),
         MoreEntry(R.string.more_section_plan, R.string.more_search, Icons.Rounded.Search, SearchRoute, R.string.more_search_sub),
