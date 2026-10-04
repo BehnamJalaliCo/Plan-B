@@ -82,6 +82,44 @@ class HabitStatsTest {
     }
 
     @Test
+    fun timesPerWeekRate_ignoresDaysBeforeStart_andUnfinishedToday() {
+        // Started Monday 5 Oct; today is Wednesday 7 Oct, nothing logged today yet.
+        val h = Habit(title = "h", schedule = HabitSchedule.TimesPerWeek(7), startDate = LocalDate.of(2026, 10, 5))
+        val amounts = mapOf(LocalDate.of(2026, 10, 5) to 1, LocalDate.of(2026, 10, 6) to 1)
+        val weekStart = LocalDate.of(2026, 10, 3)
+        assertThat(HabitStats.completionRate(h, amounts, weekStart, today, today)).isWithin(0.001f).of(1f)
+        // Once today is done it counts too.
+        assertThat(HabitStats.completionRate(h, amounts + (today to 1), weekStart, today, today)).isWithin(0.001f).of(1f)
+        // Without "today" (the old contract) the open day still counts against the rate.
+        assertThat(HabitStats.completionRate(h, amounts, weekStart, today)).isWithin(0.001f).of(2f / 3f)
+    }
+
+    @Test
+    fun dailyRate_unfinishedTodayIsNotMissed() {
+        val h = habit()
+        assertThat(HabitStats.completionRate(h, days(1, 2), today.minusDays(2), today, today)).isWithin(0.001f).of(1f)
+        assertThat(HabitStats.completionRate(h, days(1), today.minusDays(2), today, today)).isWithin(0.001f).of(0.5f)
+    }
+
+    @Test
+    fun timesPerWeek_bestStreakInWeeks() {
+        val h = habit(HabitSchedule.TimesPerWeek(2))
+        // Weeks start Saturday. Three good weeks in a row, a gap, then the current week (one so far).
+        val amounts = listOf(
+            LocalDate.of(2026, 8, 29), LocalDate.of(2026, 8, 30),
+            LocalDate.of(2026, 9, 5), LocalDate.of(2026, 9, 6),
+            LocalDate.of(2026, 9, 12), LocalDate.of(2026, 9, 13),
+            LocalDate.of(2026, 9, 26), LocalDate.of(2026, 9, 27),
+            LocalDate.of(2026, 10, 4),
+        ).associateWith { 1 }
+        assertThat(HabitStats.bestStreak(h, amounts, today, DayOfWeek.SATURDAY)).isEqualTo(Streak(3, Streak.Unit.WEEKS))
+        assertThat(HabitStats.bestStreakDays(h, amounts, today, DayOfWeek.SATURDAY)).isEqualTo(3)
+        // The current, unfinished week neither breaks nor (yet) extends the latest run.
+        val current = HabitStats.currentStreak(h, amounts, today, DayOfWeek.SATURDAY)
+        assertThat(current.count).isAtMost(HabitStats.bestStreak(h, amounts, today, DayOfWeek.SATURDAY).count)
+    }
+
+    @Test
     fun scheduleEncoding_roundTrips() {
         listOf(
             HabitSchedule.Daily,

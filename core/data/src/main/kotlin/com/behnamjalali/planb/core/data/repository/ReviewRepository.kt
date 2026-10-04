@@ -52,7 +52,7 @@ internal class OfflineReviewRepository @Inject constructor(
             .filter { it.startDate <= weekEnd }
             .map { habit ->
                 val amounts = completions[habit.id].orEmpty().associate { it.date to it.amount }
-                val rate = if (reviewEnd < weekStart) 0f else HabitStats.completionRate(habit, amounts, weekStart, reviewEnd)
+                val rate = if (reviewEnd < weekStart) 0f else HabitStats.completionRate(habit, amounts, weekStart, reviewEnd, today)
                 HabitWeekSummary(habit, rate, amounts.count { (_, amount) -> amount >= habit.target })
             }
 

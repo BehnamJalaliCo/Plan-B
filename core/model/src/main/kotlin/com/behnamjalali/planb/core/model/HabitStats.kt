@@ -53,6 +53,12 @@ object HabitStats {
         return streak
     }
 
+    private fun weekStartOf(d: LocalDate, weekStart: DayOfWeek): LocalDate =
+        d.minusDays(Math.floorMod(d.dayOfWeek.value - weekStart.value, 7).toLong())
+
+    private fun doneDaysInWeek(habit: Habit, amounts: Map<LocalDate, Int>, start: LocalDate): Int =
+        (0L until 7L).count { isDone(habit, amounts, start.plusDays(it)) }
+
     private fun weekStreak(
         habit: Habit,
         times: Int,
@@ -60,32 +66,43 @@ object HabitStats {
         today: LocalDate,
         weekStart: DayOfWeek,
     ): Int {
-        fun weekStartOf(d: LocalDate) = d.minusDays(Math.floorMod(d.dayOfWeek.value - weekStart.value, 7).toLong())
-        fun doneDays(start: LocalDate) = (0L until 7L).count { isDone(habit, amounts, start.plusDays(it)) }
-        var start = weekStartOf(today)
+        var start = weekStartOf(today, weekStart)
         var streak = 0
-        if (doneDays(start) >= times) streak++
+        if (doneDaysInWeek(habit, amounts, start) >= times) streak++
         start = start.minusWeeks(1)
-        val limit = weekStartOf(habit.startDate)
+        val limit = weekStartOf(habit.startDate, weekStart)
         while (start >= limit && streak < MAX_LOOKBACK_DAYS / 7) {
-            if (doneDays(start) >= times) streak++ else break
+            if (doneDaysInWeek(habit, amounts, start) >= times) streak++ else break
             start = start.minusWeeks(1)
         }
         return streak
     }
 
-    /** Fraction of scheduled days in [from, to] that met the target (0 when none scheduled). */
-    fun completionRate(habit: Habit, amounts: Map<LocalDate, Int>, from: LocalDate, to: LocalDate): Float {
+    /**
+     * Fraction of scheduled days in [from, to] that met the target (0 when none scheduled).
+     * Days before the habit's start date never count. When [today] is given, an unfinished
+     * [today] is not counted as missed yet: it only counts once it is done.
+     */
+    fun completionRate(
+        habit: Habit,
+        amounts: Map<LocalDate, Int>,
+        from: LocalDate,
+        to: LocalDate,
+        today: LocalDate? = null,
+    ): Float {
+        val start = maxOf(from, habit.startDate)
+        val end = if (today != null && to >= today && !isDone(habit, amounts, today)) minOf(to, today.minusDays(1)) else to
         if (habit.schedule is HabitSchedule.TimesPerWeek) {
-            val days = ChronoUnit.DAYS.between(from, to) + 1
+            if (end < start) return 0f
+            val days = ChronoUnit.DAYS.between(start, end) + 1
             val expected = (habit.schedule.times * days / 7.0).coerceAtLeast(1.0)
-            val done = generateSequence(from) { it.plusDays(1) }.takeWhile { it <= to }.count { isDone(habit, amounts, it) }
+            val done = generateSequence(start) { it.plusDays(1) }.takeWhile { it <= end }.count { isDone(habit, amounts, it) }
             return (done / expected).toFloat().coerceIn(0f, 1f)
         }
         var scheduled = 0
         var done = 0
-        var d = from
-        while (d <= to) {
+        var d = start
+        while (d <= end) {
             if (isScheduled(habit, d)) {
                 scheduled++
                 if (isDone(habit, amounts, d)) done++
@@ -95,8 +112,38 @@ object HabitStats {
         return if (scheduled == 0) 0f else done.toFloat() / scheduled
     }
 
-    fun bestStreakDays(habit: Habit, amounts: Map<LocalDate, Int>, today: LocalDate): Int {
-        if (habit.schedule is HabitSchedule.TimesPerWeek) return 0
+    /**
+     * Longest streak so far, in the same unit as [currentStreak]: scheduled days, or weeks
+     * that met the target for "N times per week". The current day/week only extends a run.
+     */
+    fun bestStreak(habit: Habit, amounts: Map<LocalDate, Int>, today: LocalDate, weekStart: DayOfWeek): Streak {
+        val s = habit.schedule
+        if (s !is HabitSchedule.TimesPerWeek) return Streak(bestDayStreak(habit, amounts, today), Streak.Unit.DAYS)
+        val current = weekStartOf(today, weekStart)
+        var start = maxOf(weekStartOf(habit.startDate, weekStart), weekStartOf(today.minusDays(MAX_LOOKBACK_DAYS), weekStart))
+        var best = 0
+        var run = 0
+        while (start <= current) {
+            if (doneDaysInWeek(habit, amounts, start) >= s.times) {
+                run++
+                best = maxOf(best, run)
+            } else if (start != current) {
+                run = 0
+            }
+            start = start.plusWeeks(1)
+        }
+        return Streak(best, Streak.Unit.WEEKS)
+    }
+
+    /** Count of [bestStreak]; weeks for "N times per week" habits (counted from [weekStart]). */
+    fun bestStreakDays(
+        habit: Habit,
+        amounts: Map<LocalDate, Int>,
+        today: LocalDate,
+        weekStart: DayOfWeek = DayOfWeek.SATURDAY,
+    ): Int = bestStreak(habit, amounts, today, weekStart).count
+
+    private fun bestDayStreak(habit: Habit, amounts: Map<LocalDate, Int>, today: LocalDate): Int {
         var best = 0
         var run = 0
         var d = maxOf(habit.startDate, today.minusDays(MAX_LOOKBACK_DAYS))
