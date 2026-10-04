@@ -4,7 +4,7 @@
 
 **Package:** `com.behnamjalali.planb` · **Suggested category:** Tools → Productivity
 
-**Suggested content rating:** All ages (no sensitive content, no ads, no in-app purchases)
+**Suggested content rating:** All ages (no sensitive content, no ads; optional in-app purchase: Plan-B Pro)
 
 ## Short description (max 80 characters)
 
@@ -46,6 +46,16 @@ choose.
 
 **Accessible and polished** — light and dark themes, a themed icon, large-font and TalkBack
 support.
+
+**Optional: Plan-B Pro** — everything above is free and stays free. If you want more, Plan-B
+Pro adds new tools such as time blocking, deadlines and multiple reminders, a daily journal,
+attachments in notes, Health Connect habits, widgets, app lock and an AI assistant that uses
+your own provider key. Monthly subscription or a one-time lifetime purchase through Cafe Bazaar.
+
+**Permissions** — notifications, exact alarms and start at boot are used only for your
+reminders. Internet is used only by the optional AI assistant, which stays off until you turn it
+on with your own key; then only the text you choose is sent, directly to the provider you chose.
+Payment for Pro goes through Cafe Bazaar.
 
 ## Keywords
 

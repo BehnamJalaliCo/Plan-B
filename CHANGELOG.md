@@ -3,6 +3,28 @@
 All notable changes to Plan-B are documented here. The project follows
 [Semantic Versioning](https://semver.org/); `versionCode` increases with every store upload.
 
+## [Unreleased]
+
+Foundation for **Plan-B Pro**. Every existing feature stays free.
+
+### Added
+- Plan-B Pro: a monthly subscription (`planb_pro_monthly`) or a lifetime purchase
+  (`planb_pro_lifetime`) through Cafe Bazaar, verified on the device. Pro also works offline
+  (lifetime always, monthly for 7 days after the last check). A Plan-B Pro screen with plans,
+  restore purchases and the list of 40 upcoming Pro features; a Plan-B Pro row at the top of
+  Settings and an entry in More. Pro features are gated without pop-ups or nagging.
+- Database schema 3 for all Pro features (deadlines, time blocks, extra reminders,
+  dependencies, smart lists, attachments, note links and versions, journal and mood, challenges
+  and badges, activity history, calendar links, trash). Existing data is migrated unchanged.
+- Backup format 2: includes the new data and attachment files; format 1 backups still restore.
+- Infrastructure for an optional AI assistant that uses the user's own provider key (off by
+  default; the key is stored encrypted and never backed up).
+
+### Changed
+- The app may now use the Internet, only for the optional AI assistant. The release build may
+  request only the permissions listed in `tools/allowed-permissions.txt` (checked in CI).
+- Items in the trash are left out of every list, count, reminder, search and export.
+
 ## [1.0.1] — 2026-10-04
 
 Reliability update after a full code and screenshot review.

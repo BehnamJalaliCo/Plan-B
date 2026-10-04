@@ -2,7 +2,9 @@
 
 Plan-B is a single-activity Compose app organised as a multi-module Gradle build. It follows
 the layered architecture recommended for Android: UI (Compose + ViewModels) → data
-(repositories) → local data sources (Room, DataStore, files). There is no network layer.
+(repositories) → local data sources (Room, DataStore, files). The only network code is the
+optional AI assistant client in `core:ai` (off by default, the user's own provider key); Plan-B
+Pro purchases go through the installed Cafe Bazaar app (`core:billing`).
 
 ## Modules
 
@@ -15,6 +17,11 @@ graph TD
   app --> notifications[core:notifications]
   app --> backup[core:backup]
   settings[feature:settings] --> backup
+  settings --> billing[core:billing]
+  pro[feature:pro] --> billing
+  app --> pro
+  app --> billing
+  app --> ai[core:ai]
   ui --> designsystem
   ui --> datetime[core:datetime]
   notifications --> data
@@ -39,11 +46,13 @@ graph TD
 | `core:datastore` | User preferences in Preferences DataStore with tolerant per-key parsing. |
 | `core:data` | Repositories (the single source of truth for each feature), entity↔model mappers, search indexing, `ReminderScheduler` contract, SAF file helpers. |
 | `core:notifications` | `AlarmReminderScheduler` (implements `ReminderScheduler`), reminder/reschedule broadcast receivers, notification channels, private notifications and deep links. |
-| `core:backup` | Versioned ZIP backup, validation, transactional restore, CSV/JSON/Markdown export and import. |
+| `core:backup` | Versioned ZIP backup (with attachment files), validation, transactional restore, CSV/JSON/Markdown export and import. |
+| `core:billing` | Plan-B Pro: `BillingClient` (Cafe Bazaar via Poolakey, or a fake in debug builds), on-device purchase verification, `EntitlementRepository` with an offline cache. See [docs/PRO.md](docs/PRO.md). |
+| `core:ai` | Optional AI assistant infrastructure: provider catalog, settings with the key encrypted by the Android Keystore, `AiClient` (OkHttp; OpenAI and Anthropic wire formats). The only module that declares `INTERNET`. |
 | `core:designsystem` | Theme, color/typography/tokens and generic components. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md). |
-| `core:ui` | Planner-specific shared composables: cards, pickers (date/time/color/icon), editor rows, recurrence and reminder menus, heatmap, formatting locals. |
+| `core:ui` | Planner-specific shared composables: cards, pickers (date/time/color/icon), editor rows, recurrence and reminder menus, heatmap, formatting locals, and Pro gating (`ProFeature`, `LocalProAccess`, `ProGate`, `rememberProGuard`). |
 | `core:testing` | Test helpers (`FakeTimeProvider`). |
-| `feature:*` | One module per feature: screens, ViewModels and type-safe navigation routes. Features never depend on each other; the app wires navigation between them. |
+| `feature:*` | One module per feature: screens, ViewModels and type-safe navigation routes. Features never depend on each other; the app wires navigation between them. `feature:pro` is the Plan-B Pro screen; other features gate Pro actions only through `core:ui` (`LocalProAccess`), which the app provides. |
 | `app` | `Application`, `MainActivity`, root scaffold, navigation host, onboarding, locale bootstrap. |
 | `baselineprofile`, `benchmark` | Macrobenchmark modules (profile generation and measurements). |
 | `build-logic` | Convention plugins (`planb.android.application/library/library.compose/feature/room`, `planb.hilt`, `planb.roborazzi`). |
@@ -109,7 +118,8 @@ counts and end dates, and starts Jalali weeks on Saturday.
 
 ## Persistence
 
-- Room database `planb.db` (schema version 2, exported to `core/database/schemas`). Migrations
+- Room database `planb.db` (schema version 3, exported to `core/database/schemas`; v3 holds the
+  tables of every Pro feature). Migrations
   are explicit and tested; there is no destructive fallback. See [DATABASE.md](DATABASE.md).
 - DataStore holds preferences. Unknown or malformed values fall back to defaults per key.
 - Backups are ZIP files written through the Storage Access Framework; restore validates the
@@ -124,7 +134,9 @@ counts and end dates, and starts Jalali weeks on Saturday.
 Hilt everywhere: `@HiltAndroidApp` application, `@AndroidEntryPoint` activity and receivers,
 `@HiltViewModel` ViewModels. Modules: `CommonModule` (clock, application scope),
 `DispatchersModule`, `DatabaseModule`, `DataStoreModule`, `DataModule`, `NotificationsModule`,
-`AppModule` (app version). Tests replace the database (in-memory) and the clock (frozen) with
+`AppModule` (app version), `BillingModule` (Cafe Bazaar in release builds, the fake store in
+debug builds), `BillingStorageModule` and `AiModule` (device-only DataStore files that are never
+exported). Tests replace the database (in-memory) and the clock (frozen) with
 `@TestInstallIn` modules.
 
 ## Localization

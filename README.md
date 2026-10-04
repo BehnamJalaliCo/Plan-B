@@ -6,11 +6,14 @@ templates and a weekly review together in one app, with Jalali and Gregorian cal
 
 Your data stays on your device. There are no accounts, ads, analytics or trackers.
 
+**All of these features are free and stay free.** An optional upgrade, **Plan-B Pro** (monthly
+or lifetime through Cafe Bazaar), adds new tools on top; see [docs/PRO.md](docs/PRO.md).
+
 | Today | Calendar | Notes | Habits |
 |---|---|---|---|
 | <img src="artifacts/screenshots/today/today_fa_light.png" width="200"/> | <img src="artifacts/screenshots/calendar/calendar_month_fa_light.png" width="200"/> | <img src="artifacts/screenshots/notebooks/note_editor_en_light.png" width="200"/> | <img src="artifacts/screenshots/habits/habit_detail_en_dark.png" width="200"/> |
 
-All 156 screen captures (Persian/English, light/dark, large font) and the icons are in
+All 162 screen captures (Persian/English, light/dark, large font) and the icons are in
 [docs/UI_GALLERY.md](docs/UI_GALLERY.md).
 
 ## Features
@@ -45,9 +48,21 @@ All 156 screen captures (Persian/English, light/dark, large font) and the icons 
 - **Backup & data**: versioned ZIP backups validated before a transactional restore; export of
   tasks (CSV/JSON) and notes (Markdown ZIP/JSON); task import that never overwrites.
 
+## Plan-B Pro
+
+Plan-B Pro is optional and never takes anything away from the free app. It is sold through
+Cafe Bazaar as a monthly subscription (399,000 toman) or a one-time lifetime purchase
+(1,999,000 toman) and unlocks 40 new features as they ship — planning (Persian natural-language
+quick add, Iranian holidays, calendar sync, time blocking, deadlines, multiple reminders…),
+notes (attachments, links, scanning, journal…), habits and focus, reports and widgets, app lock
+and automatic backups, and an AI assistant that uses your own provider key. Nothing is sent
+anywhere unless you turn that assistant on. Details, gating rules and testing:
+[docs/PRO.md](docs/PRO.md).
+
 ## Tech stack
 
 Kotlin · Jetpack Compose (Material 3) · Coroutines/Flow · Room (FTS4) · DataStore · Hilt ·
+Poolakey (Cafe Bazaar billing) · OkHttp (optional AI assistant) ·
 Navigation Compose (type-safe routes) · kotlinx.serialization · ICU (Jalali calendar) ·
 AlarmManager notifications · Baseline Profiles · Robolectric · Roborazzi · Macrobenchmark.
 
@@ -89,11 +104,13 @@ core/datastore        User preferences (DataStore)
 core/data             Repositories, search indexing, reminder scheduling contract, file I/O
 core/notifications    Alarm scheduling, reminder receivers, notification channels
 core/backup           Backup/restore and export/import
+core/billing          Plan-B Pro: Cafe Bazaar billing and the offline entitlement
+core/ai               Optional AI assistant: providers, encrypted key, HTTP client
 core/designsystem     Theme, tokens, typography and components
 core/ui               Shared composables (cards, pickers, editors, formatting)
 core/testing          Test utilities (fake clock)
 feature/*             today, tasks, calendar, projects, notebooks, habits, goals, focus,
-                      search, templates, review, settings
+                      search, templates, review, settings, pro (Plan-B Pro screen)
 baselineprofile/      Baseline Profile generator (Macrobenchmark)
 benchmark/            Start-up and frame-timing benchmarks
 build-logic/          Gradle convention plugins
@@ -109,6 +126,7 @@ build-logic/          Gradle convention plugins
 | [TESTING.md](TESTING.md) | Test suites and how to run them |
 | [RELEASE.md](RELEASE.md) | Versioning, signing, release builds, CI release workflow |
 | [PRIVACY.md](PRIVACY.md) | Privacy policy |
+| [docs/PRO.md](docs/PRO.md) | Plan-B Pro: products, the 40 features, gating, billing key, testing |
 | [CHANGELOG.md](CHANGELOG.md) | Release notes |
 | [docs/UI_GALLERY.md](docs/UI_GALLERY.md) | Screenshots of every major screen |
 | [docs/LOCALIZATION.md](docs/LOCALIZATION.md) | Languages, RTL, calendars, digits |
