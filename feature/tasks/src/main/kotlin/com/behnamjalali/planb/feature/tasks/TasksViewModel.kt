@@ -153,7 +153,11 @@ class TasksViewModel @Inject constructor(
         )
     }.onEach { state ->
         // Drop hidden ids from the selection itself too, so they don't come back selected later.
-        if (!state.error) selection.update { current -> if (current.all { it in state.selection }) current else state.selection }
+        // Intersect the current selection (not this state's, which may already be stale) with what is visible.
+        if (!state.error && selection.value.isNotEmpty()) {
+            val visible = state.tasks.mapTo(HashSet()) { it.id }
+            selection.update { current -> if (current.all { it in visible }) current else current.filterTo(LinkedHashSet()) { it in visible } }
+        }
     }.catch { emit(TasksUiState(loading = false, error = true)) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TasksUiState())
 
