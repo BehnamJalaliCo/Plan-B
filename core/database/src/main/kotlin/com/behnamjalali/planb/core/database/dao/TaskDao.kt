@@ -1,5 +1,6 @@
 package com.behnamjalali.planb.core.database.dao
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -12,7 +13,15 @@ import com.behnamjalali.planb.core.database.entity.TagEntity
 import com.behnamjalali.planb.core.database.entity.TaskEntity
 import com.behnamjalali.planb.core.database.entity.TaskTagCrossRef
 import com.behnamjalali.planb.core.database.model.TaskWithDetails
+import java.time.Instant
+import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
+
+/** A task's manual position (for reordering a subset without disturbing the others). */
+data class TaskSortSlot(
+    val id: Long,
+    @ColumnInfo(name = "sort_order") val sortOrder: Long,
+)
 
 @Dao
 interface TaskDao {
@@ -47,6 +56,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE parent_task_id = :parentId")
     suspend fun getSubtaskEntities(parentId: Long): List<TaskEntity>
 
+    @Query("SELECT id FROM tasks WHERE parent_task_id IN (:parentIds)")
+    suspend fun subtaskIds(parentIds: List<Long>): List<Long>
+
     @Insert
     suspend fun insert(task: TaskEntity): Long
 
@@ -64,6 +76,32 @@ interface TaskDao {
 
     @Query("UPDATE tasks SET sort_order = :order, updated_at = :now WHERE id = :id")
     suspend fun setSortOrder(id: Long, order: Long, now: Long)
+
+    @Query("SELECT id, sort_order FROM tasks WHERE id IN (:ids)")
+    suspend fun sortSlots(ids: List<Long>): List<TaskSortSlot>
+
+    @Query("UPDATE tasks SET actual_minutes = COALESCE(actual_minutes, 0) + :minutes, updated_at = :now WHERE id = :id")
+    suspend fun addActualMinutes(id: Long, minutes: Int, now: Long)
+
+    /**
+     * The open occurrence that completing a recurring task created: inserted after it, at the
+     * completion instant, as a copy of it (same title, parent, project and series anchor) and
+     * never modified since.
+     */
+    @Query(
+        "SELECT * FROM tasks WHERE id > :afterId AND completed = 0 AND recurrence IS NOT NULL " +
+            "AND created_at = :createdAt AND updated_at = created_at AND title = :title " +
+            "AND parent_task_id IS :parentId AND project_id IS :projectId AND recurrence_anchor IS :anchor " +
+            "ORDER BY id LIMIT 1",
+    )
+    suspend fun findSpawnedOccurrence(
+        afterId: Long,
+        createdAt: Instant,
+        title: String,
+        parentId: Long?,
+        projectId: Long?,
+        anchor: LocalDate?,
+    ): TaskEntity?
 
     @Query("SELECT COALESCE(MAX(sort_order), 0) FROM tasks")
     suspend fun maxSortOrder(): Long
@@ -84,8 +122,16 @@ interface TaskDao {
     )
     suspend fun tasksWithReminders(): List<TaskEntity>
 
-    @Query("SELECT COUNT(*) FROM tasks WHERE completed = 1 AND completed_at >= :from AND completed_at < :to")
-    fun observeCompletedBetween(from: Long, to: Long): Flow<Int>
+    /**
+     * Completed part of the Today list: top-level, non-archived tasks due on or before [dueBy]
+     * that were completed in [from, to). Matches the open TODAY view, so done + open is the
+     * day's total.
+     */
+    @Query(
+        "SELECT COUNT(*) FROM tasks WHERE completed = 1 AND archived = 0 AND parent_task_id IS NULL " +
+            "AND due_date IS NOT NULL AND due_date <= :dueBy AND completed_at >= :from AND completed_at < :to",
+    )
+    fun observeCompletedForToday(from: Long, to: Long, dueBy: LocalDate): Flow<Int>
 
     @Query("SELECT * FROM tasks WHERE completed = 1 AND completed_at >= :from AND completed_at < :to ORDER BY completed_at")
     suspend fun completedBetween(from: Long, to: Long): List<TaskEntity>

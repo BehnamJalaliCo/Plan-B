@@ -16,9 +16,11 @@ import com.behnamjalali.planb.core.model.SearchEntityType
 import com.behnamjalali.planb.core.model.Tag
 import com.behnamjalali.planb.core.model.Task
 import com.behnamjalali.planb.core.model.TaskSort
+import com.behnamjalali.planb.core.model.TaskStatus
 import com.behnamjalali.planb.core.model.TaskView
 import com.behnamjalali.planb.core.testing.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
+import java.time.Duration
 import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -215,6 +217,151 @@ class TaskRepositoryTest {
         assertThat(search.search("plan").map { it.id }).containsExactly(english)
         assertThat(search.search("RELEASE").single().type).isEqualTo(SearchEntityType.TASK)
         assertThat(search.search("\"*)(")).isEmpty()
+    }
+
+    @Test
+    fun save_doneOnRecurringTask_continuesTheSeries() = runTest {
+        val rule = RecurrenceRule(RecurrenceFrequency.WEEKLY)
+        val id = repo.save(Task(title = "Weekly sync", dueDate = today, recurrence = rule, reminderOffsetMinutes = 5))
+        // The editor's "Done" status chip saves the whole task with status DONE.
+        repo.save(repo.getTask(id)!!.copy(title = "Weekly sync (edited)", status = TaskStatus.DONE))
+
+        val completed = repo.getTask(id)!!
+        assertThat(completed.isCompleted).isTrue()
+        assertThat(completed.completedAt).isEqualTo(time.now())
+        assertThat(completed.recurrence).isNull()
+        val next = repo.observeTasks(filter(TaskView.ALL)).first().single()
+        assertThat(next.id).isNotEqualTo(id)
+        assertThat(next.title).isEqualTo("Weekly sync (edited)")
+        assertThat(next.dueDate).isEqualTo(today.plusWeeks(1))
+        assertThat(next.recurrence).isEqualTo(rule)
+        assertThat(reminders.synced).contains("task:${next.id}")
+    }
+
+    @Test
+    fun save_movingRecurringTask_reanchorsTheSeries() = runTest {
+        val monday = LocalDate.of(2026, 10, 5)
+        val wednesday = monday.plusDays(2)
+        val id = repo.save(Task(title = "Gym", dueDate = monday, recurrence = RecurrenceRule(RecurrenceFrequency.WEEKLY)))
+        repo.save(repo.getTask(id)!!.copy(dueDate = wednesday))
+        assertThat(repo.getTask(id)!!.recurrenceAnchor).isEqualTo(wednesday)
+        val next = repo.getTask(repo.setCompleted(id, true)!!)!!
+        assertThat(next.dueDate).isEqualTo(wednesday.plusWeeks(1))
+
+        // Editing anything else (or only the end of the series) keeps the anchor.
+        repo.save(next.copy(title = "Gym!", recurrence = next.recurrence!!.copy(count = 10)))
+        assertThat(repo.getTask(next.id)!!.recurrenceAnchor).isEqualTo(wednesday)
+    }
+
+    @Test
+    fun nextOccurrence_shiftsSubtaskDates_andSchedulesTheirReminders() = runTest {
+        val parent = repo.save(Task(title = "Report", dueDate = today, recurrence = RecurrenceRule(RecurrenceFrequency.WEEKLY)))
+        repo.save(Task(title = "Draft", parentTaskId = parent, dueDate = today.minusDays(1), startDate = today.minusDays(2), reminderOffsetMinutes = 0))
+        val next = repo.setCompleted(parent, true)!!
+        val sub = repo.observeSubtasks(next).first().single()
+        assertThat(sub.dueDate).isEqualTo(today.minusDays(1).plusWeeks(1))
+        assertThat(sub.startDate).isEqualTo(today.minusDays(2).plusWeeks(1))
+        assertThat(sub.isCompleted).isFalse()
+        assertThat(reminders.synced).contains("task:${sub.id}")
+    }
+
+    @Test
+    fun duplicate_schedulesSubtaskReminders() = runTest {
+        val id = repo.save(Task(title = "Original"))
+        repo.save(Task(title = "Child", parentTaskId = id, dueDate = today.plusDays(1), reminderOffsetMinutes = 10))
+        val copy = repo.duplicate(id)
+        val childCopy = repo.observeSubtasks(copy).first().single()
+        assertThat(reminders.synced).contains("task:${childCopy.id}")
+    }
+
+    @Test
+    fun uncheckingRecurringOccurrence_takesTheSeriesBack() = runTest {
+        val rule = RecurrenceRule(RecurrenceFrequency.DAILY)
+        val id = repo.save(Task(title = "Water plants", dueDate = today, recurrence = rule))
+        repo.save(Task(title = "Fill can", parentTaskId = id))
+        val next = repo.setCompleted(id, true)!!
+        val nextSubtask = repo.observeSubtasks(next).first().single().id
+        time.advance(Duration.ofMinutes(1))
+
+        repo.setCompleted(id, false)
+
+        assertThat(repo.getTask(next)).isNull()
+        assertThat(repo.getTask(nextSubtask)).isNull()
+        assertThat(reminders.cancelled).containsAtLeast("task:$next", "task:$nextSubtask")
+        val reopened = repo.getTask(id)!!
+        assertThat(reopened.isCompleted).isFalse()
+        assertThat(reopened.recurrence).isEqualTo(rule)
+        assertThat(reopened.recurrenceAnchor).isEqualTo(today)
+        assertThat(repo.observeTasks(filter(TaskView.ALL)).first().map { it.id }).containsExactly(id)
+        assertThat(search.search("Water").map { it.id }).containsExactly(id)
+        // Completing again continues the series as before.
+        assertThat(repo.getTask(repo.setCompleted(id, true)!!)!!.dueDate).isEqualTo(today.plusDays(1))
+    }
+
+    @Test
+    fun uncheckingRecurringOccurrence_keepsANextOccurrenceTheUserChanged() = runTest {
+        val id = repo.save(Task(title = "Stretch", dueDate = today, recurrence = RecurrenceRule(RecurrenceFrequency.DAILY)))
+        val next = repo.setCompleted(id, true)!!
+        time.advance(Duration.ofMinutes(1))
+        repo.save(repo.getTask(next)!!.copy(notes = "moved to the evening"))
+
+        repo.setStatus(id, TaskStatus.TODO)
+
+        assertThat(repo.getTask(next)).isNotNull()
+        assertThat(repo.getTask(id)!!.isCompleted).isFalse()
+        assertThat(repo.getTask(id)!!.recurrence).isNull()
+    }
+
+    @Test
+    fun reorder_subset_keepsOtherTasksInPlace() = runTest {
+        val ids = (1..5).map { repo.save(Task(title = "t$it")) }
+        // A filtered view (e.g. one project) shows only t2, t4 and t5 and moves t5 first.
+        repo.reorder(listOf(ids[4], ids[1], ids[3]))
+        val all = repo.observeTasks(filter(TaskView.ALL)).first()
+        assertThat(all.map { it.title }).containsExactly("t1", "t5", "t3", "t2", "t4").inOrder()
+        assertThat(all.map { it.sortOrder }.toSet()).hasSize(5)
+    }
+
+    @Test
+    fun archivingParent_archivesSubtasks_andStopsTheirReminders() = runTest {
+        val parent = repo.save(Task(title = "Trip"))
+        val sub = repo.save(Task(title = "Book hotel", parentTaskId = parent, dueDate = today.plusDays(3), reminderOffsetMinutes = 60))
+        reminders.synced.clear()
+        repo.setArchived(listOf(parent), true)
+        assertThat(repo.getTask(sub)!!.archived).isTrue()
+        assertThat(reminders.synced).containsAtLeast("task:$parent", "task:$sub")
+        assertThat(repo.tasksWithReminders().map { it.id }).doesNotContain(sub)
+
+        repo.setArchived(listOf(parent), false)
+        assertThat(repo.getTask(sub)!!.archived).isFalse()
+        assertThat(repo.tasksWithReminders().map { it.id }).contains(sub)
+    }
+
+    @Test
+    fun completedCount_matchesTheTodayList() = runTest {
+        val zone = time.zone()
+        val dayStart = today.atStartOfDay(zone).toInstant()
+        val dayEnd = today.plusDays(1).atStartOfDay(zone).toInstant()
+        val dueToday = repo.save(Task(title = "due today", dueDate = today))
+        val overdue = repo.save(Task(title = "overdue", dueDate = today.minusDays(3)))
+        val tomorrow = repo.save(Task(title = "tomorrow", dueDate = today.plusDays(1)))
+        val noDate = repo.save(Task(title = "inbox"))
+        val sub = repo.save(Task(title = "sub", parentTaskId = dueToday, dueDate = today))
+        val archived = repo.save(Task(title = "archived", dueDate = today))
+        listOf(dueToday, overdue, tomorrow, noDate, sub, archived).forEach { repo.setCompleted(it, true) }
+        repo.setArchived(listOf(archived), true)
+
+        assertThat(repo.observeCompletedCount(dayStart, dayEnd).first()).isEqualTo(2)
+    }
+
+    @Test
+    fun addActualMinutes_onlyTouchesTrackedTime() = runTest {
+        val id = repo.save(Task(title = "Focus target", actualMinutes = 5))
+        repo.addActualMinutes(id, 25)
+        assertThat(repo.getTask(id)!!.actualMinutes).isEqualTo(30)
+        val other = repo.save(Task(title = "Untracked"))
+        repo.addActualMinutes(other, 10)
+        assertThat(repo.getTask(other)!!.actualMinutes).isEqualTo(10)
     }
 
     @Test

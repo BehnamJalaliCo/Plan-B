@@ -12,16 +12,19 @@ import com.behnamjalali.planb.core.database.dao.SearchDao
 import com.behnamjalali.planb.core.database.dao.TagDao
 import com.behnamjalali.planb.core.database.dao.TaskDao
 import com.behnamjalali.planb.core.database.entity.TagEntity
+import com.behnamjalali.planb.core.database.entity.TaskEntity
 import com.behnamjalali.planb.core.database.entity.TaskTagCrossRef
 import com.behnamjalali.planb.core.datetime.RecurrenceEngine
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.NEW_ID
+import com.behnamjalali.planb.core.model.RecurrenceRule
 import com.behnamjalali.planb.core.model.SearchEntityType
 import com.behnamjalali.planb.core.model.Tag
 import com.behnamjalali.planb.core.model.Task
 import com.behnamjalali.planb.core.model.TaskSort
 import com.behnamjalali.planb.core.model.TaskStatus
 import com.behnamjalali.planb.core.model.TaskView
+import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -52,22 +55,47 @@ interface TaskRepository {
     fun observeTask(id: EntityId): Flow<Task?>
     fun observeSubtasks(parentId: EntityId): Flow<List<Task>>
     fun observeTags(): Flow<List<Tag>>
+
+    /**
+     * Number of tasks from the Today list completed in [from, to): top-level, not archived and
+     * due on or before the day [to] ends. With the open TODAY view this is the day's total.
+     */
     fun observeCompletedCount(from: java.time.Instant, to: java.time.Instant): Flow<Int>
     suspend fun getTask(id: EntityId): Task?
     suspend fun tasksWithReminders(): List<Task>
 
-    /** Inserts or updates; returns the id. Tags are replaced by [Task.tags]. */
+    /**
+     * Inserts or updates; returns the id. Tags are replaced by [Task.tags]. Marking a recurring
+     * task done here completes it exactly like [setCompleted] (the series continues in a new
+     * occurrence), and reopening a completed occurrence takes the series back.
+     */
     suspend fun save(task: Task): EntityId
+
+    /**
+     * Completing a recurring task completes this occurrence and creates the next one; returns
+     * its id. Reopening an occurrence whose completion created a still untouched next
+     * occurrence removes that occurrence again and moves the series back onto this task.
+     */
     suspend fun setCompleted(id: EntityId, completed: Boolean): EntityId?
     suspend fun setCompleted(ids: List<EntityId>, completed: Boolean)
 
     /** Board moves: DONE completes (spawning recurrences), others reopen if needed. */
     suspend fun setStatus(id: EntityId, status: TaskStatus)
     suspend fun delete(ids: List<EntityId>)
+
+    /** Archives (or restores) the tasks together with their subtasks. */
     suspend fun setArchived(ids: List<EntityId>, archived: Boolean)
     suspend fun moveToProject(ids: List<EntityId>, projectId: EntityId?)
     suspend fun duplicate(id: EntityId): EntityId
+
+    /**
+     * Puts [orderedIds] in this order by permuting their existing positions, so tasks that are
+     * not in the list (other views, other projects) keep their place relative to them.
+     */
     suspend fun reorder(orderedIds: List<EntityId>)
+
+    /** Adds tracked time (e.g. a finished focus session) without rewriting the rest of the task. */
+    suspend fun addActualMinutes(id: EntityId, minutes: Int)
     suspend fun upsertTag(tag: Tag): EntityId
     suspend fun deleteTag(id: EntityId)
 }
@@ -92,8 +120,11 @@ class OfflineTaskRepository @Inject constructor(
 
     override fun observeTags(): Flow<List<Tag>> = tagDao.observeTags().map { tags -> tags.map { it.toModel() } }
 
-    override fun observeCompletedCount(from: java.time.Instant, to: java.time.Instant): Flow<Int> =
-        taskDao.observeCompletedBetween(from.toEpochMilli(), to.toEpochMilli())
+    override fun observeCompletedCount(from: java.time.Instant, to: java.time.Instant): Flow<Int> {
+        // The TODAY view holds tasks due on or before the day being shown, i.e. the day `to` closes.
+        val dueBy = to.minusMillis(1).atZone(time.zone()).toLocalDate()
+        return taskDao.observeCompletedForToday(from.toEpochMilli(), to.toEpochMilli(), dueBy)
+    }
 
     override suspend fun getTask(id: EntityId): Task? = taskDao.getTask(id)?.toModel()
 
@@ -103,22 +134,23 @@ class OfflineTaskRepository @Inject constructor(
         if (task.title.isBlank()) throw TaskValidationException("Task title must not be blank")
         if (task.parentTaskId != null && task.parentTaskId == task.id) throw TaskValidationException("Task cannot be its own parent")
         val now = time.now()
+        val changes = ReminderChanges()
         val id = db.withTransaction {
             val existing = if (task.id != NEW_ID) taskDao.getEntity(task.id) else null
-            val recurrenceAnchor = when {
-                task.recurrence == null -> null
-                task.recurrenceAnchor != null -> task.recurrenceAnchor
-                else -> task.dueDate ?: task.startDate ?: time.today()
-            }
-            val entity = task.copy(
+            val wasCompleted = existing?.completed == true
+            // Done from the editor on a recurring task: store it open, then complete it through
+            // the same path as the checkbox so the next occurrence is created.
+            val completesSeries = task.isCompleted && !wasCompleted && task.recurrence != null
+            val stored = if (completesSeries) task.copy(status = TaskStatus.TODO) else task
+            val entity = stored.copy(
                 createdAt = existing?.createdAt ?: now,
                 updatedAt = now,
                 sortOrder = existing?.sortOrder ?: (taskDao.maxSortOrder() + SORT_STEP),
                 completedAt = when {
-                    task.isCompleted -> existing?.completedAt ?: task.completedAt ?: now
+                    stored.isCompleted -> existing?.completedAt ?: task.completedAt ?: now
                     else -> null
                 },
-                recurrenceAnchor = recurrenceAnchor,
+                recurrenceAnchor = recurrenceAnchor(task, existing),
             ).toEntity()
             val savedId = if (existing == null) {
                 taskDao.insert(entity.copy(id = 0))
@@ -128,10 +160,31 @@ class OfflineTaskRepository @Inject constructor(
             }
             replaceTags(savedId, task.tags)
             searchDao.upsert(SearchIndexer.task(entity.copy(id = savedId)))
+            when {
+                completesSeries -> complete(taskDao.getEntity(savedId)!!, now, changes)
+                wasCompleted && !task.isCompleted -> takeSeriesBack(existing!!, savedId, now, changes)
+            }
             savedId
         }
         reminders.syncTask(id)
+        changes.apply()
         return id
+    }
+
+    /**
+     * The anchor counts occurrences of the series. It follows the task when the user moves
+     * the date or changes the repeat pattern, so the next occurrence is computed from the
+     * new schedule (a weekly task moved from Monday to Wednesday repeats on Wednesdays).
+     * Changing only the end (until/count) keeps it.
+     */
+    private fun recurrenceAnchor(task: Task, existing: TaskEntity?): LocalDate? {
+        val rule = task.recurrence ?: return null
+        val date = task.dueDate ?: task.startDate ?: time.today()
+        if (existing == null) return task.recurrenceAnchor ?: date
+        val storedRule = RecurrenceRule.decode(existing.recurrence)
+        val dateChanged = (existing.dueDate ?: existing.startDate) != (task.dueDate ?: task.startDate)
+        val patternChanged = storedRule != null && storedRule.copy(until = null, count = null) != rule.copy(until = null, count = null)
+        return if (dateChanged || patternChanged) date else task.recurrenceAnchor ?: date
     }
 
     private suspend fun replaceTags(taskId: EntityId, tags: List<Tag>) {
@@ -146,65 +199,113 @@ class OfflineTaskRepository @Inject constructor(
         return tagDao.findByName(name)?.id ?: tagDao.insert(TagEntity(name = name, color = tag.color.key))
     }
 
-    /**
-     * Completing a recurring task completes this occurrence and creates the next
-     * one (with the same tags and fresh subtasks). Returns the id of the next
-     * occurrence, if any.
-     */
+    /** Reminder work collected inside a transaction and applied once it committed. */
+    private inner class ReminderChanges {
+        val sync = mutableListOf<EntityId>()
+        val cancel = mutableListOf<EntityId>()
+
+        suspend fun apply() {
+            sync.forEach { reminders.syncTask(it) }
+            cancel.forEach { reminders.cancelTask(it) }
+        }
+    }
+
     override suspend fun setCompleted(id: EntityId, completed: Boolean): EntityId? {
         val now = time.now()
+        val changes = ReminderChanges()
         var nextId: EntityId? = null
         db.withTransaction {
             val entity = taskDao.getEntity(id) ?: return@withTransaction
             if (entity.completed == completed) return@withTransaction
-            val rule = com.behnamjalali.planb.core.model.RecurrenceRule.decode(entity.recurrence)
-            if (completed && rule != null) {
-                val anchor = entity.recurrenceAnchor ?: entity.dueDate ?: time.today()
-                val current = entity.dueDate ?: time.today()
-                val next = RecurrenceEngine.nextOccurrence(rule, anchor, current)
-                if (next != null) {
-                    val shift = ChronoUnit.DAYS.between(current, next)
-                    val nextEntity = entity.copy(
-                        id = 0,
-                        dueDate = next,
-                        startDate = entity.startDate?.plusDays(shift),
-                        createdAt = now,
-                        updatedAt = now,
-                        completedAt = null,
-                        completed = false,
-                        status = TaskStatus.TODO.name,
-                        actualMinutes = null,
-                    )
-                    val newId = taskDao.insert(nextEntity)
-                    taskDao.insertTagRefs(taskDao.tagIds(id).map { TaskTagCrossRef(newId, it) })
-                    taskDao.getSubtaskEntities(id).forEach { sub ->
-                        val subId = taskDao.insert(
-                            sub.copy(
-                                id = 0, parentTaskId = newId, completed = false, status = TaskStatus.TODO.name,
-                                completedAt = null, createdAt = now, updatedAt = now,
-                            ),
-                        )
-                        searchDao.upsert(SearchIndexer.task(sub.copy(id = subId)))
-                    }
-                    searchDao.upsert(SearchIndexer.task(nextEntity.copy(id = newId)))
-                    nextId = newId
-                }
-                // The completed occurrence leaves the series; the series continues in the new task.
-                taskDao.update(entity.copy(completed = true, status = TaskStatus.DONE.name, completedAt = now, updatedAt = now, recurrence = null))
+            if (completed) {
+                nextId = complete(entity, now, changes)
             } else {
-                taskDao.update(
-                    entity.copy(
-                        completed = completed,
-                        status = if (completed) TaskStatus.DONE.name else TaskStatus.TODO.name,
-                        completedAt = if (completed) now else null,
-                        updatedAt = now,
-                    ),
-                )
+                taskDao.update(entity.copy(completed = false, status = TaskStatus.TODO.name, completedAt = null, updatedAt = now))
+                takeSeriesBack(entity, id, now, changes)
             }
         }
         reminders.syncTask(id)
-        nextId?.let { reminders.syncTask(it) }
+        changes.apply()
         return nextId
+    }
+
+    /**
+     * Marks [entity] done (inside a transaction). For a recurring task the completed
+     * occurrence leaves the series and the next occurrence is created with the same tags and
+     * fresh copies of the subtasks, all shifted by the same number of days. Returns its id.
+     */
+    private suspend fun complete(entity: TaskEntity, now: Instant, changes: ReminderChanges): EntityId? {
+        val done = entity.copy(completed = true, status = TaskStatus.DONE.name, completedAt = now, updatedAt = now)
+        val rule = RecurrenceRule.decode(entity.recurrence)
+        if (rule == null) {
+            taskDao.update(done)
+            return null
+        }
+        var nextId: EntityId? = null
+        val anchor = entity.recurrenceAnchor ?: entity.dueDate ?: time.today()
+        val current = entity.dueDate ?: time.today()
+        val next = RecurrenceEngine.nextOccurrence(rule, anchor, current)
+        if (next != null) {
+            val shift = ChronoUnit.DAYS.between(current, next)
+            val nextEntity = entity.copy(
+                id = 0,
+                dueDate = next,
+                startDate = entity.startDate?.plusDays(shift),
+                createdAt = now,
+                updatedAt = now,
+                completedAt = null,
+                completed = false,
+                status = TaskStatus.TODO.name,
+                actualMinutes = null,
+            )
+            val newId = taskDao.insert(nextEntity)
+            taskDao.insertTagRefs(taskDao.tagIds(entity.id).map { TaskTagCrossRef(newId, it) })
+            taskDao.getSubtaskEntities(entity.id).forEach { sub ->
+                val copy = sub.copy(
+                    id = 0, parentTaskId = newId, completed = false, status = TaskStatus.TODO.name,
+                    dueDate = sub.dueDate?.plusDays(shift), startDate = sub.startDate?.plusDays(shift),
+                    completedAt = null, createdAt = now, updatedAt = now, actualMinutes = null,
+                )
+                val subId = taskDao.insert(copy)
+                searchDao.upsert(SearchIndexer.task(copy.copy(id = subId)))
+                changes.sync += subId
+            }
+            searchDao.upsert(SearchIndexer.task(nextEntity.copy(id = newId)))
+            changes.sync += newId
+            nextId = newId
+        }
+        // The completed occurrence leaves the series; the series continues in the new task.
+        taskDao.update(done.copy(recurrence = null))
+        return nextId
+    }
+
+    /**
+     * Reopening a completed occurrence (inside a transaction, [completed] being the row as it
+     * was while done): if its completion created a next occurrence that nobody has touched
+     * since (task and subtasks unchanged), that occurrence is removed and the series moves
+     * back onto task [id]. Without this, unchecking leaves two open copies of the series.
+     */
+    private suspend fun takeSeriesBack(completed: TaskEntity, id: EntityId, now: Instant, changes: ReminderChanges) {
+        val completedAt = completed.completedAt ?: return
+        if (completed.recurrence != null) return
+        val spawned = taskDao.findSpawnedOccurrence(
+            afterId = completed.id,
+            createdAt = completedAt,
+            title = completed.title,
+            parentId = completed.parentTaskId,
+            projectId = completed.projectId,
+            anchor = completed.recurrenceAnchor,
+        ) ?: return
+        val subtasks = taskDao.getSubtaskEntities(spawned.id)
+        if (subtasks.any { it.updatedAt != it.createdAt }) return
+        val removed = listOf(spawned.id) + subtasks.map { it.id }
+        removed.forEach { searchDao.delete(SearchIndexer.rowId(SearchEntityType.TASK, it)) }
+        taskDao.delete(listOf(spawned.id))
+        changes.cancel += removed
+        val reopened = taskDao.getEntity(id) ?: return
+        if (reopened.recurrence == null) {
+            taskDao.update(reopened.copy(recurrence = spawned.recurrence, recurrenceAnchor = spawned.recurrenceAnchor, updatedAt = now))
+        }
     }
 
     override suspend fun setCompleted(ids: List<EntityId>, completed: Boolean) {
@@ -236,8 +337,14 @@ class OfflineTaskRepository @Inject constructor(
     }
 
     override suspend fun setArchived(ids: List<EntityId>, archived: Boolean) {
-        taskDao.setArchived(ids, archived, time.now().toEpochMilli())
-        ids.forEach { reminders.syncTask(it) }
+        if (ids.isEmpty()) return
+        val all = db.withTransaction {
+            // Subtasks share their parent's fate, so their reminders stop (and resume) with it.
+            val withSubtasks = (ids + ids.chunked(QUERY_CHUNK).flatMap { taskDao.subtaskIds(it) }).distinct()
+            withSubtasks.chunked(QUERY_CHUNK).forEach { taskDao.setArchived(it, archived, time.now().toEpochMilli()) }
+            withSubtasks
+        }
+        all.forEach { reminders.syncTask(it) }
     }
 
     override suspend fun moveToProject(ids: List<EntityId>, projectId: EntityId?) {
@@ -246,6 +353,7 @@ class OfflineTaskRepository @Inject constructor(
 
     override suspend fun duplicate(id: EntityId): EntityId {
         val now = time.now()
+        val subtaskIds = mutableListOf<EntityId>()
         val newId = db.withTransaction {
             val source = taskDao.getEntity(id) ?: throw TaskValidationException("Task $id not found")
             val copy = source.copy(id = 0, createdAt = now, updatedAt = now, sortOrder = taskDao.maxSortOrder() + SORT_STEP)
@@ -254,19 +362,36 @@ class OfflineTaskRepository @Inject constructor(
             taskDao.getSubtaskEntities(id).forEach { sub ->
                 val subId = taskDao.insert(sub.copy(id = 0, parentTaskId = newId, createdAt = now, updatedAt = now))
                 searchDao.upsert(SearchIndexer.task(sub.copy(id = subId)))
+                subtaskIds += subId
             }
             searchDao.upsert(SearchIndexer.task(copy.copy(id = newId)))
             newId
         }
         reminders.syncTask(newId)
+        subtaskIds.forEach { reminders.syncTask(it) }
         return newId
     }
 
     override suspend fun reorder(orderedIds: List<EntityId>) {
+        val ids = orderedIds.distinct()
+        if (ids.isEmpty()) return
         val now = time.now().toEpochMilli()
         db.withTransaction {
-            orderedIds.forEachIndexed { index, id -> taskDao.setSortOrder(id, (index + 1) * SORT_STEP, now) }
+            val current = ids.chunked(QUERY_CHUNK).flatMap { taskDao.sortSlots(it) }.associate { it.id to it.sortOrder }
+            val present = ids.filter { it in current }
+            // The subset keeps the positions it already occupies, only in the new order. Ties
+            // (from older data) are spread out so the new order is unambiguous.
+            val slots = current.values.sorted().toMutableList()
+            for (i in 1 until slots.size) if (slots[i] <= slots[i - 1]) slots[i] = slots[i - 1] + 1
+            present.forEachIndexed { index, id ->
+                if (current[id] != slots[index]) taskDao.setSortOrder(id, slots[index], now)
+            }
         }
+    }
+
+    override suspend fun addActualMinutes(id: EntityId, minutes: Int) {
+        if (minutes <= 0) return
+        taskDao.addActualMinutes(id, minutes, time.now().toEpochMilli())
     }
 
     override suspend fun upsertTag(tag: Tag): EntityId {
@@ -278,6 +403,9 @@ class OfflineTaskRepository @Inject constructor(
 
     private companion object {
         const val SORT_STEP = 1024L
+
+        /** Stays below SQLite's bound-parameter limit for IN (...) lists. */
+        const val QUERY_CHUNK = 500
     }
 }
 
