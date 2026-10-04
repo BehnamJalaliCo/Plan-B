@@ -11,6 +11,7 @@ import com.behnamjalali.planb.core.model.UserSettings
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.nio.file.Files
+import java.time.DayOfWeek
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -76,5 +77,29 @@ class UserPreferencesDataSourceTest {
         assertThat(s.language).isEqualTo(AppLanguage.ENGLISH)
         assertThat(s.focusMinutes).isEqualTo(50)
         assertThat(s.onboardingCompleted).isFalse()
+    }
+
+    @Test
+    fun import_withMissingKeys_keepsCurrentValues() = runTest {
+        val store = UserPreferencesDataSource(newStore(Files.createTempDirectory("c").toFile(), backgroundScope))
+        store.update { it.copy(focusMinutes = 45, themeMode = ThemeMode.DARK) }
+        // An older backup that only knew the language.
+        store.import(mapOf("language" to "en", "theme" to "NOT_A_THEME"))
+        val s = store.current()
+        assertThat(s.language).isEqualTo(AppLanguage.ENGLISH)
+        assertThat(s.focusMinutes).isEqualTo(45)
+        assertThat(s.themeMode).isEqualTo(ThemeMode.DARK)
+        assertThat(store.export()).doesNotContainKey("onboarding_completed")
+    }
+
+    @Test
+    fun import_autoCalendarAndFirstDay_resetOverrides() = runTest {
+        val source = UserPreferencesDataSource(newStore(Files.createTempDirectory("d").toFile(), backgroundScope))
+        val exported = source.export() // follows the language: no overrides
+        val target = UserPreferencesDataSource(newStore(Files.createTempDirectory("e").toFile(), backgroundScope))
+        target.update { it.copy(calendarSystemOverride = CalendarSystem.GREGORIAN, firstDayOfWeekOverride = DayOfWeek.SUNDAY) }
+        target.import(exported)
+        assertThat(target.current().calendarSystemOverride).isNull()
+        assertThat(target.current().firstDayOfWeekOverride).isNull()
     }
 }

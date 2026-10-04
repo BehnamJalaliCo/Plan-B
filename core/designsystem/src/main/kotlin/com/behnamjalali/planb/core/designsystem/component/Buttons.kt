@@ -85,7 +85,7 @@ fun PlannerButton(
     }
 }
 
-/** Icon button with a guaranteed 48dp target and mandatory content description. */
+/** Icon button with a guaranteed 48dp target; pass a content description unless a parent describes it. */
 @Composable
 fun PlannerIconButton(
     icon: ImageVector,

@@ -13,7 +13,7 @@ import org.robolectric.RobolectricTestRunner
 
 /**
  * Validates every migration against the committed schema JSON files.
- * Runs on the JVM (Robolectric) and as an instrumentation test on CI devices.
+ * Runs on the JVM under Robolectric against the exported schema files.
  */
 @RunWith(RobolectricTestRunner::class)
 class MigrationTest {

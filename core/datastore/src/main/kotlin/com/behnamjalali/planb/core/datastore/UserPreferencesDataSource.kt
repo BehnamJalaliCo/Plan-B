@@ -65,16 +65,26 @@ class UserPreferencesDataSource @Inject constructor(
         }
     }
 
-    /** Raw key/value snapshot for backups (only known keys). */
+    /** Raw key/value snapshot for backups; device-specific onboarding state is left out. */
     suspend fun export(): Map<String, String> {
         val prefs = dataStore.data.first()
-        return prefs.asMap().entries.associate { (k, v) -> k.name to v.toString() }
+        val values = prefs.asMap().entries
+            .filter { (k, _) -> k.name != Keys.onboarding.name }
+            .associate { (k, v) -> k.name to v.toString() }
+        // "Follow the language" is stored as an absent key; export it explicitly so a restore
+        // resets an override instead of keeping it.
+        return values + mapOf(
+            Keys.calendarSystem.name to (values[Keys.calendarSystem.name] ?: AUTO),
+            Keys.firstDayOfWeek.name to (values[Keys.firstDayOfWeek.name] ?: "0"),
+        )
     }
 
     suspend fun import(values: Map<String, String>) {
         val defaults = UserSettings()
         dataStore.edit { prefs ->
-            val imported = toSettings(emptyPreferences(), values)
+            // Keys missing from the backup keep their current values; malformed ones fall back
+            // to the current value too.
+            val imported = toSettings(prefs, values, fallback = toSettings(prefs))
             // Device-specific onboarding state is not overwritten by a restore.
             write(prefs, imported.copy(onboardingCompleted = prefs[Keys.onboarding] ?: defaults.onboardingCompleted))
         }
@@ -82,16 +92,29 @@ class UserPreferencesDataSource @Inject constructor(
 
     private fun toSettings(prefs: Preferences): UserSettings = toSettings(prefs, null)
 
-    private fun toSettings(prefs: Preferences, raw: Map<String, String>?): UserSettings {
-        val d = UserSettings()
+    /**
+     * Reads settings from [prefs], overridden by [raw] backup values when given. Missing or
+     * malformed values resolve to [fallback] (defaults, or the current settings on import).
+     */
+    private fun toSettings(prefs: Preferences, raw: Map<String, String>?, fallback: UserSettings = UserSettings()): UserSettings {
+        val d = fallback
         fun str(key: Preferences.Key<String>): String? = raw?.get(key.name) ?: prefs[key]
         fun int(key: Preferences.Key<Int>): Int? = raw?.get(key.name)?.toIntOrNull() ?: prefs[key]
         fun bool(key: Preferences.Key<Boolean>): Boolean? = raw?.get(key.name)?.toBooleanStrictOrNull() ?: prefs[key]
         return UserSettings(
-            language = str(Keys.language)?.let(AppLanguage::fromTag) ?: d.language,
+            language = str(Keys.language)?.let { tag -> AppLanguage.entries.firstOrNull { tag.startsWith(it.tag) } } ?: d.language,
             themeMode = str(Keys.theme).enumOr(d.themeMode),
-            calendarSystemOverride = str(Keys.calendarSystem)?.let { runCatching { CalendarSystem.valueOf(it) }.getOrNull() },
-            firstDayOfWeekOverride = int(Keys.firstDayOfWeek)?.takeIf { it in 1..7 }?.let(DayOfWeek::of),
+            calendarSystemOverride = when (val v = str(Keys.calendarSystem)) {
+                null -> d.calendarSystemOverride
+                AUTO -> null
+                else -> CalendarSystem.entries.firstOrNull { it.name == v } ?: d.calendarSystemOverride
+            },
+            firstDayOfWeekOverride = when (val v = int(Keys.firstDayOfWeek)) {
+                null -> d.firstDayOfWeekOverride
+                0 -> null
+                in 1..7 -> DayOfWeek.of(v)
+                else -> d.firstDayOfWeekOverride
+            },
             numberFormat = str(Keys.numberFormat).enumOr(d.numberFormat),
             defaultReminderMinutes = int(Keys.defaultReminder)?.coerceIn(0, 7 * 24 * 60) ?: d.defaultReminderMinutes,
             animationsEnabled = bool(Keys.animations) ?: d.animationsEnabled,
@@ -107,6 +130,10 @@ class UserPreferencesDataSource @Inject constructor(
             shortBreakMinutes = int(Keys.breakMinutes)?.coerceIn(1, 60) ?: d.shortBreakMinutes,
             onboardingCompleted = bool(Keys.onboarding) ?: d.onboardingCompleted,
         )
+    }
+
+    private companion object {
+        const val AUTO = "AUTO"
     }
 
     /** Known sections in saved order; sections added in newer versions are appended. */

@@ -161,8 +161,12 @@ object BackupFormat {
     const val METADATA = "metadata.json"
     const val MIME = "application/zip"
 
-    /** Hard limits protecting against zip bombs and corrupt archives. */
-    const val MAX_ENTRY_BYTES = 256L * 1024 * 1024
+    /**
+     * Hard limits protecting against zip bombs and corrupt archives. Entries are read into
+     * memory, so the uncompressed total is capped well below a phone's heap.
+     */
+    const val MAX_ENTRY_BYTES = 128L * 1024 * 1024
+    const val MAX_TOTAL_BYTES = 128L * 1024 * 1024
     const val MAX_ENTRIES = 16
 }
 

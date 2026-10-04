@@ -73,7 +73,7 @@ interface TaskRepository {
 }
 
 @Singleton
-internal class OfflineTaskRepository @Inject constructor(
+class OfflineTaskRepository @Inject constructor(
     private val db: PlanBDatabase,
     private val taskDao: TaskDao,
     private val tagDao: TagDao,

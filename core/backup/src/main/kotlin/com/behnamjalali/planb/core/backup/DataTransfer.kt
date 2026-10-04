@@ -3,11 +3,14 @@ package com.behnamjalali.planb.core.backup
 import android.net.Uri
 import com.behnamjalali.planb.core.common.Digits
 import com.behnamjalali.planb.core.data.DocumentFiles
+import com.behnamjalali.planb.core.data.repository.ProjectRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.database.dao.BackupDao
+import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.Markdown
 import com.behnamjalali.planb.core.model.NoteDocument
 import com.behnamjalali.planb.core.model.Priority
+import com.behnamjalali.planb.core.model.Project
 import com.behnamjalali.planb.core.model.Tag
 import com.behnamjalali.planb.core.model.Task
 import com.behnamjalali.planb.core.model.TaskStatus
@@ -78,6 +81,8 @@ data class TaskExport(
     val tags: List<String> = emptyList(),
     val notes: String = "",
     val estimatedMinutes: Int? = null,
+    /** Title of the parent task for subtasks; the parent is exported right before them. */
+    val parent: String? = null,
 )
 
 @Serializable
@@ -91,6 +96,7 @@ class ImportException(message: String) : Exception(message)
 class DataTransfer @Inject constructor(
     private val dao: BackupDao,
     private val tasks: TaskRepository,
+    private val projects: ProjectRepository,
     private val files: DocumentFiles,
 ) {
     private val json = BackupCodec.json
@@ -99,7 +105,12 @@ class DataTransfer @Inject constructor(
         val projects = dao.projects().associate { it.id to it.title }
         val tags = dao.tags().associate { it.id to it.name }
         val tagsByTask = dao.taskTags().groupBy({ it.taskId }, { tags[it.tagId].orEmpty() })
-        return dao.tasks().filter { it.parentTaskId == null }.map { t ->
+        val all = dao.tasks()
+        val children = all.filter { it.parentTaskId != null }.groupBy { it.parentTaskId }
+        val titles = all.associate { it.id to it.title }
+        // Each top-level task is followed by its subtasks, so an import can re-link them.
+        val ordered = all.filter { it.parentTaskId == null }.flatMap { listOf(it) + children[it.id].orEmpty() }
+        return ordered.map { t ->
             TaskExport(
                 title = t.title,
                 description = t.description,
@@ -112,6 +123,7 @@ class DataTransfer @Inject constructor(
                 tags = tagsByTask[t.id].orEmpty().filter { it.isNotBlank() },
                 notes = t.notes,
                 estimatedMinutes = t.estimatedMinutes,
+                parent = t.parentTaskId?.let { titles[it] },
             )
         }
     }
@@ -119,10 +131,10 @@ class DataTransfer @Inject constructor(
     suspend fun exportTasksCsv(uri: Uri): Int {
         val rows = taskExports()
         val text = Csv.write(
-            listOf("title", "description", "status", "priority", "start_date", "due_date", "due_time", "project", "tags", "notes", "estimated_minutes"),
+            listOf("title", "description", "status", "priority", "start_date", "due_date", "due_time", "project", "tags", "notes", "estimated_minutes", "parent"),
             rows.map {
                 listOf(it.title, it.description, it.status, it.priority, it.startDate.orEmpty(), it.dueDate.orEmpty(), it.dueTime.orEmpty(),
-                    it.project.orEmpty(), it.tags.joinToString(";"), it.notes, it.estimatedMinutes?.toString().orEmpty())
+                    it.project.orEmpty(), it.tags.joinToString(";"), it.notes, it.estimatedMinutes?.toString().orEmpty(), it.parent.orEmpty())
             },
         )
         files.writeText(uri, text)
@@ -178,6 +190,11 @@ class DataTransfer @Inject constructor(
             parseCsv(text)
         }
         if (rows.isEmpty()) throw ImportException("No tasks found")
+        // Tasks are linked to an existing project with the same name (case-insensitive);
+        // unknown project names create a new project. Existing data is never modified.
+        val projectIds = dao.projects().associate { it.title.trim().lowercase() to it.id }.toMutableMap()
+        // Top-level tasks imported in this run, by title, for re-linking subtasks.
+        val importedByTitle = mutableMapOf<String, EntityId>()
         var imported = 0
         var skipped = 0
         rows.forEach { row ->
@@ -185,7 +202,13 @@ class DataTransfer @Inject constructor(
             if (task == null) {
                 skipped++
             } else {
-                tasks.save(task)
+                val projectName = row.project?.trim()?.take(200)?.takeIf { it.isNotEmpty() }
+                val projectId = projectName?.let { name ->
+                    projectIds.getOrPut(name.lowercase()) { projects.save(Project(title = name)) }
+                }
+                val parentId = row.parent?.trim()?.takeIf { it.isNotEmpty() }?.let { importedByTitle[it] }
+                val id = tasks.save(task.copy(projectId = projectId, parentTaskId = parentId))
+                if (parentId == null) importedByTitle[task.title] = id
                 imported++
             }
         }
@@ -208,6 +231,8 @@ class DataTransfer @Inject constructor(
                 startDate = r.col("start_date"),
                 dueDate = r.col("due_date"),
                 dueTime = r.col("due_time"),
+                project = r.col("project"),
+                parent = r.col("parent"),
                 tags = r.col("tags")?.split(';', ',')?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty(),
                 notes = r.col("notes").orEmpty(),
                 estimatedMinutes = r.col("estimated_minutes")?.let { Digits.toLatin(it).toIntOrNull() },

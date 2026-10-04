@@ -47,11 +47,12 @@ object BackupCodec {
         }
     }
 
-    fun read(input: InputStream): BackupArchive {
+    fun read(input: InputStream, maxTotalBytes: Long = BackupFormat.MAX_TOTAL_BYTES): BackupArchive {
         val entries = mutableMapOf<String, ByteArray>()
         try {
             ZipInputStream(input).use { zip ->
                 var count = 0
+                var totalBytes = 0L
                 while (true) {
                     val entry = zip.nextEntry ?: break
                     count++
@@ -60,7 +61,9 @@ object BackupCodec {
                     // Only flat, known file names are read; anything else is ignored.
                     if (entry.isDirectory || name.contains('/') || name.contains('\\') || name.contains("..")) continue
                     if (name !in KNOWN) continue
-                    entries[name] = readLimited(zip, BackupFormat.MAX_ENTRY_BYTES)
+                    val bytes = readLimited(zip, minOf(BackupFormat.MAX_ENTRY_BYTES, maxTotalBytes - totalBytes))
+                    totalBytes += bytes.size
+                    entries[name] = bytes
                 }
             }
         } catch (e: BackupException) {
@@ -149,6 +152,11 @@ object BackupValidator {
         db.tasks.forEach { t ->
             check(t.projectId == null || t.projectId in projects) { "task ${t.id} references missing project" }
             check(t.parentTaskId == null || (t.parentTaskId in tasks && t.parentTaskId != t.id)) { "task ${t.id} references missing parent" }
+        }
+        // Tag names are unique (the database has a unique index on the exact name), and so are links.
+        check(db.tags.map { it.name }.let { it.toSet().size == it.size }) { "duplicate tag names" }
+        for ((name, links) in listOf("task" to db.taskTags, "project" to db.projectTags, "note" to db.noteTags)) {
+            check(links.map { it.a to it.b }.toSet().size == links.size) { "duplicate $name tag links" }
         }
         db.taskTags.forEach { check(it.a in tasks && it.b in tags) { "task tag references missing record" } }
         db.projectTags.forEach { check(it.a in projects && it.b in tags) { "project tag references missing record" } }

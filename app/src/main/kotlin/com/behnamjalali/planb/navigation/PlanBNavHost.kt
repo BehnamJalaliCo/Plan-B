@@ -262,7 +262,8 @@ fun NavHostController.openTemplateResult(result: TemplateResult) {
 
 /** Handles `planb://open/<type>/<id>` links from notifications. */
 fun NavHostController.handleDeepLink(uri: Uri) {
-    if (uri.scheme != "planb") return
+    // Only our own notification links (planb://open/...) are honoured.
+    if (uri.scheme != "planb" || uri.host != "open") return
     val segments = uri.pathSegments
     val id = segments.getOrNull(1)?.toLongOrNull()
     when (segments.firstOrNull()) {

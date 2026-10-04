@@ -39,7 +39,7 @@ class PlannerDateFormatter(
 
     fun dayNumber(date: LocalDate): String = numbers.format(engine.toCalendarDate(date).day)
 
-    /** e.g. "شنبه ۱۲ مهر ۱۴۰۵" / "Saturday, October 3, 2026". */
+    /** e.g. "یکشنبه ۱۲ مهر ۱۴۰۵" / "Sunday, October 4, 2026". */
     fun fullDate(date: LocalDate): String {
         val c = engine.toCalendarDate(date)
         val pattern = if (isJalali) R.string.date_pattern_full_jalali else R.string.date_pattern_full_gregorian

@@ -42,7 +42,7 @@ interface ProjectRepository {
 }
 
 @Singleton
-internal class OfflineProjectRepository @Inject constructor(
+class OfflineProjectRepository @Inject constructor(
     private val db: PlanBDatabase,
     private val dao: ProjectDao,
     private val tagDao: TagDao,

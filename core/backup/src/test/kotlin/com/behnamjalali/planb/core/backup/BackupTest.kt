@@ -1,12 +1,15 @@
 package com.behnamjalali.planb.core.backup
 
 import android.content.Context
+import android.net.Uri
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.behnamjalali.planb.core.data.DocumentFiles
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.SearchIndexMaintenance
+import com.behnamjalali.planb.core.data.repository.OfflineProjectRepository
+import com.behnamjalali.planb.core.data.repository.OfflineTaskRepository
 import com.behnamjalali.planb.core.database.PlanBDatabase
 import com.behnamjalali.planb.core.database.entity.HabitEntity
 import com.behnamjalali.planb.core.database.entity.NoteEntity
@@ -180,6 +183,17 @@ class BackupTest {
     }
 
     @Test
+    fun oversizedArchive_isRejectedBeforeExhaustingMemory() {
+        // Highly compressible content: tiny on disk, large when inflated (a zip bomb in miniature).
+        val bytes = zip("manifest.json" to manifestV1, "database.json" to " ".repeat(64 * 1024))
+        val error = assertThrows(BackupException.Corrupt::class.java) {
+            BackupCodec.read(ByteArrayInputStream(bytes), maxTotalBytes = 16 * 1024)
+        }
+        assertThat(error.message).contains("too large")
+        assertThat(bytes.size).isLessThan(4 * 1024)
+    }
+
+    @Test
     fun corruptZip_isRejected() {
         val good = zip("manifest.json" to manifestV1, "database.json" to "{}")
         val truncated = good.copyOf(good.size / 2)
@@ -208,6 +222,12 @@ class BackupTest {
         assertThrows(BackupException.Invalid::class.java) { BackupValidator.validate(orphan) }
         val cycle = BackupDatabase(tasks = listOf(TaskDto(1, "a", parentTaskId = 2), TaskDto(2, "b", parentTaskId = 1)))
         assertThrows(BackupException.Invalid::class.java) { BackupValidator.validate(cycle) }
+        val sameTagName = BackupDatabase(tags = listOf(TagDto(1, "کار"), TagDto(2, "کار")))
+        assertThrows(BackupException.Invalid::class.java) { BackupValidator.validate(sameTagName) }
+        val caseVariants = BackupDatabase(tags = listOf(TagDto(1, "Work"), TagDto(2, "work")))
+        BackupValidator.validate(caseVariants) // allowed, like in the database
+        val duplicateLink = BackupDatabase(tasks = listOf(TaskDto(1, "a")), tags = listOf(TagDto(1, "x")), taskTags = listOf(RefDto(1, 1), RefDto(1, 1)))
+        assertThrows(BackupException.Invalid::class.java) { BackupValidator.validate(duplicateLink) }
     }
 
     @Test
@@ -243,5 +263,58 @@ class BackupTest {
         val text = Csv.write(listOf("title", "notes"), listOf(listOf("خرید \"نان\", شیر", "line1\nline2")))
         val rows = Csv.parse(text)
         assertThat(rows[1]).containsExactly("خرید \"نان\", شیر", "line1\nline2").inOrder()
+    }
+
+    private fun transfer(): DataTransfer {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val time = FakeTimeProvider()
+        return DataTransfer(
+            db.backupDao(),
+            OfflineTaskRepository(db, db.taskDao(), db.tagDao(), db.searchDao(), time, reminders),
+            OfflineProjectRepository(db, db.projectDao(), db.tagDao(), db.searchDao(), time),
+            DocumentFiles(context, Dispatchers.IO),
+        )
+    }
+
+    @Test
+    fun taskExport_thenImport_addsCopiesLinkedToProjects_withoutOverwriting() = runBlocking {
+        seed()
+        val transfer = transfer()
+        for (extension in listOf("csv", "json")) {
+            val file = File(Files.createTempDirectory("export").toFile(), "tasks.$extension")
+            val uri = Uri.fromFile(file)
+            val before = db.backupDao().tasks()
+            val exported = if (extension == "csv") transfer.exportTasksCsv(uri) else transfer.exportTasksJson(uri)
+            assertThat(exported).isEqualTo(before.size)
+
+            val result = transfer.importTasks(uri)
+            assertThat(result.imported).isEqualTo(before.size)
+            val after = db.backupDao().tasks()
+            // Originals untouched, copies added.
+            assertThat(after.size).isEqualTo(before.size * 2)
+            assertThat(after.filter { it.id in before.map { b -> b.id } }).containsExactlyElementsIn(before)
+            // Copies of project tasks are linked to the existing project by name, and the
+            // subtask copy is linked to the copy of its parent.
+            val copies = after.filterNot { it.id in before.map { b -> b.id } }
+            assertThat(copies.count { it.projectId == 1L }).isEqualTo(before.count { it.projectId == 1L })
+            val subtaskCopies = copies.filter { it.title == "زیرکار" }
+            assertThat(subtaskCopies).isNotEmpty()
+            subtaskCopies.forEach { sub ->
+                assertThat(copies.single { it.id == sub.parentTaskId }.title).isEqualTo(before.single { it.id == 1L }.title)
+            }
+        }
+        assertThat(db.backupDao().projects()).hasSize(1)
+    }
+
+    @Test
+    fun csvImport_unknownProject_createsIt_andSkipsInvalidRows() = runBlocking {
+        val file = File(Files.createTempDirectory("import").toFile(), "tasks.csv")
+        file.writeText("title,due_date,project\nخرید,۱۴۰۵-۰۱-۰۱x,\nPlan trip,2026-10-05,سفر\n,2026-10-05,\n")
+        val result = transfer().importTasks(Uri.fromFile(file))
+        assertThat(result.imported).isEqualTo(1)
+        assertThat(result.skipped).isEqualTo(2)
+        val project = db.backupDao().projects().single()
+        assertThat(project.title).isEqualTo("سفر")
+        assertThat(db.backupDao().tasks().single().projectId).isEqualTo(project.id)
     }
 }

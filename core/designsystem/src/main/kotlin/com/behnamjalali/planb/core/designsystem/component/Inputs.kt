@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -78,7 +79,9 @@ fun PlannerChip(
         else -> scheme.onSurfaceVariant
     }
     Surface(
+        // 40dp visual height inside a 48dp touch target.
         modifier = modifier
+            .minimumInteractiveComponentSize()
             .defaultMinSize(minHeight = 40.dp)
             .selectable(selected = selected, onClick = onClick, role = Role.Tab),
         shape = RoundedCornerShape(Radius.pill),
@@ -241,7 +244,7 @@ fun <T> PlannerSegmentedControl(
                 Box(
                     Modifier
                         .weight(1f)
-                        .heightIn(min = MinTouchTarget - Spacing.xs)
+                        .heightIn(min = MinTouchTarget)
                         .selectable(selected = isSelected, onClick = { onSelect(option) }, role = Role.Tab),
                     contentAlignment = Alignment.Center,
                 ) {

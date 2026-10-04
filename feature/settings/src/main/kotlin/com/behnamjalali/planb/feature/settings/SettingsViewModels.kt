@@ -10,6 +10,7 @@ import com.behnamjalali.planb.core.backup.BackupManager
 import com.behnamjalali.planb.core.backup.DataTransfer
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
+import com.behnamjalali.planb.core.model.AppLanguage
 import com.behnamjalali.planb.core.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -44,7 +45,8 @@ class SettingsViewModel @Inject constructor(
 sealed interface DataMessage {
     data object BackupCreated : DataMessage
     data object BackupFailed : DataMessage
-    data object Restored : DataMessage
+    /** [language] is the restored language preference, applied to the app by the screen. */
+    data class Restored(val language: AppLanguage) : DataMessage
     data class RestoreError(val error: Throwable) : DataMessage
     data class Exported(val count: Int) : DataMessage
     data object ExportFailed : DataMessage
@@ -69,6 +71,7 @@ enum class ExportKind { TASKS_CSV, TASKS_JSON, NOTES_MARKDOWN, NOTES_JSON }
 class DataViewModel @Inject constructor(
     private val backup: BackupManager,
     private val transfer: DataTransfer,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(DataUiState())
     val state: StateFlow<DataUiState> = _state.asStateFlow()
@@ -107,7 +110,7 @@ class DataViewModel @Inject constructor(
         _state.value = _state.value.copy(pendingRestore = null)
         work {
             runCatchingSafely { backup.restore(archive) }
-                .onSuccess { _messages.tryEmit(DataMessage.Restored) }
+                .onSuccess { _messages.tryEmit(DataMessage.Restored(settings.current().language)) }
                 .onFailure { _messages.tryEmit(DataMessage.RestoreError(it)) }
         }
     }

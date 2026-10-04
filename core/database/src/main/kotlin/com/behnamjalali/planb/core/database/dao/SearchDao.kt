@@ -26,7 +26,7 @@ interface SearchDao {
     @Query("DELETE FROM search_index")
     suspend fun clear()
 
-    /** [match] must be a sanitized FTS4 query (see SearchQuery). */
+    /** [match] must be a sanitized FTS4 query built by SearchIndexer.matchQuery. */
     @Query("SELECT entity_type, entity_id FROM search_index WHERE search_index MATCH :match LIMIT :limit")
     suspend fun search(match: String, limit: Int): List<SearchHit>
 }

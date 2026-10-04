@@ -74,7 +74,7 @@
     <string name="date_pattern_month_year">%1$s %2$s</string>
     <!-- %1$s weekday, %2$s short date -->
     <string name="date_pattern_weekday_date">%1$s, %2$s</string>
-    <!-- %1$d minutes -->
+    <!-- %1$s minutes (already localized digits) -->
     <plurals name="duration_minutes">
         <item quantity="one">%1$s min</item>
         <item quantity="other">%1$s min</item>

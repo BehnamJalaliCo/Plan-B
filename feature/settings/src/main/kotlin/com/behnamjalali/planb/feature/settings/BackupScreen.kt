@@ -2,6 +2,7 @@ package com.behnamjalali.planb.feature.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.os.LocaleListCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.behnamjalali.planb.core.backup.BackupFormat
@@ -58,7 +60,15 @@ fun BackupDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, 
             val text = when (m) {
                 DataMessage.BackupCreated -> resources.getString(R.string.backup_created)
                 DataMessage.BackupFailed -> resources.getString(R.string.backup_failed)
-                DataMessage.Restored -> resources.getString(R.string.backup_restored)
+                is DataMessage.Restored -> {
+                    // The restored language must also become the app's language (it drives
+                    // resources, not just the stored preference).
+                    val tag = m.language.tag
+                    if (AppCompatDelegate.getApplicationLocales().toLanguageTags() != tag) {
+                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tag))
+                    }
+                    resources.getString(R.string.backup_restored)
+                }
                 is DataMessage.RestoreError -> resources.getString(restoreErrorMessage(m.error))
                 is DataMessage.Exported -> resources.getQuantityString(R.plurals.export_done, m.count, numbers.format(m.count))
                 DataMessage.ExportFailed -> resources.getString(R.string.export_failed)
