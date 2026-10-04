@@ -7,6 +7,7 @@ import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.RestoreFromTrash
 import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material.icons.rounded.QueryStats
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Search
@@ -20,6 +21,7 @@ import com.behnamjalali.planb.feature.goals.GoalsRoute
 import com.behnamjalali.planb.feature.pro.PaywallRoute
 import com.behnamjalali.planb.feature.habits.HabitsRoute
 import com.behnamjalali.planb.feature.projects.ProjectsRoute
+import com.behnamjalali.planb.feature.reports.StatisticsRoute
 import com.behnamjalali.planb.feature.review.ReviewRoute
 import com.behnamjalali.planb.feature.search.SearchRoute
 import com.behnamjalali.planb.feature.security.ActivityRoute
@@ -46,6 +48,7 @@ object MoreEntries {
         MoreEntry(R.string.more_section_grow, R.string.more_goals, Icons.Rounded.Flag, GoalsRoute, R.string.more_goals_sub),
         MoreEntry(R.string.more_section_grow, R.string.more_focus, Icons.Rounded.Timer, FocusRoute, R.string.more_focus_sub),
         MoreEntry(R.string.more_section_grow, R.string.more_review, Icons.Rounded.Insights, ReviewRoute, R.string.more_review_sub),
+        MoreEntry(R.string.more_section_grow, R.string.more_statistics, Icons.Rounded.QueryStats, StatisticsRoute, R.string.more_statistics_sub),
         MoreEntry(R.string.more_section_app, R.string.more_settings, Icons.Rounded.Settings, SettingsRoute, R.string.more_settings_sub),
         MoreEntry(R.string.more_section_app, R.string.more_trash, Icons.Rounded.RestoreFromTrash, TrashRoute, R.string.more_trash_sub),
         MoreEntry(R.string.more_section_app, R.string.more_activity, Icons.Rounded.History, ActivityRoute(), R.string.more_activity_sub),

@@ -29,7 +29,19 @@ the app has no ads, analytics or tracking):
 | `INTERNET` | Only the optional AI assistant, off until the user adds their own key | فقط دستیار هوش مصنوعی اختیاری؛ تا وارد کردن کلید شخصی خاموش است |
 | `PAY_THROUGH_BAZAAR` | Plan-B Pro purchases through Cafe Bazaar | خرید Plan-B Pro از طریق کافه‌بازار |
 | `USE_BIOMETRIC`, `USE_FINGERPRINT` | Plan-B Pro App lock and locked notes (the device's own fingerprint, face or screen lock) | قفل برنامه و یادداشت‌های قفل‌شدهٔ Plan-B Pro (اثر انگشت، چهره یا قفل صفحهٔ خود گوشی) |
-| `WAKE_LOCK` | Let short background jobs finish (Plan-B Pro automatic backups, emptying the 30-day trash) | تمام شدن کارهای کوتاه پس‌زمینه (پشتیبان‌گیری خودکار Plan-B Pro، خالی شدن سطل زبالهٔ ۳۰ روزه) |
+| `WAKE_LOCK` | Let short background jobs finish (Plan-B Pro automatic backups, emptying the 30-day trash, home-screen widget updates) | تمام شدن کارهای کوتاه پس‌زمینه (پشتیبان‌گیری خودکار Plan-B Pro، خالی شدن سطل زبالهٔ ۳۰ روزه، به‌روزرسانی ابزارک‌ها) |
+
+| Permission | English | فارسی |
+|---|---|---|
+| `POST_NOTIFICATIONS` | Show the reminders you set | نمایش یادآورهایی که تنظیم می‌کنید |
+| `SCHEDULE_EXACT_ALARM` | Deliver reminders at the exact minute | ارسال یادآورها سر دقیقه |
+| `RECEIVE_BOOT_COMPLETED` | Restore reminders after a restart | بازگرداندن یادآورها پس از روشن شدن دوباره |
+| `INTERNET` | Optional AI assistant only, with your own key | فقط دستیار هوش مصنوعی اختیاری، با کلید خودتان |
+| `PAY_THROUGH_BAZAAR` | Buy Plan-B Pro through Cafe Bazaar | خرید Plan-B Pro از کافه‌بازار |
+
+The last three are normal permissions (granted at install, never asked) and appear because the
+Plan-B Pro widgets use Jetpack Glance. The Wear OS companion is a separate app and is not part of
+the Cafe Bazaar upload.
 
 ## In-app products (Plan-B Pro)
 

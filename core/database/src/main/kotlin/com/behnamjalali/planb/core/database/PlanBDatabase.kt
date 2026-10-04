@@ -34,6 +34,7 @@ import com.behnamjalali.planb.core.database.dao.NoteDao
 import com.behnamjalali.planb.core.database.dao.NoteDraftDao
 import com.behnamjalali.planb.core.database.dao.ProjectDao
 import com.behnamjalali.planb.core.database.dao.SearchDao
+import com.behnamjalali.planb.core.database.dao.StatisticsDao
 import com.behnamjalali.planb.core.database.dao.TagDao
 import com.behnamjalali.planb.core.database.dao.TaskDao
 import com.behnamjalali.planb.core.database.dao.TemplateDao
@@ -119,6 +120,9 @@ abstract class PlanBDatabase : RoomDatabase() {
     abstract fun challengeDao(): ChallengeDao
     abstract fun activityLogDao(): ActivityLogDao
     abstract fun calendarLinkDao(): CalendarLinkDao
+
+    /** Read-only queries for statistics and reports (no tables of its own). */
+    abstract fun statisticsDao(): StatisticsDao
 
     companion object {
         const val VERSION = 3

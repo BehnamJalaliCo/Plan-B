@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wear_app_name">Plan-B</string>
+    <string name="wear_waiting">Open Plan-B on your phone to see today’s tasks here.</string>
+</resources>

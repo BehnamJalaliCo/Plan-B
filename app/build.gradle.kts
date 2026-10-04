@@ -124,6 +124,7 @@ dependencies {
     implementation(projects.feature.settings)
     implementation(projects.feature.pro)
     implementation(projects.feature.security)
+    implementation(projects.feature.reports)
     implementation(projects.core.backup)
     implementation(projects.core.billing)
     implementation(projects.core.ai)
@@ -140,6 +141,11 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    // Wear OS companion sync; every call is guarded so devices without Play services are unaffected.
+    implementation(libs.play.services.wearable)
+    implementation(libs.kotlinx.coroutines.play.services)
     baselineProfile(projects.baselineprofile)
 
     testImplementation(projects.core.testing)
@@ -147,6 +153,7 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.room.runtime)
     testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.androidx.glance.appwidget.testing)
 
     androidTestImplementation(projects.core.database)
     androidTestImplementation(libs.androidx.room.runtime)

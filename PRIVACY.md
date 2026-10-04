@@ -30,6 +30,10 @@ device (a local database and a preferences file) and are readable only by Plan-B
 | Biometrics (`USE_BIOMETRIC`, `USE_FINGERPRINT`) | Plan-B Pro App lock and locked notes: your device's own fingerprint, face or screen lock confirms it's you. Plan-B never sees or stores biometric data. |
 | Keep awake (`WAKE_LOCK`) | Lets short background jobs finish: Plan-B Pro automatic backups and emptying the 30-day trash. |
 
+With Plan-B Pro and a paired Wear OS watch, today's open tasks and habits are sent directly to
+your watch over Google's Wearable Data Layer (Bluetooth or your own Wi-Fi); this needs Google
+Play services and nothing goes to a server of ours.
+
 Plan-B does not access contacts, location, camera, microphone, accounts or shared storage.
 
 ## Plan-B Pro purchases

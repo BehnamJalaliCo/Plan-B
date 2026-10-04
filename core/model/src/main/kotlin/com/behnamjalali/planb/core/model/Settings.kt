@@ -15,6 +15,35 @@ enum class AppLanguage(val tag: String) {
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/**
+ * The app's color palette. [CLASSIC] is the free brand palette; the others are Plan-B Pro
+ * themes (#33). Stored by [key]; unknown keys read as [CLASSIC].
+ */
+enum class ColorTheme(val key: String) {
+    CLASSIC("classic"),
+    OCEAN("ocean"),
+    FOREST("forest"),
+    SUNSET("sunset"),
+    BLOSSOM("blossom"),
+    MIDNIGHT("midnight"),
+    ;
+
+    val isPremium: Boolean get() = this != CLASSIC
+
+    companion object {
+        fun fromKey(key: String?): ColorTheme = entries.firstOrNull { it.key == key } ?: CLASSIC
+    }
+}
+
+/** Launcher icon variants (Plan-B Pro, #33). The enabled launcher alias is the source of truth. */
+enum class AppIcon(val key: String) {
+    CLASSIC("classic"),
+    OCEAN("ocean"),
+    SUNSET("sunset"),
+    FOREST("forest"),
+    MIDNIGHT("midnight"),
+}
+
 enum class NumberFormatMode {
     /** Persian digits for Persian UI, Latin digits for English UI. */
     AUTO,
@@ -67,7 +96,12 @@ data class UserSettings(
     val focusMinutes: Int = 25,
     val shortBreakMinutes: Int = 5,
     val onboardingCompleted: Boolean = false,
+    /** Chosen palette; only applied while the user has Plan-B Pro (see [effectiveColorTheme]). */
+    val colorTheme: ColorTheme = ColorTheme.CLASSIC,
 ) {
+    /** The palette to draw with: premium themes fall back to the classic one without Pro. */
+    fun effectiveColorTheme(isPro: Boolean): ColorTheme = if (isPro || !colorTheme.isPremium) colorTheme else ColorTheme.CLASSIC
+
     val calendarSystem: CalendarSystem
         get() = calendarSystemOverride
             ?: if (language == AppLanguage.PERSIAN) CalendarSystem.JALALI else CalendarSystem.GREGORIAN

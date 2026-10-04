@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.behnamjalali.planb.core.model.AppLanguage
 import com.behnamjalali.planb.core.model.CalendarSystem
 import com.behnamjalali.planb.core.model.CalendarView
+import com.behnamjalali.planb.core.model.ColorTheme
 import com.behnamjalali.planb.core.model.DashboardConfig
 import com.behnamjalali.planb.core.model.DashboardSection
 import com.behnamjalali.planb.core.model.NumberFormatMode
@@ -50,6 +51,7 @@ class UserPreferencesDataSource @Inject constructor(
         val focusMinutes = intPreferencesKey("focus_minutes")
         val breakMinutes = intPreferencesKey("short_break_minutes")
         val onboarding = booleanPreferencesKey("onboarding_completed")
+        val colorTheme = stringPreferencesKey("color_theme")
 
         /** Normalizer version the search index was built with (device state, never exported). */
         val searchIndexVersion = intPreferencesKey("search_index_version")
@@ -144,6 +146,7 @@ class UserPreferencesDataSource @Inject constructor(
             focusMinutes = int(Keys.focusMinutes)?.coerceIn(1, 180) ?: d.focusMinutes,
             shortBreakMinutes = int(Keys.breakMinutes)?.coerceIn(1, 60) ?: d.shortBreakMinutes,
             onboardingCompleted = bool(Keys.onboarding) ?: d.onboardingCompleted,
+            colorTheme = str(Keys.colorTheme)?.let { key -> ColorTheme.entries.firstOrNull { it.key == key } } ?: d.colorTheme,
         )
     }
 
@@ -174,6 +177,7 @@ class UserPreferencesDataSource @Inject constructor(
         prefs[Keys.focusMinutes] = s.focusMinutes
         prefs[Keys.breakMinutes] = s.shortBreakMinutes
         prefs[Keys.onboarding] = s.onboardingCompleted
+        prefs[Keys.colorTheme] = s.colorTheme.key
     }
 }
 

@@ -118,4 +118,17 @@
     <string name="settings_developer_none">بدون پرو</string>
     <string name="licenses_poolakey">Poolakey (پرداخت درون‌برنامه‌ای کافه‌بازار) — مجوز Apache 2.0، © کافه‌بازار</string>
     <string name="licenses_okhttp">OkHttp و Okio — مجوز Apache 2.0، © Square, Inc.</string>
+    <string name="appearance_mode">روشن یا تیره</string>
+    <string name="appearance_color_theme">رنگ‌بندی</string>
+    <string name="appearance_app_icon">آیکون برنامه</string>
+    <string name="appearance_selected">انتخاب‌شده</string>
+    <string name="appearance_icon_note">نمایش آیکون جدید در صفحهٔ اصلی ممکن است چند ثانیه طول بکشد. بعضی لانچرها میان‌بری را که روی صفحه گذاشته‌اید جابه‌جا یا حذف می‌کنند؛ در این صورت Plan-B را دوباره از فهرست برنامه‌ها اضافه کنید.</string>
+    <string name="appearance_theme_classic">کلاسیک</string>
+    <string name="appearance_theme_ocean">اقیانوس</string>
+    <string name="appearance_theme_forest">جنگل</string>
+    <string name="appearance_theme_sunset">غروب</string>
+    <string name="appearance_theme_blossom">شکوفه</string>
+    <string name="appearance_theme_midnight">نیمه‌شب</string>
+    <string name="settings_personalize">رنگ‌بندی و آیکون</string>
+    <string name="settings_personalize_summary">رنگ‌بندی‌ها و آیکون‌های برنامه</string>
 </resources>

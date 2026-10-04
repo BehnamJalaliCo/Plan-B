@@ -57,10 +57,11 @@ jobs:
       - name: Android Lint
         run: ./gradlew lintDebug --continue
 
-      - name: Build debug, release, test and benchmark artifacts
+      - name: Build debug, release, test, benchmark and Wear OS artifacts
         run: >-
           ./gradlew assembleDebug :app:assembleRelease :app:bundleRelease
           :app:assembleDebugAndroidTest :baselineprofile:assemble :benchmark:assemble
+          :wear:assembleRelease
 
       - name: Release manifest requests only allowlisted permissions
         # tools/allowed-permissions.txt is the complete list; any other permission (for example

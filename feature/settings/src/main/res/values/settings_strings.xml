@@ -123,4 +123,17 @@
     <string name="settings_developer_none">Not Pro</string>
     <string name="licenses_poolakey">Poolakey (Cafe Bazaar in-app billing) — Apache License 2.0, © Cafe Bazaar</string>
     <string name="licenses_okhttp">OkHttp and Okio — Apache License 2.0, © Square, Inc.</string>
+    <string name="appearance_mode">Light or dark</string>
+    <string name="appearance_color_theme">Color theme</string>
+    <string name="appearance_app_icon">App icon</string>
+    <string name="appearance_selected">Selected</string>
+    <string name="appearance_icon_note">The new icon can take a few seconds to appear on your home screen. Some launchers move or remove the shortcut you placed there; add Plan-B again from the app list if that happens.</string>
+    <string name="appearance_theme_classic">Classic</string>
+    <string name="appearance_theme_ocean">Ocean</string>
+    <string name="appearance_theme_forest">Forest</string>
+    <string name="appearance_theme_sunset">Sunset</string>
+    <string name="appearance_theme_blossom">Blossom</string>
+    <string name="appearance_theme_midnight">Midnight</string>
+    <string name="settings_personalize">Themes and app icon</string>
+    <string name="settings_personalize_summary">Color themes and app icons</string>
 </resources>

@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import com.behnamjalali.planb.core.model.AccentColor
+import com.behnamjalali.planb.core.model.ColorTheme
 
 /** Extended colors beyond Material roles. */
 @Immutable
@@ -38,9 +39,9 @@ data class PlannerExperience(val motion: Motion, val hapticsEnabled: Boolean)
 val LocalPlannerColors = staticCompositionLocalOf<PlannerColors> { error("PlanBTheme not applied") }
 val LocalPlannerExperience = staticCompositionLocalOf { PlannerExperience(Motion(true), hapticsEnabled = true) }
 
-private fun plannerColors(dark: Boolean, scheme: ColorScheme) = PlannerColors(
+private fun plannerColors(dark: Boolean, scheme: ColorScheme, theme: ColorTheme = ColorTheme.CLASSIC) = PlannerColors(
     isDark = dark,
-    heroGradient = if (dark) {
+    heroGradient = ThemePalettes.hero(theme, dark) ?: if (dark) {
         Brush.linearGradient(listOf(Color(0xFF2A2557), Color(0xFF1C2D45), Color(0xFF1B3A35)))
     } else {
         Brush.linearGradient(listOf(Color(0xFFEDE7FF), Color(0xFFE3EEFA), Color(0xFFDDF4EC)))
@@ -70,10 +71,11 @@ fun PlanBTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     animationsEnabled: Boolean = true,
     hapticsEnabled: Boolean = true,
+    colorTheme: ColorTheme = ColorTheme.CLASSIC,
     content: @Composable () -> Unit,
 ) {
-    val scheme = if (darkTheme) DarkColors else LightColors
-    val colors = remember(darkTheme) { plannerColors(darkTheme, scheme) }
+    val scheme = remember(darkTheme, colorTheme) { ThemePalettes.scheme(colorTheme, darkTheme) }
+    val colors = remember(darkTheme, colorTheme) { plannerColors(darkTheme, scheme, colorTheme) }
     val motionEnabled = animationsEnabled && !systemAnimationsDisabled()
     val experience = remember(motionEnabled, hapticsEnabled) { PlannerExperience(Motion(motionEnabled), hapticsEnabled) }
     CompositionLocalProvider(

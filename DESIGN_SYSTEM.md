@@ -52,7 +52,13 @@ and never raw palette values.
 | `outline` / `outlineVariant` | Ink500 / Ink200 | Mist500 / Night600 |
 | `error` | Error600 | Error200 |
 
-There is **no dynamic color**. The brand palette is always used. The theme mode (`SYSTEM`,
+There is **no dynamic color** in the app. The brand palette is used, or, with Plan-B Pro, one
+of the color themes in `theme/ColorThemes.kt` (Ocean, Forest, Sunset, Blossom, Midnight). Each
+theme only replaces the primary/secondary/tertiary families and tints the neutrals of these
+schemes (Midnight's dark variant is true black), and `ColorThemesTest` checks text contrast for
+every theme. `PlanBTheme(colorTheme = …)` applies it; without Pro the classic palette is drawn.
+Home-screen widgets (Glance) use Material You dynamic colors on Android 12+ and the classic
+scheme (`planBColorScheme`) before. The theme mode (`SYSTEM`,
 `LIGHT` or `DARK`) comes from user settings and is resolved in `PlanBProviders`
 (`app/.../ui/PlanBRoot.kt`).
 

@@ -47,6 +47,7 @@ import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Numbers
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Vibration
@@ -256,6 +257,10 @@ fun SettingsScreen(
             }
             item { PlannerSectionHeader(stringResource(R.string.settings_appearance)) }
             item { SettingsRow(stringResource(R.string.settings_appearance), icon = Icons.Rounded.Contrast, subtitle = themeLabel, onClick = { dialog = "theme" }) }
+            item {
+                SettingsRow(stringResource(R.string.settings_personalize), icon = Icons.Rounded.Palette,
+                    subtitle = stringResource(R.string.settings_personalize_summary), onClick = { onOpen(AppearanceRoute) })
+            }
             item { PlannerSectionHeader(stringResource(R.string.settings_calendar)) }
             item {
                 SettingsRow(

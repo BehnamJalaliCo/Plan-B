@@ -19,6 +19,17 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
 - Backup format 2: includes the new data and attachment files; format 1 backups still restore.
 - Infrastructure for an optional AI assistant that uses the user's own provider key (off by
   default; the key is stored encrypted and never backed up).
+- Plan-B Pro reports: statistics for any week, month or year (Jalali or Gregorian) with
+  accessible charts, a "My year" story and PDF export (statistics, My year, weekly review) in
+  the app's Persian font, saved where the user chooses.
+- Plan-B Pro home-screen widgets: Today, Quick add, Habits, Focus and a monthly calendar, with
+  Material You colors; free users see a Pro placeholder.
+- Plan-B Pro themes (Ocean, Forest, Sunset, Blossom, Midnight with true black) and four
+  alternate app icons in Settings → Themes and app icon.
+- Quick-settings tiles (Quick add, Focus) and launcher shortcuts: New task and New note are
+  free; Today and Start focus are Pro.
+- Wear OS companion app (Pro): today's tasks and habit check-ins on the watch, synced with the
+  phone; the phone app keeps working without Google Play services.
 
 - Plan-B Pro **App lock and locked notes** (#36): lock Plan-B with the device's fingerprint,
   face or screen lock (immediately or after 1, 5 or 15 minutes in the background, optionally
@@ -36,6 +47,9 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
 - The app may now use the Internet, only for the optional AI assistant. The release build may
   request only the permissions listed in `tools/allowed-permissions.txt` (checked in CI).
 - Items in the trash are left out of every list, count, reminder, search and export.
+- The launcher entry is now an activity alias (to allow alternate icons); widgets add the
+  normal WorkManager permissions `WAKE_LOCK`, `ACCESS_NETWORK_STATE` and `FOREGROUND_SERVICE`
+  (no runtime permission).
 
 ## [1.0.1] — 2026-10-04
 

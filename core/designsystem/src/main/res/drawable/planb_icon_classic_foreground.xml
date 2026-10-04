@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Plan-B "B" mark (classic icon variant): a cream stem with a warm upper lobe and a cool lower lobe.
+  Artwork is drawn in a 650-unit design space and scaled into the 66dp safe zone.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.1075"
+        android:scaleY="0.1075"
+        android:translateX="16.7"
+        android:translateY="18.8">
+        <!-- Soft shadow -->
+        <path
+            android:fillColor="#144B3FA8"
+            android:pathData="M176,101h234c62,0 100,46 100,100c0,40 -18,66 -40,84c38,20 66,62 66,118c0,84 -62,165 -128,165h-232c-8,0 -14,-6 -14,-14v-439c0,-8 6,-14 14,-14z" />
+        <!-- Stem -->
+        <path android:pathData="M176,95h170v465h-170c-8,0 -14,-6 -14,-14v-437c0,-8 6,-14 14,-14z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="200"
+                    android:startY="95"
+                    android:endX="250"
+                    android:endY="520">
+                    <item android:offset="0" android:color="#FFFFFDF9" />
+                    <item android:offset="1" android:color="#FFF1EBF6" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Upper lobe -->
+        <path android:pathData="M172,96L410,96C470,96 503,140 503,192C503,240 485,275 460,290L298,386C326,330 336,290 330,262C322,232 305,215 290,203Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="230"
+                    android:startY="330"
+                    android:endX="500"
+                    android:endY="110">
+                    <item android:offset="0" android:color="#FFEE5FA0" />
+                    <item android:offset="0.45" android:color="#FFF77C74" />
+                    <item android:offset="1" android:color="#FFFFD27C" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:pathData="M172,96L410,96C470,96 503,140 503,192C503,240 485,275 460,290L298,386C326,330 336,290 330,262C322,232 305,215 290,203Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="172"
+                    android:startY="96"
+                    android:endX="330"
+                    android:endY="200">
+                    <item android:offset="0" android:color="#B3DD4A63" />
+                    <item android:offset="1" android:color="#00DD4A63" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Lower lobe -->
+        <path android:pathData="M162,520C165,465 210,430 270,400L410,322C425,312 440,306 455,306C500,306 532,350 532,420C532,500 485,560 420,560L182,560C170,560 162,552 162,540Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="180"
+                    android:startY="545"
+                    android:endX="520"
+                    android:endY="330">
+                    <item android:offset="0" android:color="#FF4A44D6" />
+                    <item android:offset="0.5" android:color="#FF6F8CF2" />
+                    <item android:offset="1" android:color="#FF9FD6FB" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:pathData="M162,520C165,465 210,430 270,400L410,322C425,312 440,306 455,306C500,306 532,350 532,420C532,500 485,560 420,560L182,560C170,560 162,552 162,540Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="450"
+                    android:startY="306"
+                    android:endX="400"
+                    android:endY="430">
+                    <item android:offset="0" android:color="#99D9C8F8" />
+                    <item android:offset="1" android:color="#00D9C8F8" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+</vector>

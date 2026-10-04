@@ -54,6 +54,9 @@ import com.behnamjalali.planb.core.model.ThemeMode
 import com.behnamjalali.planb.core.model.AccentColor
 import com.behnamjalali.planb.core.model.PlannerIcon
 import com.behnamjalali.planb.core.testing.FakeTimeProvider
+import com.behnamjalali.planb.core.billing.DeveloperBilling
+import com.behnamjalali.planb.core.billing.EntitlementRepository
+import com.behnamjalali.planb.core.billing.ProProduct
 import com.github.takahirom.roborazzi.captureRoboImage
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -78,6 +81,7 @@ import com.behnamjalali.planb.feature.focus.R as FocusR
 import com.behnamjalali.planb.feature.habits.R as HabitsR
 import com.behnamjalali.planb.feature.pro.R as ProR
 import com.behnamjalali.planb.feature.projects.R as ProjectsR
+import com.behnamjalali.planb.feature.reports.R as ReportsR
 import com.behnamjalali.planb.feature.review.R as ReviewR
 import com.behnamjalali.planb.feature.settings.R as SettingsR
 import com.behnamjalali.planb.feature.templates.R as TemplatesR
@@ -504,6 +508,48 @@ class AppScreenshotTest(private val variant: Variant) {
     }
 
     // endregion
+
+    /** Plan-B Pro screens (WP5) are captured as a Pro user, through the debug store. */
+    private fun enablePro() {
+        developerBilling.setOwned(ProProduct.LIFETIME)
+        // The entitlement cache is written on the application scope: let the main looper run
+        // (it may be the scope's dispatcher) until the store's answer has been saved.
+        val deadline = System.currentTimeMillis() + 30_000
+        while (!runBlocking { entitlements.current().isPro }) {
+            check(System.currentTimeMillis() < deadline) { "Pro was not enabled" }
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(50))
+            Thread.sleep(20)
+        }
+    }
+
+    @Test
+    fun statistics() {
+        enablePro()
+        launch()
+        openMore(AppR.string.more_statistics)
+        waitFor(hasText(s(ReportsR.string.reports_completed_chart)))
+        capture("reports", "statistics")
+    }
+
+    @Test
+    fun yearReport() {
+        enablePro()
+        launch()
+        openMore(AppR.string.more_statistics)
+        click(s(ReportsR.string.reports_open_year))
+        waitFor(hasText(s(ReportsR.string.year_tasks)))
+        capture("reports", "my_year")
+    }
+
+    @Test
+    fun appearance() {
+        enablePro()
+        launch()
+        openMore(AppR.string.more_settings)
+        click(s(SettingsR.string.settings_personalize))
+        waitFor(hasText(s(SettingsR.string.appearance_app_icon)))
+        capture("settings", "appearance")
+    }
 
     @Test
     fun onboarding() {

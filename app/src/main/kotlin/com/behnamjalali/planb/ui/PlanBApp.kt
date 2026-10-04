@@ -82,7 +82,12 @@ fun PlanBApp(
 
     LaunchedEffect(pendingLink) {
         if (pendingLink != null) {
-            navController.handleDeepLink(pendingLink)
+            // Quick add from a widget, tile or shortcut opens Quick Capture over the current screen.
+            if (pendingLink.scheme == "planb" && pendingLink.host == "open" && pendingLink.pathSegments.firstOrNull() == "capture") {
+                capturing = true
+            } else {
+                navController.handleDeepLink(pendingLink)
+            }
             onLinkHandled()
         }
     }

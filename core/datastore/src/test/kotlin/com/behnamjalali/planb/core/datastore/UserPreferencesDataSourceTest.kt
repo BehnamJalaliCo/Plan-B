@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.behnamjalali.planb.core.model.AppLanguage
 import com.behnamjalali.planb.core.model.CalendarSystem
+import com.behnamjalali.planb.core.model.ColorTheme
 import com.behnamjalali.planb.core.model.DashboardSection
 import com.behnamjalali.planb.core.model.ThemeMode
 import com.behnamjalali.planb.core.model.UserSettings
@@ -122,5 +123,21 @@ class UserPreferencesDataSourceTest {
         target.import(exported)
         assertThat(target.current().calendarSystemOverride).isNull()
         assertThat(target.current().firstDayOfWeekOverride).isNull()
+    }
+
+    @Test
+    fun colorTheme_roundTripsAndUnknownKeysFallBack() = runTest {
+        val dir = Files.createTempDirectory("prefs").toFile()
+        val store = newStore(dir, backgroundScope)
+        val source = UserPreferencesDataSource(store)
+        source.update { it.copy(colorTheme = ColorTheme.OCEAN) }
+        assertThat(source.current().colorTheme).isEqualTo(ColorTheme.OCEAN)
+        assertThat(source.export()["color_theme"]).isEqualTo("ocean")
+        store.edit { it[stringPreferencesKey("color_theme")] = "neon_future_theme" }
+        assertThat(source.current().colorTheme).isEqualTo(ColorTheme.CLASSIC)
+        // Without Pro, a premium theme is drawn with the classic palette.
+        val ocean = UserSettings(colorTheme = ColorTheme.OCEAN)
+        assertThat(ocean.effectiveColorTheme(isPro = false)).isEqualTo(ColorTheme.CLASSIC)
+        assertThat(ocean.effectiveColorTheme(isPro = true)).isEqualTo(ColorTheme.OCEAN)
     }
 }

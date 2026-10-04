@@ -15,4 +15,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     // App lock and locked notes (Plan-B Pro #36): the device's own lock through BiometricPrompt.
     api(libs.androidx.biometric)
+
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }

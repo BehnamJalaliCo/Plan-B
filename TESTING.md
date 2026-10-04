@@ -19,9 +19,9 @@ needs no emulator. CI also runs the device suite on an Android emulator.
 
 | Module | Tests | Focus |
 |---|---|---|
-| `core:model` | 33 | Recurrence/habit encodings, habit streaks and rates, goal pace, Markdown import/export |
+| `core:model` | 45 | Recurrence/habit encodings, habit streaks and rates, goal pace, Markdown import/export, statistics aggregation (Pro reports) |
 | `core:common` | 16 | Persian/Latin digits, search normalization (Arabic ي/ك, ZWNJ, diacritics, digits) |
-| `core:datetime` | 28 | Jalali conversion and month lengths (incl. leap years), month grids, recurrence (intervals, weekdays, month-end clamping, Jalali months, counts/until, DST) |
+| `core:datetime` | 31 | Jalali conversion and month lengths (incl. leap years), month grids, recurrence (intervals, weekdays, month-end clamping, Jalali months, counts/until, DST), Jalali/Gregorian statistics periods |
 | `core:database` | 16 | DAOs, cascades and constraints, FTS queries, migrations 1→2, 2→3 and 1→3 against the exported schemas (existing data survives), soft-delete filters of every list query, the v3 DAOs |
 | `core:datastore` | 8 | Defaults, round-trips, tolerance of malformed values |
 | `core:data` | 65 | Locked-note crypto (round trip, wrong passphrase, tamper detection), note vault and restore on a new device, App lock timeout policy and controller, trash (Pro only, subtasks, restore re-indexes and reschedules, 30-day purge), activity history (merging, cap, no note bodies), Pro schema fields round-trip, trash excluded from lists and search, locked notes indexed by title only; task filtering/sorting/views, recurrence spawning, reminders scheduling, notes hierarchy, drafts, habits, goals, events validation, focus timing, search indexing, templates, **large-dataset performance** |
