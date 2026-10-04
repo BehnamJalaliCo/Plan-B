@@ -14,5 +14,14 @@ android.permission.SCHEDULE_EXACT_ALARM
 # Plan-B Pro purchases through the installed Cafe Bazaar app (Poolakey).
 com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR
 
+# Plan-B Pro App lock and locked notes (androidx.biometric): the device's own fingerprint, face
+# or screen lock confirms the user. USE_FINGERPRINT is the same for Android 8.x (API 26–27).
+android.permission.USE_BIOMETRIC
+android.permission.USE_FINGERPRINT
+
+# WorkManager (automatic backups, 30-day trash purge): keeps the device awake while a short
+# background job runs. Its network and foreground-service permissions are removed in the manifest.
+android.permission.WAKE_LOCK
+
 # Added by AndroidX core: protects the app's own non-exported dynamic receivers.
 com.behnamjalali.planb.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION

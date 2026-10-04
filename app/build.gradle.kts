@@ -123,6 +123,7 @@ dependencies {
     implementation(projects.feature.review)
     implementation(projects.feature.settings)
     implementation(projects.feature.pro)
+    implementation(projects.feature.security)
     implementation(projects.core.backup)
     implementation(projects.core.billing)
     implementation(projects.core.ai)
@@ -138,6 +139,7 @@ dependencies {
     implementation(libs.androidx.compose.material.iconsExtended)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.profileinstaller)
+    implementation(libs.androidx.work.runtime)
     baselineProfile(projects.baselineprofile)
 
     testImplementation(projects.core.testing)

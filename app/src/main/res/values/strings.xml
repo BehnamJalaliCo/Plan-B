@@ -40,4 +40,8 @@
     <string name="more_section_pro">Plan-B Pro</string>
     <string name="more_pro">Plan-B Pro</string>
     <string name="more_pro_sub">New tools; free features stay free</string>
+    <string name="more_trash">Trash</string>
+    <string name="more_trash_sub">Deleted tasks and notes, kept for a month</string>
+    <string name="more_activity">Activity</string>
+    <string name="more_activity_sub">What changed, and when</string>
 </resources>

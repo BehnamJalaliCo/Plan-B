@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.behnamjalali.planb.core.data.repository.TemplateResult
 import com.behnamjalali.planb.core.designsystem.theme.PlanBTheme
+import com.behnamjalali.planb.core.model.ActivityEntityType
 import com.behnamjalali.planb.core.model.SearchEntityType
 import com.behnamjalali.planb.core.model.SearchResult
 import com.behnamjalali.planb.core.model.TemplateType
@@ -53,6 +54,12 @@ import com.behnamjalali.planb.feature.review.ReviewDestination
 import com.behnamjalali.planb.feature.review.ReviewRoute
 import com.behnamjalali.planb.feature.search.SearchDestination
 import com.behnamjalali.planb.feature.search.SearchRoute
+import com.behnamjalali.planb.feature.security.ActivityDestination
+import com.behnamjalali.planb.feature.security.ActivityRoute
+import com.behnamjalali.planb.feature.security.SecurityDestination
+import com.behnamjalali.planb.feature.security.SecurityRoute
+import com.behnamjalali.planb.feature.security.TrashDestination
+import com.behnamjalali.planb.feature.security.TrashRoute
 import com.behnamjalali.planb.feature.settings.AboutDestination
 import com.behnamjalali.planb.feature.settings.AboutRoute
 import com.behnamjalali.planb.feature.settings.BackupDestination
@@ -152,7 +159,11 @@ fun PlanBNavHost(
         }
         composable<TaskEditorRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
-            TaskEditorDestination(onClose = nav.back, onOpenSubtask = { nav.navigate(TaskEditorRoute(taskId = it)) })
+            TaskEditorDestination(
+                onClose = nav.back,
+                onOpenSubtask = { nav.navigate(TaskEditorRoute(taskId = it)) },
+                onOpenActivity = { nav.navigate(ActivityRoute(ActivityEntityType.TASK.name, it)) },
+            )
         }
         composable<EventEditorRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
@@ -169,9 +180,11 @@ fun PlanBNavHost(
         }
         composable<NoteEditorRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
-            NoteEditorDestination(onClose = nav.back, onOpenNote = {
-                nav.go { navigate(NoteEditorRoute(noteId = it)) { popUpTo<NoteEditorRoute> { inclusive = true } } }
-            })
+            NoteEditorDestination(
+                onClose = nav.back,
+                onOpenNote = { nav.go { navigate(NoteEditorRoute(noteId = it)) { popUpTo<NoteEditorRoute> { inclusive = true } } } },
+                onOpenActivity = { nav.navigate(ActivityRoute(ActivityEntityType.NOTE.name, it)) },
+            )
         }
         composable<ProjectsRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
@@ -255,6 +268,7 @@ fun PlanBNavHost(
                 onOpen = { nav.navigate(it) },
                 onOpenPro = { nav.navigate(PaywallRoute()) },
                 onCustomizeToday = onCustomizeToday,
+                onOpenSecurity = { nav.navigate(SecurityRoute) },
             )
         }
         composable<PaywallRoute> { entry -> PaywallDestination(onBack = rememberScreenNavigator(navController, entry).back) }
@@ -265,6 +279,13 @@ fun PlanBNavHost(
         composable<PrivacyRoute> { entry -> PrivacyDestination(onBack = rememberScreenNavigator(navController, entry).back) }
         composable<AboutRoute> { entry -> AboutDestination(onBack = rememberScreenNavigator(navController, entry).back) }
         composable<LicensesRoute> { entry -> LicensesDestination(onBack = rememberScreenNavigator(navController, entry).back) }
+        // Plan-B Pro security and data (#36–#38).
+        composable<SecurityRoute> { entry -> SecurityDestination(onBack = rememberScreenNavigator(navController, entry).back, snackbarHostState = snackbarHostState) }
+        composable<TrashRoute> { entry -> TrashDestination(onBack = rememberScreenNavigator(navController, entry).back, snackbarHostState = snackbarHostState) }
+        composable<ActivityRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            ActivityDestination(onBack = nav.back, onOpen = { type, id -> nav.go { openActivityItem(type, id) } })
+        }
     }
 }
 
@@ -332,6 +353,19 @@ fun NavHostController.openTemplateResult(result: TemplateResult) {
         TemplateType.PROJECT -> navigate(ProjectDetailRoute(result.id))
         TemplateType.TASKS -> navigateTopLevel(TopLevelDestination.TASKS)
         TemplateType.HABITS -> navigate(HabitsRoute)
+    }
+}
+
+/** Opens the item of an activity entry (a deleted item shows its editor's "not found"). */
+fun NavHostController.openActivityItem(type: ActivityEntityType, id: Long) {
+    when (type) {
+        ActivityEntityType.TASK -> navigate(TaskEditorRoute(taskId = id))
+        ActivityEntityType.PROJECT -> navigate(ProjectDetailRoute(id))
+        ActivityEntityType.NOTE -> navigate(NoteEditorRoute(noteId = id))
+        ActivityEntityType.NOTEBOOK -> navigate(NotebookDetailRoute(id))
+        ActivityEntityType.HABIT -> navigate(HabitDetailRoute(id))
+        ActivityEntityType.GOAL -> navigate(GoalDetailRoute(id))
+        ActivityEntityType.EVENT -> navigate(EventEditorRoute(eventId = id))
     }
 }
 

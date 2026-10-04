@@ -14,6 +14,7 @@ import com.behnamjalali.planb.core.model.UserSettings
 import com.behnamjalali.planb.core.ui.LocalDateFormatter
 import com.behnamjalali.planb.core.ui.LocalToday
 import com.behnamjalali.planb.core.ui.rememberDateFormatter
+import com.behnamjalali.planb.feature.security.AppLockGate
 import java.time.LocalDate
 import kotlinx.coroutines.flow.StateFlow
 
@@ -28,12 +29,15 @@ fun PlanBRoot(
     val link by pendingLink.collectAsStateWithLifecycle()
     val settings = (state as? MainUiState.Ready)?.settings ?: return
     PlanBProviders(settings, today) {
-        PlanBApp(
-            settings = settings,
-            pendingLink = link,
-            onLinkHandled = onLinkHandled,
-            onOnboardingDone = viewModel::completeOnboarding,
-        )
+        // App lock (Plan-B Pro #36) covers the whole app while it is locked.
+        AppLockGate {
+            PlanBApp(
+                settings = settings,
+                pendingLink = link,
+                onLinkHandled = onLinkHandled,
+                onOnboardingDone = viewModel::completeOnboarding,
+            )
+        }
     }
 }
 
