@@ -4,6 +4,9 @@ import androidx.room.withTransaction
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.SearchIndexer
+import com.behnamjalali.planb.core.data.DataHistory
+import com.behnamjalali.planb.core.model.ActivityAction
+import com.behnamjalali.planb.core.model.ActivityEntityType
 import com.behnamjalali.planb.core.data.toEntity
 import com.behnamjalali.planb.core.data.toModel
 import com.behnamjalali.planb.core.database.PlanBDatabase
@@ -42,6 +45,8 @@ class OfflineEventRepository @Inject constructor(
     private val searchDao: SearchDao,
     private val time: TimeProvider,
     private val reminders: ReminderScheduler,
+    /** Activity history (Plan-B Pro); null logs nothing. */
+    private val history: DataHistory? = null,
 ) : EventRepository {
     override fun observeOccurrences(from: LocalDate, to: LocalDate): Flow<List<EventOccurrence>> =
         dao.observeCandidates(from.toEpochDay(), to.toEpochDay()).map { expand(it, from, to) }
@@ -70,11 +75,13 @@ class OfflineEventRepository @Inject constructor(
             throw EventValidationException("Event end must not be before start")
         }
         val now = time.now()
+        val log = history?.active() == true
         val id = db.withTransaction {
             val existing = if (event.id != NEW_ID) dao.getEvent(event.id) else null
             val entity = event.copy(createdAt = existing?.createdAt ?: now, updatedAt = now).toEntity()
             val id = if (existing == null) dao.insert(entity.copy(id = 0)) else entity.id.also { dao.update(entity) }
             searchDao.upsert(SearchIndexer.event(entity.copy(id = id)))
+            if (log) history?.record(ActivityEntityType.EVENT, id, if (existing == null) ActivityAction.CREATED else ActivityAction.UPDATED, event.title)
             id
         }
         reminders.syncEvent(id)
@@ -82,10 +89,13 @@ class OfflineEventRepository @Inject constructor(
     }
 
     override suspend fun delete(id: EntityId) {
+        val log = history?.active() == true
         db.withTransaction {
+            val title = dao.getEvent(id)?.title
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.EVENT, id))
             dao.delete(id)
             db.attachmentDao().deleteOrphans()
+            if (log && title != null) history?.record(ActivityEntityType.EVENT, id, ActivityAction.DELETED, title)
         }
         reminders.cancelEvent(id)
     }

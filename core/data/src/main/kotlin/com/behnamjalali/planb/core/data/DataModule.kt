@@ -41,4 +41,6 @@ internal abstract class DataModule {
     @Binds abstract fun search(impl: FtsSearchRepository): SearchRepository
     @Binds abstract fun review(impl: OfflineReviewRepository): ReviewRepository
     @Binds abstract fun settings(impl: DataStoreSettingsRepository): SettingsRepository
+    @Binds abstract fun trash(impl: com.behnamjalali.planb.core.data.repository.OfflineTrashRepository): com.behnamjalali.planb.core.data.repository.TrashRepository
+    @Binds abstract fun activity(impl: com.behnamjalali.planb.core.data.repository.OfflineActivityRepository): com.behnamjalali.planb.core.data.repository.ActivityRepository
 }

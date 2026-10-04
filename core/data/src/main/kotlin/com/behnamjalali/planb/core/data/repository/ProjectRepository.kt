@@ -3,6 +3,9 @@ package com.behnamjalali.planb.core.data.repository
 import androidx.room.withTransaction
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.data.SearchIndexer
+import com.behnamjalali.planb.core.data.DataHistory
+import com.behnamjalali.planb.core.model.ActivityAction
+import com.behnamjalali.planb.core.model.ActivityEntityType
 import com.behnamjalali.planb.core.data.toEntity
 import com.behnamjalali.planb.core.data.toModel
 import com.behnamjalali.planb.core.database.PlanBDatabase
@@ -53,6 +56,8 @@ class OfflineProjectRepository @Inject constructor(
     private val tagDao: TagDao,
     private val searchDao: SearchDao,
     private val time: TimeProvider,
+    /** Activity history (Plan-B Pro); null logs nothing. */
+    private val history: DataHistory? = null,
 ) : ProjectRepository {
     override fun observeProjects(archived: Boolean) = dao.observeProjects(archived).map { list -> list.map { it.toModel() } }
     override fun observeProject(id: EntityId) = dao.observeProject(id).map { it?.toModel() }
@@ -73,6 +78,7 @@ class OfflineProjectRepository @Inject constructor(
     override suspend fun save(project: Project): EntityId {
         require(project.title.isNotBlank()) { "Project title must not be blank" }
         val now = time.now()
+        val log = history?.active() == true
         return db.withTransaction {
             val existing = if (project.id != NEW_ID) dao.getEntity(project.id) else null
             val entity = project.copy(
@@ -89,6 +95,7 @@ class OfflineProjectRepository @Inject constructor(
             }
             dao.insertTagRefs(tagIds.distinct().map { ProjectTagCrossRef(id, it) })
             searchDao.upsert(SearchIndexer.project(entity.copy(id = id)))
+            if (log) history?.record(ActivityEntityType.PROJECT, id, if (existing == null) ActivityAction.CREATED else ActivityAction.UPDATED, project.title)
             id
         }
     }
@@ -105,13 +112,20 @@ class OfflineProjectRepository @Inject constructor(
             entity.status == ProjectStatus.ARCHIVED.name -> ProjectStatus.ACTIVE.name
             else -> entity.status
         }
-        dao.update(entity.copy(archived = archived, status = status, updatedAt = time.now()))
+        val log = history?.active() == true
+        db.withTransaction {
+            dao.update(entity.copy(archived = archived, status = status, updatedAt = time.now()))
+            if (log) history?.record(ActivityEntityType.PROJECT, id, if (archived) ActivityAction.ARCHIVED else ActivityAction.RESTORED, entity.title)
+        }
     }
 
     override suspend fun delete(id: EntityId) {
+        val log = history?.active() == true
         db.withTransaction {
+            val title = dao.getEntity(id)?.title
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.PROJECT, id))
             dao.delete(id)
+            if (log && title != null) history?.record(ActivityEntityType.PROJECT, id, ActivityAction.DELETED, title)
         }
     }
 

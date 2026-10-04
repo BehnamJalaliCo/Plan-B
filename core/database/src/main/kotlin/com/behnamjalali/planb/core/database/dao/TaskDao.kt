@@ -17,6 +17,14 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
+/** A row of the task trash list. */
+data class TaskTrashRow(
+    val id: Long,
+    val title: String,
+    @ColumnInfo(name = "deleted_at") val deletedAt: Long,
+    @ColumnInfo(name = "child_count") val childCount: Int,
+)
+
 /** A task's manual position (for reordering a subset without disturbing the others). */
 data class TaskSortSlot(
     val id: Long,
@@ -166,6 +174,27 @@ interface TaskDao {
 
     @Query("SELECT COUNT(*) FROM tasks")
     suspend fun count(): Int
+
+    /**
+     * The trash as shown to the user: trashed tasks whose parent did not go to the trash with
+     * them, with the number of subtasks trashed together (same `deleted_at`), newest first.
+     */
+    @Query(
+        "SELECT t.id, t.title, t.deleted_at, " +
+            "(SELECT COUNT(*) FROM tasks s WHERE s.parent_task_id = t.id AND s.deleted_at = t.deleted_at) AS child_count " +
+            "FROM tasks t WHERE t.deleted_at IS NOT NULL AND NOT EXISTS " +
+            "(SELECT 1 FROM tasks p WHERE p.id = t.parent_task_id AND p.deleted_at = t.deleted_at) " +
+            "ORDER BY t.deleted_at DESC, t.id DESC",
+    )
+    fun observeTrashRows(): Flow<List<TaskTrashRow>>
+
+    /** Live (not trashed) subtasks of [parentIds]; they go to the trash with their parent. */
+    @Query("SELECT id FROM tasks WHERE parent_task_id IN (:parentIds) AND deleted_at IS NULL")
+    suspend fun liveSubtaskIds(parentIds: List<Long>): List<Long>
+
+    /** Subtasks that went to the trash together with [parentId] (same time). */
+    @Query("SELECT id FROM tasks WHERE parent_task_id = :parentId AND deleted_at = :deletedAt")
+    suspend fun subtasksTrashedWith(parentId: Long, deletedAt: Long): List<Long>
 
     companion object {
         const val SELECT_WITH_COUNTS =
