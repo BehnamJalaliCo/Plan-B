@@ -2,6 +2,7 @@ package com.behnamjalali.planb
 
 import android.app.Application
 import android.util.Log
+import com.behnamjalali.planb.core.billing.EntitlementRepository
 import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.data.AttachmentMaintenance
 import com.behnamjalali.planb.core.data.ReminderScheduler
@@ -22,6 +23,7 @@ class PlanBApplication : Application() {
     @Inject lateinit var settings: SettingsRepository
     @Inject lateinit var searchIndex: SearchIndexUpgrade
     @Inject lateinit var attachments: AttachmentMaintenance
+    @Inject lateinit var entitlements: EntitlementRepository
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
 
     override fun onCreate() {
@@ -38,6 +40,8 @@ class PlanBApplication : Application() {
             runCatching { reminders.rescheduleAll() }
             // Existing installs rebuild the search index once after a normalizer change.
             runCatching { searchIndex.rebuildIfOutdated() }.onFailure { Log.w(TAG, "Search index rebuild failed (${it.javaClass.simpleName})") }
+            // Re-verify Plan-B Pro with Cafe Bazaar; offline, the cached entitlement applies.
+            runCatching { entitlements.refresh() }
             // Attachment rows of deleted owners and files without a row are removed.
             runCatching { attachments.sweep() }.onFailure { Log.w(TAG, "Attachment sweep failed (${it.javaClass.simpleName})") }
         }

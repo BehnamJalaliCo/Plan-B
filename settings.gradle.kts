@@ -18,6 +18,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Cafe Bazaar's in-app billing library (Poolakey) is published only on JitPack. The
+        // content filter keeps every other dependency from ever resolving there.
+        exclusiveContent {
+            forRepository { maven("https://jitpack.io") { name = "JitPack" } }
+            filter { includeGroup("com.github.cafebazaar.Poolakey") }
+        }
     }
 }
 
@@ -37,6 +43,7 @@ include(":core:datastore")
 include(":core:data")
 include(":core:notifications")
 include(":core:backup")
+include(":core:billing")
 include(":feature:today")
 include(":feature:tasks")
 include(":feature:calendar")

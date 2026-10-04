@@ -40,6 +40,8 @@ android {
         versionCode = 2
         versionName = "1.0.1"
         testInstrumentationRunner = "com.behnamjalali.planb.HiltTestRunner"
+        // Release builds buy through Cafe Bazaar; debug builds use an in-memory store.
+        buildConfigField("boolean", "FAKE_BILLING", "false")
     }
 
     androidResources {
@@ -65,6 +67,8 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            // Pro can be toggled in a hidden developer section (long-press the version in About).
+            buildConfigField("boolean", "FAKE_BILLING", "true")
         }
         release {
             isMinifyEnabled = true
@@ -119,6 +123,7 @@ dependencies {
     implementation(projects.feature.review)
     implementation(projects.feature.settings)
     implementation(projects.core.backup)
+    implementation(projects.core.billing)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
