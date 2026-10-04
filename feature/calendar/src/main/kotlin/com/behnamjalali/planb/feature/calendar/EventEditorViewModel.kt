@@ -94,6 +94,8 @@ class EventEditorViewModel @Inject constructor(
 ) : ViewModel() {
     private val route = runCatching { savedState.toRoute<EventEditorRoute>() }.getOrDefault(EventEditorRoute())
     private val json = Json { ignoreUnknownKeys = true }
+    // Must be read before getStateFlow(), which stores its default value in the handle.
+    private val needsLoad = !savedState.contains(KEY_FORM)
     private var original: EventForm? = savedState.get<String>(KEY_ORIGINAL)?.let { json.decodeFromString(EventForm.serializer(), it) }
 
     val form: StateFlow<EventForm> = savedState.getStateFlow(KEY_FORM, "")
@@ -109,7 +111,7 @@ class EventEditorViewModel @Inject constructor(
     val isDirty: Boolean get() = original != null && original != form.value
 
     init {
-        if (!savedState.contains(KEY_FORM)) {
+        if (needsLoad) {
             viewModelScope.launch {
                 val initial = if (route.eventId != NEW_ID) {
                     val event = events.getEvent(route.eventId) ?: run {

@@ -44,6 +44,7 @@ import com.behnamjalali.planb.feature.today.capture.captureSavedMessage
 import com.behnamjalali.planb.navigation.PlanBNavHost
 import com.behnamjalali.planb.navigation.TopLevelDestination
 import com.behnamjalali.planb.navigation.handleDeepLink
+import com.behnamjalali.planb.navigation.navigateTopLevel
 import com.behnamjalali.planb.navigation.openCaptured
 import kotlinx.coroutines.launch
 
@@ -59,6 +60,11 @@ fun PlanBApp(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var capturing by rememberSaveable { mutableStateOf(false) }
+    var customizeToday by rememberSaveable { mutableStateOf(false) }
+    if (!settings.onboardingCompleted) {
+        OnboardingScreen(onDone = onOnboardingDone)
+        return
+    }
     val backStack by navController.currentBackStackEntryAsState()
     val destination = backStack?.destination
     val current = TopLevelDestination.entries.firstOrNull { top -> destination?.hasRoute(top.route::class) == true }
@@ -103,8 +109,12 @@ fun PlanBApp(
             navController = navController,
             snackbarHostState = snackbar,
             contentPadding = PaddingValues(bottom = padding.calculateBottomPadding()),
-            showOnboarding = !settings.onboardingCompleted,
-            onOnboardingDone = onOnboardingDone,
+            openTodayCustomizer = customizeToday,
+            onTodayCustomizerOpened = { customizeToday = false },
+            onCustomizeToday = {
+                customizeToday = true
+                navController.navigateTopLevel(TopLevelDestination.TODAY)
+            },
         )
     }
 

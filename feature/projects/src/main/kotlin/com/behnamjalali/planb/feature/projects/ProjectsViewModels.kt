@@ -211,6 +211,8 @@ class ProjectEditorViewModel @Inject constructor(
 ) : ViewModel() {
     private val route = runCatching { savedState.toRoute<ProjectEditorRoute>() }.getOrDefault(ProjectEditorRoute())
     private val json = Json { ignoreUnknownKeys = true }
+    // Must be read before getStateFlow(), which stores its default value in the handle.
+    private val needsLoad = !savedState.contains(KEY_FORM)
     private var original: ProjectForm? = savedState.get<String>(KEY_ORIGINAL)?.let { json.decodeFromString(ProjectForm.serializer(), it) }
     val form: StateFlow<ProjectForm> = savedState.getStateFlow(KEY_FORM, "")
         .map { if (it.isBlank()) ProjectForm() else json.decodeFromString(ProjectForm.serializer(), it) }
@@ -223,7 +225,7 @@ class ProjectEditorViewModel @Inject constructor(
     val isDirty get() = original != null && original != form.value
 
     init {
-        if (!savedState.contains(KEY_FORM)) {
+        if (needsLoad) {
             viewModelScope.launch {
                 val initial = if (isNew) ProjectForm() else projects.getProject(route.projectId)?.let(ProjectForm::from) ?: ProjectForm()
                 original = initial

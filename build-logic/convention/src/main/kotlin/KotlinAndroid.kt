@@ -29,6 +29,10 @@ internal fun Project.configureKotlinAndroid(extension: CommonExtension) {
     configureKotlin()
     tasks.withType<Test>().configureEach {
         maxHeapSize = "2g"
+        // Modules without a src/test directory only see generated classes (R) on the test
+        // classpath; Gradle would otherwise flag them as misconfigured. Modules that do have
+        // tests keep the strict default.
+        if (!file("src/test").exists()) failOnNoDiscoveredTests.set(false)
         systemProperty("robolectric.logging.enabled", "false")
         // Robolectric (SDK 36 sandbox) needs access to JDK internals on Java 17+.
         jvmArgs(

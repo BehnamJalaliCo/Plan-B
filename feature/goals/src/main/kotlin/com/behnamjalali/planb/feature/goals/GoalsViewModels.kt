@@ -152,6 +152,8 @@ class GoalEditorViewModel @Inject constructor(
 ) : ViewModel() {
     private val route = runCatching { savedState.toRoute<GoalEditorRoute>() }.getOrDefault(GoalEditorRoute())
     private val json = Json { ignoreUnknownKeys = true }
+    // Must be read before getStateFlow(), which stores its default value in the handle.
+    private val needsLoad = !savedState.contains(KEY_FORM)
     private var original: GoalForm? = savedState.get<String>(KEY_ORIGINAL)?.let { json.decodeFromString(GoalForm.serializer(), it) }
     val form: StateFlow<GoalForm> = savedState.getStateFlow(KEY_FORM, "")
         .map { if (it.isBlank()) GoalForm() else json.decodeFromString(GoalForm.serializer(), it) }
@@ -163,7 +165,7 @@ class GoalEditorViewModel @Inject constructor(
     val isDirty get() = original != null && original != form.value
 
     init {
-        if (!savedState.contains(KEY_FORM)) {
+        if (needsLoad) {
             viewModelScope.launch {
                 val initial = if (isNew) GoalForm() else goals.getGoal(route.goalId)?.let(GoalForm::from) ?: GoalForm()
                 original = initial

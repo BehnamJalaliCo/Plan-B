@@ -1,8 +1,6 @@
 package com.behnamjalali.planb
 
 import android.app.Application
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.notifications.Notifier
@@ -21,15 +19,9 @@ class PlanBApplication : Application() {
         super.onCreate()
         // Persian is the default language on a fresh install. Once the user (or the
         // system per-app language setting) picks a language, that choice is kept.
-        if (AppCompatDelegate.getApplicationLocales().isEmpty) {
-            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(DEFAULT_LANGUAGE))
-        }
+        AppLocales.applyDefaultIfUnset()
         notifier.createChannels()
         // Alarms can be lost (force-stop, restore); re-sync them off the main thread.
         appScope.launch { runCatching { reminders.rescheduleAll() } }
-    }
-
-    companion object {
-        const val DEFAULT_LANGUAGE = "fa"
     }
 }

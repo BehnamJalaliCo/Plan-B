@@ -32,6 +32,16 @@ dependencies {
     implementation(projects.feature.today)
     implementation(projects.feature.tasks)
     implementation(projects.feature.calendar)
+    implementation(projects.feature.projects)
+    implementation(projects.feature.notebooks)
+    implementation(projects.feature.habits)
+    implementation(projects.feature.goals)
+    implementation(projects.feature.focus)
+    implementation(projects.feature.search)
+    implementation(projects.feature.templates)
+    implementation(projects.feature.review)
+    implementation(projects.feature.settings)
+    implementation(projects.core.backup)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
@@ -45,5 +55,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(projects.core.testing)
+    testImplementation(projects.core.database)
     testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.room.runtime)
+    testImplementation(libs.androidx.test.ext.junit)
 }

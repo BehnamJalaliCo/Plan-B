@@ -142,6 +142,8 @@ class TaskEditorViewModel @Inject constructor(
 ) : ViewModel() {
     private val route = runCatching { savedState.toRoute<TaskEditorRoute>() }.getOrDefault(TaskEditorRoute())
     private val json = Json { ignoreUnknownKeys = true }
+    // Must be read before getStateFlow(), which stores its default value in the handle.
+    private val needsLoad = !savedState.contains(KEY_FORM)
 
     val form: StateFlow<TaskForm> = savedState.getStateFlow(KEY_FORM, "")
         .map { raw -> if (raw.isBlank()) TaskForm() else json.decodeFromString(TaskForm.serializer(), raw) }
@@ -165,7 +167,7 @@ class TaskEditorViewModel @Inject constructor(
     val isNew: Boolean get() = route.taskId == NEW_ID
 
     init {
-        if (!savedState.contains(KEY_FORM)) {
+        if (needsLoad) {
             viewModelScope.launch {
                 val initial = if (route.taskId != NEW_ID) {
                     val task = tasks.getTask(route.taskId)

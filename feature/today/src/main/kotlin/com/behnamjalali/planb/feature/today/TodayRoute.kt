@@ -38,10 +38,18 @@ fun TodayDestination(
     actions: TodayActions,
     snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues,
+    openCustomizer: Boolean = false,
+    onCustomizerOpened: () -> Unit = {},
     viewModel: TodayViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(openCustomizer) {
+        if (openCustomizer) {
+            customizing = true
+            onCustomizerOpened()
+        }
+    }
     val context = LocalContext.current
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { snackbarHostState.showSnackbar(context.getString(R.string.capture_failed)) }
