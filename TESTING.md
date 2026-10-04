@@ -31,9 +31,10 @@ needs no emulator. CI also runs the device suite on an Android emulator.
 | `core:ai` | 11 | Both wire formats against MockWebServer, error mapping, timeouts, HTTPS-only URLs, provider catalog, encrypted key storage and consent |
 | `feature:pro` | 9 | Paywall states, purchase, cancel, restore, store unavailable, price formatting, `ProGate` and `rememberProGuard` |
 | `feature:*` (others) | 91 | ViewModels of Today, Tasks, Habits, Focus and Search on real repositories (30), Trash and Activity, automatic backup settings, locking notes in the editor, block editing, task form validation |
-| `app` | 167 | Persian default locale, smoke test, 9 end-to-end flows, 138 screenshot tests (including the Plan-B Pro screen, Trash, Activity, Security and the lock screen), launcher/store icon rendering |
+| `app` | 193 | Persian default locale, smoke test, 9 end-to-end flows, 162 screenshot tests (including the Plan-B Pro screen, Trash, Activity, Security, the lock screen, Statistics, My year and Appearance), launcher/store icon rendering, Glance widget content and the launcher icon switcher |
+| `wear` | 2 | Watch state updates (optimistic task completion and habit check-in) |
 
-Total: **506 JVM tests**, all passing locally and in CI.
+Total: **699 JVM tests**, all passing locally and in CI.
 
 ### End-to-end flows (`app/src/test/.../e2e`)
 
@@ -46,8 +47,8 @@ and restore round trip.
 
 ### Screenshot tests (`app/src/test/.../screenshots`)
 
-`AppScreenshotTest` launches the real app with seeded data and captures 31 screens in six
-variants (Persian/English × light/dark, plus 150% font in both languages): 186 images in
+`AppScreenshotTest` launches the real app with seeded data and captures 35 screens in six
+variants (Persian/English × light/dark, plus 150% font in both languages): 210 images in
 `artifacts/screenshots/<feature>/`, shown in [docs/UI_GALLERY.md](docs/UI_GALLERY.md). Clicks
 are dispatched through semantics actions (no touch ripples) and animations settle on the test
 clock, so images are pixel-stable. `AppIconTest` renders the adaptive icon, the themed icon and
