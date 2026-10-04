@@ -73,6 +73,7 @@ data class PeriodStatistics(
     /** Tasks planned in the period (up to today) that are done, over all planned; null when none. */
     val completionRate: Float?,
     val plannedTotal: Int,
+    val plannedDone: Int,
     val onTime: Int,
     val late: Int,
     /** Completed tasks per weekday, indexed by [DayOfWeek.value] - 1 (Monday first). */
@@ -169,6 +170,7 @@ object StatisticsCalculator {
             completedTotal = tasks.size,
             completionRate = if (planned.isEmpty()) null else plannedDone.toFloat() / planned.size,
             plannedTotal = planned.size,
+            plannedDone = plannedDone,
             onTime = onTime,
             late = withDue.size - onTime,
             completedPerWeekday = perWeekday,

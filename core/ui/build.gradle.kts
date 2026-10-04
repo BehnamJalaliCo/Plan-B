@@ -13,4 +13,7 @@ dependencies {
     api(projects.core.common)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
+
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }
