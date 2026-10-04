@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **170**.
+Total screenshots: **188**.
 
 
 ## Today
@@ -166,6 +166,20 @@ Total screenshots: **170**.
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/review/weekly_review_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/review/weekly_review_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/review/weekly_review_en_light.png" width="220"/> | <img src="../artifacts/screenshots/review/weekly_review_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/review/weekly_review_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/review/weekly_review_en_light_font150.png" width="220"/> |
 
+## Reports
+
+### `my_year`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/reports/my_year_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/reports/my_year_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/reports/my_year_en_light.png" width="220"/> | <img src="../artifacts/screenshots/reports/my_year_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/reports/my_year_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/reports/my_year_en_light_font150.png" width="220"/> |
+
+### `statistics`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/reports/statistics_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/reports/statistics_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/reports/statistics_en_light.png" width="220"/> | <img src="../artifacts/screenshots/reports/statistics_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/reports/statistics_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/reports/statistics_en_light_font150.png" width="220"/> |
+
 ## Settings
 
 ### `about`
@@ -173,6 +187,12 @@ Total screenshots: **170**.
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/settings/about_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/settings/about_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/settings/about_en_light.png" width="220"/> | <img src="../artifacts/screenshots/settings/about_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/settings/about_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/settings/about_en_light_font150.png" width="220"/> |
+
+### `appearance`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/settings/appearance_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/settings/appearance_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/settings/appearance_en_light.png" width="220"/> | <img src="../artifacts/screenshots/settings/appearance_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/settings/appearance_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/settings/appearance_en_light_font150.png" width="220"/> |
 
 ### `backup`
 

@@ -8,7 +8,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHOTS = os.path.join(ROOT, "artifacts", "screenshots")
 OUT = os.path.join(ROOT, "docs", "UI_GALLERY.md")
 ORDER = ["today", "capture", "tasks", "calendar", "notebooks", "more", "projects", "habits", "goals",
-         "focus", "search", "templates", "review", "settings", "onboarding", "states", "icon"]
+         "focus", "search", "templates", "review", "reports", "settings", "onboarding", "states", "icon"]
 VARIANT_ORDER = ["fa_light", "fa_dark", "en_light", "en_dark", "fa_light_font150", "en_light_font150"]
 
 def main():
