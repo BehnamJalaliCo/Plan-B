@@ -27,6 +27,11 @@ device (a local database and a preferences file) and are readable only by Plan-B
 | Run at startup (`RECEIVE_BOOT_COMPLETED`) | To restore your reminders after the device restarts. |
 | Internet (`INTERNET`) | Used only by the optional AI assistant, which is off until you turn it on and add your own provider key. Nothing else in the app uses the network. |
 | Pay through Cafe Bazaar (`com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR`) | Lets the installed Cafe Bazaar app handle Plan-B Pro purchases. |
+| Keep awake, network state, foreground service (`WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `FOREGROUND_SERVICE`) | Added by Android's WorkManager library, which draws the Plan-B Pro home-screen widgets. Granted at install without a prompt; Plan-B sends nothing over the network for widgets. |
+
+With Plan-B Pro and a paired Wear OS watch, today's open tasks and habits are sent directly to
+your watch over Google's Wearable Data Layer (Bluetooth or your own Wi-Fi); this needs Google
+Play services and nothing goes to a server of ours.
 
 Plan-B does not access contacts, location, camera, microphone, accounts or shared storage.
 

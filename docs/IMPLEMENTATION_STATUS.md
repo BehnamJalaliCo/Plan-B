@@ -42,6 +42,11 @@ by build only · ⏳ needs an external step (credentials, device lab).
 | Macrobenchmarks and baseline-profile generator | ☑️ | Modules build in CI; running them needs a KVM device (not available in the dev container) |
 | Instrumentation tests | ✅ | Run on an API 34 emulator in CI |
 | App icon (adaptive + themed), splash screen | ✅ | Rendered by `AppIconTest` |
+| Pro #31 statistics, My year, PDF export | ✅ | `StatisticsCalculatorTest`, `StatsPeriodsTest`, `StatisticsRepositoryTest`, `PdfReportWriterTest` (layout on the JVM), `PdfExportDeviceTest` (real PDF on a device), screenshots |
+| Pro #32 home-screen widgets | ✅ | `WidgetContentTest` (Glance unit tests); live widgets checked on a device only |
+| Pro #33 themes and app icons | ✅ | `ColorThemesTest` (contrast), DataStore test, icon switcher test, Appearance screenshots |
+| Pro #34 quick-settings tiles and shortcuts | ☑️ | Built and lint-checked; tiles and shortcuts need a device/launcher to try |
+| Pro #35 Wear OS companion | ☑️ | `wear` module built in CI, `WearStateTest`; Data Layer sync needs a phone + watch with Google Play services (see docs/PRO.md) |
 | Privacy: no tracking; network only for the opt-in AI assistant; permission allowlist | ✅ | CI checks the merged release manifest against `tools/allowed-permissions.txt` |
 | Security review | ✅ | [SECURITY_REVIEW.md](SECURITY_REVIEW.md) |
 

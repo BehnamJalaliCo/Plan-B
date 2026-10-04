@@ -55,12 +55,12 @@ The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable;
 29. `challenges` — challenges and badges
 30. `mood_tracker` — mood and energy tracker
 
-**Reports & personalization**
-31. `reports` — statistics, yearly report ("my year") and PDF export
-32. `widgets` — home-screen widgets
-33. `themes` — premium themes and app icons
-34. `quick_tiles` — quick-settings tile and launcher shortcuts
-35. `wear_os` — Wear OS companion
+**Reports & personalization** (implemented, see [Reports and personalization](#reports-and-personalization-3135))
+31. `reports` — statistics, yearly report ("my year") and PDF export ✅
+32. `widgets` — home-screen widgets ✅
+33. `themes` — premium themes and app icons ✅
+34. `quick_tiles` — quick-settings tile and launcher shortcuts ✅
+35. `wear_os` — Wear OS companion ✅ (see limitations)
 
 **Security & data**
 36. `app_lock` — app lock with fingerprint and encrypted notes
@@ -183,3 +183,53 @@ neutral categories (`INVALID_KEY`, `NETWORK_UNREACHABLE`, `RATE_LIMITED`, `PROVI
 the UI must only ever say to check the key or the internet connection. Only the text the user
 chooses is sent, directly to their provider. Anthropic has no suggested model ids in the
 catalog: the assistant UI should offer `listModels()` results.
+
+## Reports and personalization (#31–35)
+
+| # | Where | What |
+|---|---|---|
+| 31 | `feature:reports` (`StatisticsRoute`, `YearReportRoute`), More → Statistics | Week/month/year statistics in the user's calendar (Jalali or Gregorian, `StatsPeriods` in `core:datetime`): tasks done per day/month, completion rate, on time vs late, busiest weekday and hour, focus minutes, habit success, notes written, project progress, top tags and projects. Charts are drawn on a Canvas, mirrored for RTL, with a spoken summary. "My year" is a story-like yearly summary. Aggregation is pure Kotlin (`StatisticsCalculator` in `core:model`) over a read-only `StatisticsDao` (no schema change). |
+| 31 | `core:ui` `pdf/` | `PdfReportWriter` renders reports on A4 `PdfDocument` pages with `StaticLayout` in the app typeface (Persian shaping, RTL alignment, mirrored bars); `rememberPdfExport` saves through `ACTION_CREATE_DOCUMENT` (no permission). Statistics, My year and the weekly review (button at the end of the review) export PDFs. |
+| 32 | `app` `widget/` | Glance widgets: Today (progress, next tasks, tap to complete), Quick add (opens Quick Capture), Habits (tap to check in), Focus (start/pause, a platform countdown), Monthly calendar (dots on busy days). Material You colors on Android 12+, the Plan-B palette before; light/dark; resizable; texts and digits follow the app's language, calendar and digit settings. Updated after any write to the shown tables (`DataChangeWatcher` observes Room's invalidation tracker and calls the `WidgetUpdater` bound in the app), at midnight (inexact alarm, only while widgets exist) and on clock/time-zone changes. |
+| 33 | `core:designsystem` `ColorThemes.kt`, Settings → Themes and app icon (`AppearanceRoute`) | Color themes Ocean, Forest, Sunset, Blossom and Midnight (true black in dark mode), stored as `color_theme`; contrast is unit-tested. Four alternate launcher icons (Ocean, Sunset, Forest, Midnight) derived from the B mark, each with the monochrome themed-icon layer, switched with activity aliases (`LauncherIconSwitcher`, `DONT_KILL_APP`). |
+| 34 | `app` `quick/` | Quick-settings tiles "Quick add" and "Focus"; launcher shortcuts. |
+| 35 | `wear` module + `app` `wear/` | Wear OS app (Compose for Wear OS, minSdk 30) with today's tasks (tap to complete) and habit check-ins, synced through the Wearable Data Layer. |
+
+**Gating decisions.**
+- Statistics, My year and PDF export: the screens show a calm `ProTeaser` to free users; the
+  weekly review stays free and only its new PDF button is Pro (`rememberProGuard`).
+- Widgets: every widget can be added by anyone, but without Pro it shows a "Plan-B Pro"
+  placeholder that opens the Pro screen when tapped (widgets cannot be hidden from the picker
+  per user).
+- Themes and icons: free users see the choices with a Pro badge; tapping a premium one opens the
+  Pro screen. If Pro ends, the classic palette is drawn again (the choice is kept); the launcher
+  icon stays as chosen until changed.
+- **#34 decision:** the static launcher shortcuts **New task** and **New note** are basic UX and
+  stay **free**. The **quick-settings tiles** and the **dynamic shortcuts** (Today, Start focus)
+  are **Pro**: anyone may add a tile, but without Pro a tap opens the Pro screen; dynamic
+  shortcuts are only published while the user has Pro and removed when Pro ends.
+- Wear OS: the phone sends data only while the user has Pro; otherwise the watch says Pro is
+  needed on the phone.
+
+**Wear OS notes and limitations.**
+- The watch app uses the phone's application id (`com.behnamjalali.planb`, `.debug` for debug
+  builds), which the Data Layer requires, and must be **signed with the same key** as the phone
+  app. It is a separate APK/AAB (`./gradlew :wear:bundleRelease`); CI builds it, but
+  `tools/package_cafebazaar.sh` ships only the phone app. Wear apps are distributed through
+  Google Play (Cafe Bazaar has no Wear OS store); publishing it is the owner's decision.
+- The phone app works unchanged without Google Play services: every Wearable call is behind a
+  `GoogleApiAvailability` check and `runCatching`, and nothing is sent without a connected watch.
+  `play-services-wearable` adds no permission to the phone's release manifest.
+- The watch shows today's open tasks and scheduled habits (up to 20 each) and works while the
+  phone is reachable; it keeps the last synced copy, but changes made offline on the watch are
+  not queued.
+
+**Platform notes.**
+- Glance runs widget updates through AndroidX WorkManager, which adds the normal (install-time,
+  no user prompt) permissions `WAKE_LOCK`, `ACCESS_NETWORK_STATE` and `FOREGROUND_SERVICE` to
+  the merged manifest; they are allowlisted in `tools/allowed-permissions.txt`. No runtime
+  permission was added.
+- The launcher entry is now the `.LauncherClassic` alias instead of `MainActivity` itself. Some
+  launchers drop a home-screen shortcut once when the app updates to this version or when the
+  icon is switched; the Appearance screen says so, and the app is reachable from the app list.
+

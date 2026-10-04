@@ -23,6 +23,21 @@ reminders); Internet (used only by the optional AI assistant, off until the user
 with their own provider key); and paying through Cafe Bazaar (Plan-B Pro). The app has no
 ads, analytics or tracking. The complete list is `tools/allowed-permissions.txt`.
 
+| Permission | English | فارسی |
+|---|---|---|
+| `POST_NOTIFICATIONS` | Show the reminders you set | نمایش یادآورهایی که تنظیم می‌کنید |
+| `SCHEDULE_EXACT_ALARM` | Deliver reminders at the exact minute | ارسال یادآورها سر دقیقه |
+| `RECEIVE_BOOT_COMPLETED` | Restore reminders after a restart | بازگرداندن یادآورها پس از روشن شدن دوباره |
+| `INTERNET` | Optional AI assistant only, with your own key | فقط دستیار هوش مصنوعی اختیاری، با کلید خودتان |
+| `PAY_THROUGH_BAZAAR` | Buy Plan-B Pro through Cafe Bazaar | خرید Plan-B Pro از کافه‌بازار |
+| `WAKE_LOCK` | Finish home-screen widget updates (added by AndroidX WorkManager) | تکمیل به‌روزرسانی ابزارک‌های صفحهٔ اصلی (افزودهٔ WorkManager اندروید) |
+| `ACCESS_NETWORK_STATE` | Required by AndroidX WorkManager for widgets; Plan-B sends nothing | لازمهٔ WorkManager برای ابزارک‌ها؛ Plan-B چیزی ارسال نمی‌کند |
+| `FOREGROUND_SERVICE` | Declared by AndroidX WorkManager; not used by Plan-B | اعلام‌شده توسط WorkManager؛ Plan-B از آن استفاده نمی‌کند |
+
+The last three are normal permissions (granted at install, never asked) and appear because the
+Plan-B Pro widgets use Jetpack Glance. The Wear OS companion is a separate app and is not part of
+the Cafe Bazaar upload.
+
 ## In-app products (Plan-B Pro)
 
 Create both products in Pishkhan → your app → **In-app products** before the release that

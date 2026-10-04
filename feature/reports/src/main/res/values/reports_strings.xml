@@ -4,7 +4,6 @@
     <string name="reports_period_week">Week</string>
     <string name="reports_period_month">Month</string>
     <string name="reports_period_year">Year</string>
-    <string name="reports_period">Period</string>
     <string name="reports_previous">Previous period</string>
     <string name="reports_next">Next period</string>
     <string name="reports_completed">Tasks done</string>

@@ -16,3 +16,11 @@ com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR
 
 # Added by AndroidX core: protects the app's own non-exported dynamic receivers.
 com.behnamjalali.planb.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+
+# Added by AndroidX WorkManager, which Jetpack Glance uses to render the Plan-B Pro home-screen
+# widgets. All three are normal install-time permissions (no prompt, no user data): WorkManager
+# holds a wake lock while a widget update runs, can track connectivity for constrained work
+# (Plan-B schedules none) and declares its foreground service (not used by Plan-B).
+android.permission.WAKE_LOCK
+android.permission.ACCESS_NETWORK_STATE
+android.permission.FOREGROUND_SERVICE
