@@ -90,6 +90,16 @@ fun QuickCaptureSheet(
     val defaultNotebook = stringResource(com.behnamjalali.planb.core.data.R.string.data_default_notebook)
     val haptics = rememberPlannerHaptics()
 
+    // The ViewModel outlives the sheet: bring a stale default date up to today on every open.
+    // rememberSaveable keeps a rotation from counting as a new open.
+    var opened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(viewModel) {
+        if (!opened) {
+            opened = true
+            viewModel.onOpened()
+        }
+    }
+
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {

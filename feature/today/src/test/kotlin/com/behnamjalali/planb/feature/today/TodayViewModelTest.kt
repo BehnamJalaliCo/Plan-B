@@ -139,4 +139,15 @@ class TodayViewModelTest {
         val data = awaitData { it.activeFocus != null }
         assertThat(data.activeFocus!!.plannedDurationMillis).isEqualTo(25 * 60_000L)
     }
+
+    @Test
+    fun greeting_followsTheClockWithoutDataChanges() = runBlocking<Unit> {
+        viewModel.greetingTickMillis = 50
+        graph.time.setLocal(today, LocalTime.of(10, 0))
+        assertThat(awaitData().greeting).isEqualTo(Greeting.MORNING)
+
+        // Nothing in the database changes; only time passes.
+        graph.time.setLocal(today, LocalTime.of(18, 0))
+        awaitData { it.greeting == Greeting.EVENING }
+    }
 }

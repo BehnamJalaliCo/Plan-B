@@ -82,4 +82,6 @@
     <string name="note_add_block">Add block</string>
     <string name="note_not_found">This note no longer exists.</string>
     <string name="note_section_none">No section</string>
+    <string name="note_block_merge">Join with the block above</string>
+    <string name="note_file_name_fallback">Plan-B note</string>
 </resources>

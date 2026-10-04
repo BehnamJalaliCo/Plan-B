@@ -69,6 +69,11 @@ internal fun visibleRange(view: CalendarView, selected: LocalDate, system: Calen
 
 internal const val AGENDA_DAYS = 30L
 
+sealed interface CalendarMessage {
+    data object Failed : CalendarMessage
+    data class Completed(val taskId: EntityId, val nextOccurrenceId: EntityId?) : CalendarMessage
+}
+
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
@@ -81,8 +86,8 @@ class CalendarViewModel @Inject constructor(
     private val view = savedState.getStateFlow<String?>(KEY_VIEW, null)
     private val selectedEpoch = savedState.getStateFlow(KEY_SELECTED, time.today().toEpochDay())
 
-    private val _failures = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val failures: SharedFlow<Unit> = _failures
+    private val _messages = MutableSharedFlow<CalendarMessage>(extraBufferCapacity = 4)
+    val messages: SharedFlow<CalendarMessage> = _messages
 
     private data class Query(val view: CalendarView, val selected: LocalDate, val system: CalendarSystem, val firstDay: DayOfWeek)
 
@@ -126,22 +131,46 @@ class CalendarViewModel @Inject constructor(
 
     fun goToToday() = select(time.today())
 
-    /** Moves by one page of the current view in the user's calendar system. */
+    /**
+     * Moves by one page of the current view in the user's calendar system. The anchor date and the
+     * view come from the saved state, which updates synchronously; [uiState] lags behind its
+     * database query, so two quick taps would otherwise both page from the same date.
+     */
     fun page(delta: Int) {
         val state = uiState.value
+        val selected = LocalDate.ofEpochDay(selectedEpoch.value)
+        val currentView = view.value?.let { runCatching { CalendarView.valueOf(it) }.getOrNull() } ?: state.view
         val engine = CalendarEngines.of(state.calendarSystem)
-        val next = when (state.view) {
-            CalendarView.DAY -> state.selected.plusDays(delta.toLong())
-            CalendarView.WEEK -> state.selected.plusWeeks(delta.toLong())
-            CalendarView.MONTH -> engine.firstDayOfMonth(engine.monthOf(state.selected).plus(delta))
-            CalendarView.AGENDA -> state.selected.plusDays(AGENDA_DAYS * delta)
+        val next = when (currentView) {
+            CalendarView.DAY -> selected.plusDays(delta.toLong())
+            CalendarView.WEEK -> selected.plusWeeks(delta.toLong())
+            CalendarView.MONTH -> engine.firstDayOfMonth(engine.monthOf(selected).plus(delta))
+            CalendarView.AGENDA -> selected.plusDays(AGENDA_DAYS * delta)
         }
         select(next)
     }
 
     fun setTaskCompleted(id: EntityId, completed: Boolean) {
         viewModelScope.launch {
-            runCatchingSafely { tasks.setCompleted(id, completed) }.onFailure { _failures.tryEmit(Unit) }
+            runCatchingSafely { tasks.setCompleted(id, completed) }
+                .onSuccess { next -> if (completed) _messages.tryEmit(CalendarMessage.Completed(id, next)) }
+                .onFailure { _messages.tryEmit(CalendarMessage.Failed) }
+        }
+    }
+
+    /** Undoes a completion; also removes the occurrence a recurring completion created. */
+    fun undoComplete(id: EntityId, nextOccurrenceId: EntityId?) {
+        viewModelScope.launch {
+            runCatchingSafely {
+                val next = nextOccurrenceId?.let { tasks.getTask(it) }
+                if (nextOccurrenceId != null) tasks.delete(listOf(nextOccurrenceId))
+                // Reopen first, so restoring the series below saves an open task, not a done one.
+                tasks.setCompleted(id, false)
+                val reopened = tasks.getTask(id)
+                if (reopened != null && next != null) {
+                    tasks.save(reopened.copy(recurrence = next.recurrence, recurrenceAnchor = next.recurrenceAnchor))
+                }
+            }.onFailure { _messages.tryEmit(CalendarMessage.Failed) }
         }
     }
 

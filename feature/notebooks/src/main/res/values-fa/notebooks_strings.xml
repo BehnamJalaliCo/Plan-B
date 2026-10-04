@@ -81,4 +81,6 @@
     <string name="note_add_block">افزودن بلوک</string>
     <string name="note_not_found">این یادداشت دیگر وجود ندارد.</string>
     <string name="note_section_none">بدون بخش</string>
+    <string name="note_block_merge">ادغام با بلوک بالایی</string>
+    <string name="note_file_name_fallback">یادداشت Plan-B</string>
 </resources>

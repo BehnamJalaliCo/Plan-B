@@ -47,9 +47,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.behnamjalali.planb.core.common.Dispatcher
+import com.behnamjalali.planb.core.common.PlanBDispatcher
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.repository.TemplateRepository
 import com.behnamjalali.planb.core.data.repository.TemplateResult
+import com.behnamjalali.planb.core.datetime.CalendarEngine
+import com.behnamjalali.planb.core.datetime.MonthGrid
 import com.behnamjalali.planb.core.designsystem.component.PlannerButton
 import com.behnamjalali.planb.core.designsystem.component.PlannerButtonStyle
 import com.behnamjalali.planb.core.designsystem.component.PlannerCard
@@ -70,13 +74,18 @@ import com.behnamjalali.planb.core.model.PlannerTemplate
 import com.behnamjalali.planb.core.model.TemplateType
 import com.behnamjalali.planb.core.ui.ConfirmDeleteDialog
 import com.behnamjalali.planb.core.ui.PlannerLocals
+import com.behnamjalali.planb.core.ui.metaSeparator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.DayOfWeek
+import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -91,14 +100,35 @@ sealed interface TemplatesEvent {
     data object Failed : TemplatesEvent
 }
 
+/**
+ * The date a template's `{{date}}` stands for: the start of the week (per the first-day-of-week
+ * setting) for the weekly planner, the first day of the month (in the user's calendar) for the
+ * monthly planner, and today for everything else.
+ */
+internal fun templateDate(template: PlannerTemplate, today: LocalDate, firstDayOfWeek: DayOfWeek, engine: CalendarEngine): LocalDate =
+    when (template.builtInKey) {
+        WEEKLY_PLANNER -> MonthGrid.weekStart(today, firstDayOfWeek)
+        MONTHLY_PLANNER -> engine.firstDayOfMonth(engine.monthOf(today))
+        else -> today
+    }
+
+private const val WEEKLY_PLANNER = "weekly_planner"
+private const val MONTHLY_PLANNER = "monthly_planner"
+
 @HiltViewModel
-class TemplatesViewModel @Inject constructor(private val templates: TemplateRepository) : ViewModel() {
+class TemplatesViewModel @Inject constructor(
+    private val templates: TemplateRepository,
+    @Dispatcher(PlanBDispatcher.IO) io: CoroutineDispatcher,
+) : ViewModel() {
     private val _events = MutableSharedFlow<TemplatesEvent>(extraBufferCapacity = 2)
     val events: SharedFlow<TemplatesEvent> = _events
 
     val uiState: StateFlow<TemplatesUiState> = templates.observeTemplates().map { all ->
         TemplatesUiState(loading = false, builtIn = all.filter { it.builtIn }, custom = all.filterNot { it.builtIn })
-    }.catch { emit(TemplatesUiState(loading = false, error = true)) }
+    }
+        // Built-in templates are read and parsed from raw resources on every emission: keep that off the main thread.
+        .flowOn(io)
+        .catch { emit(TemplatesUiState(loading = false, error = true)) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TemplatesUiState())
 
     fun apply(template: PlannerTemplate, dateLabel: String, notebookTitle: String) = viewModelScope.launch {
@@ -153,7 +183,7 @@ fun TemplatesDestination(
     TemplatesScreen(
         state = state,
         onBack = onBack,
-        onApply = { viewModel.apply(it, formatter.mediumDate(today), notebookTitle) },
+        onApply = { viewModel.apply(it, formatter.mediumDate(templateDate(it, today, formatter.firstDayOfWeek, formatter.engine)), notebookTitle) },
         onRename = viewModel::rename,
         onDelete = viewModel::delete,
     )
@@ -233,7 +263,7 @@ private fun TemplateCard(t: PlannerTemplate, onApply: (PlannerTemplate) -> Unit,
                         TemplateType.HABITS -> R.string.templates_type_habits
                     },
                 )
-                Text("$type · $detail", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(type + metaSeparator() + detail, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (onRename != null && onDelete != null) {
                 Box {

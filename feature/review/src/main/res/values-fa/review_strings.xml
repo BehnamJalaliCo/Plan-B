@@ -9,7 +9,7 @@
     <string name="review_missed_none">این هفته چیزی جا نماند. 👏</string>
     <string name="review_habits">عادت‌ها</string>
     <string name="review_habits_none">این هفته عادت فعالی نداشتید.</string>
-    <string name="review_habit_rate">%1$s · %2$s روز</string>
+    <string name="review_habit_rate">%1$s: %2$s روز</string>
     <string name="review_focus">زمان تمرکز</string>
     <string name="review_notes">یادداشت‌های جدید</string>
     <string name="review_projects">پیشرفت پروژه‌ها</string>

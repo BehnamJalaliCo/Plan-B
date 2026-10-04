@@ -85,4 +85,6 @@
     <string name="task_editor_notification_permission">برای دریافت یادآور، اجازهٔ اعلان را بدهید.</string>
     <string name="task_editor_not_found">این کار دیگر وجود ندارد.</string>
     <string name="task_editor_invalid_number">یک عدد صحیح وارد کنید</string>
+    <string name="task_editor_remove_tag">حذف برچسب %1$s</string>
+    <string name="task_editor_start_after_due">تاریخ شروع نمی‌تواند بعد از تاریخ سررسید باشد</string>
 </resources>

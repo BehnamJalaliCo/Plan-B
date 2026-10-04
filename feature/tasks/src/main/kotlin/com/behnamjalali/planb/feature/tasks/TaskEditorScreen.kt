@@ -142,7 +142,7 @@ fun TaskEditorDestination(
         onToggleSubtask = { id, done -> viewModel.toggleSubtask(id, done) },
         onDeleteSubtask = { viewModel.deleteSubtask(it) },
         onOpenSubtask = onOpenSubtask,
-        onSave = viewModel::save,
+        onSave = { pendingTag -> viewModel.save(pendingTag) },
         onDelete = viewModel::delete,
     )
 
@@ -183,7 +183,7 @@ fun TaskEditorScreen(
     onToggleSubtask: (EntityId, Boolean) -> Unit,
     onDeleteSubtask: (EntityId) -> Unit,
     onOpenSubtask: (EntityId) -> Unit,
-    onSave: () -> Unit,
+    onSave: (pendingTag: String) -> Unit,
     onDelete: () -> Unit,
 ) {
     val formatter = PlannerLocals.formatter
@@ -234,10 +234,11 @@ fun TaskEditorScreen(
                     text = stringResource(R.string.task_editor_save),
                     onClick = {
                         titleTouched = true
-                        onSave()
+                        onSave(tagInput)
+                        tagInput = ""
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = form.title.isNotBlank() && form.estimateValid && form.actualValid,
+                    enabled = form.canSave,
                 )
             }
         },
@@ -298,6 +299,14 @@ fun TaskEditorScreen(
                 form.dueAt?.let { formatter.time(it) } ?: notSet, { picker = "dueTime" })
             EditorRow(Icons.Rounded.EventAvailable, stringResource(R.string.task_editor_start_date),
                 form.start?.let { formatter.weekdayDate(it, today) } ?: notSet, { picker = "start" })
+            if (!form.datesValid) {
+                Text(
+                    stringResource(R.string.task_editor_start_after_due),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(horizontal = Spacing.md),
+                )
+            }
             EditorRow(Icons.Rounded.Schedule, stringResource(R.string.task_editor_start_time),
                 form.startAt?.let { formatter.time(it) } ?: notSet, { picker = "startTime" })
             Box {
@@ -345,7 +354,12 @@ fun TaskEditorScreen(
                             selected = true,
                             onClick = { onRemoveTag(tag.name) },
                             label = { Text("#${tag.name}") },
-                            trailingIcon = { androidx.compose.material3.Icon(Icons.Rounded.Close, contentDescription = null) },
+                            trailingIcon = {
+                                androidx.compose.material3.Icon(
+                                    Icons.Rounded.Close,
+                                    contentDescription = stringResource(R.string.task_editor_remove_tag, tag.name),
+                                )
+                            },
                         )
                     }
                 }

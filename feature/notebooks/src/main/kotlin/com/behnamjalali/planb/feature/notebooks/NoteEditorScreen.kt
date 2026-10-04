@@ -17,20 +17,24 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
+import androidx.compose.material.icons.automirrored.rounded.MergeType
 import androidx.compose.material.icons.automirrored.rounded.Subject
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.CheckBox
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.FormatListNumbered
+import androidx.compose.material.icons.rounded.FormatListNumberedRtl
 import androidx.compose.material.icons.rounded.FormatQuote
 import androidx.compose.material.icons.rounded.HorizontalRule
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -58,6 +62,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -71,6 +77,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -80,6 +87,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -114,12 +122,13 @@ fun blockTypeLabel(type: BlockType): String = stringResource(
     },
 )
 
-private fun blockIcon(type: BlockType) = when (type) {
+private fun blockIcon(type: BlockType, rtl: Boolean) = when (type) {
     BlockType.TEXT -> Icons.AutoMirrored.Rounded.Subject
     BlockType.HEADING -> Icons.Rounded.Title
     BlockType.CHECKLIST -> Icons.Rounded.CheckBox
     BlockType.BULLET -> Icons.AutoMirrored.Rounded.FormatListBulleted
-    BlockType.NUMBERED -> Icons.Rounded.FormatListNumbered
+    // The numbered-list icon has no auto-mirrored variant; it has a separate RTL glyph.
+    BlockType.NUMBERED -> if (rtl) Icons.Rounded.FormatListNumberedRtl else Icons.Rounded.FormatListNumbered
     BlockType.QUOTE -> Icons.Rounded.FormatQuote
     BlockType.DIVIDER -> Icons.Rounded.HorizontalRule
     BlockType.CODE -> Icons.Rounded.Code
@@ -169,19 +178,21 @@ fun NoteEditorDestination(
     val textExport = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         uri?.let { viewModel.export(it, markdown = false) }
     }
-    val copySuffix = stringResource(R.string.note_copy_suffix)
-    NoteEditorScreen(
-        state = state,
-        notebooks = notebooks,
-        snackbarHostState = snackbar,
-        actions = NoteEditorActions(
+    val copySuffix by rememberUpdatedState(stringResource(R.string.note_copy_suffix))
+    val fallbackName by rememberUpdatedState(stringResource(R.string.note_file_name_fallback))
+    val currentOnClose by rememberUpdatedState(onClose)
+    // One actions object for the screen's lifetime: rebuilding it on every keystroke would make
+    // every block row recompose.
+    val actions = remember(viewModel) {
+        NoteEditorActions(
             onBack = {
                 viewModel.flush()
-                onClose()
+                currentOnClose()
             },
             onTitle = viewModel::onTitleChange,
             onBlock = viewModel::onBlockChange,
             onBackspaceAtStart = viewModel::onBackspaceAtStart,
+            onMergeWithPrevious = viewModel::mergeWithPrevious,
             onFocus = viewModel::onFocus,
             onType = viewModel::setType,
             onToggleChecked = viewModel::toggleChecked,
@@ -198,16 +209,22 @@ fun NoteEditorDestination(
             onDuplicate = { viewModel.duplicate(copySuffix) },
             onSaveTemplate = viewModel::saveAsTemplate,
             onDelete = viewModel::delete,
-            onExportMarkdown = { markdownExport.launch(fileName(state.title.text, "md")) },
-            onExportText = { textExport.launch(fileName(state.title.text, "txt")) },
-        ),
+            onExportMarkdown = { markdownExport.launch(fileName(viewModel.state.value.title.text, "md", fallbackName)) },
+            onExportText = { textExport.launch(fileName(viewModel.state.value.title.text, "txt", fallbackName)) },
+        )
+    }
+    NoteEditorScreen(
+        state = state,
+        notebooks = notebooks,
+        snackbarHostState = snackbar,
+        actions = actions,
     )
 }
 
-/** Safe file name from a (possibly Persian) title; falls back to a generic name. */
-internal fun fileName(title: String, extension: String): String {
+/** Safe file name from a (possibly Persian) title; falls back to the localized [fallback]. */
+internal fun fileName(title: String, extension: String, fallback: String): String {
     val cleaned = title.trim().replace(Regex("""[\\/:*?"<>|\p{Cntrl}]"""), " ").replace(Regex("\\s+"), " ").take(60).trim()
-    return "${cleaned.ifBlank { "Plan-B note" }}.$extension"
+    return "${cleaned.ifBlank { fallback }}.$extension"
 }
 
 data class NoteEditorActions(
@@ -215,6 +232,7 @@ data class NoteEditorActions(
     val onTitle: (TextFieldValue) -> Unit = {},
     val onBlock: (String, TextFieldValue) -> Unit = { _, _ -> },
     val onBackspaceAtStart: (String) -> Unit = {},
+    val onMergeWithPrevious: (String) -> Unit = {},
     val onFocus: (String) -> Unit = {},
     val onType: (String, BlockType) -> Unit = { _, _ -> },
     val onToggleChecked: (String) -> Unit = {},
@@ -246,10 +264,36 @@ fun NoteEditorScreen(
     var dialog by rememberSaveable { mutableStateOf<String?>(null) }
     val focusRequesters = remember { mutableStateMapOf<String, FocusRequester>() }
     fun requester(id: String) = focusRequesters.getOrPut(id) { FocusRequester() }
+    val listState = rememberLazyListState()
+    // The block toolbar acts on body blocks only; while the title has focus it is disabled.
+    var titleFocused by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.focusVersion) {
         val id = state.focusId ?: return@LaunchedEffect
-        runCatching { requester(id).requestFocus() }
+        // A block just added below the last visible line is not composed yet, so its focus
+        // requester is not attached: scroll it into the composed range first, then focus it.
+        val keys = buildList {
+            if (state.draft != null) add("draft")
+            add(NoteEditorViewModel.TITLE_FOCUS)
+            if (state.tags.isNotEmpty()) add("tags")
+            state.blocks.forEach { add(it.id) }
+        }
+        repeat(FOCUS_ATTEMPTS) {
+            val layout = listState.layoutInfo
+            if (layout.visibleItemsInfo.any { it.key == id }) {
+                if (runCatching { requester(id).requestFocus() }.isSuccess) return@LaunchedEffect
+            } else {
+                val index = keys.indexOf(id)
+                if (index < 0) return@LaunchedEffect
+                val lastVisible = layout.visibleItemsInfo.lastOrNull()?.index ?: -1
+                if (index > lastVisible && lastVisible >= 0) {
+                    listState.scrollBy(layout.viewportSize.height / 3f)
+                } else {
+                    listState.scrollToItem(index)
+                }
+            }
+            withFrameNanos { }
+        }
     }
 
     Scaffold(
@@ -302,8 +346,14 @@ fun NoteEditorScreen(
             )
         },
         bottomBar = {
-            val focused = state.blocks.firstOrNull { it.id == state.focusId }
-            BlockToolbar(focused, actions, Modifier.navigationBarsPadding().imePadding())
+            val focusedIndex = if (titleFocused) -1 else state.blocks.indexOfFirst { it.id == state.focusId }
+            BlockToolbar(
+                focused = state.blocks.getOrNull(focusedIndex),
+                canMerge = focusedIndex > 0,
+                enabled = !titleFocused,
+                actions = actions,
+                modifier = Modifier.navigationBarsPadding().imePadding(),
+            )
         },
     ) { padding ->
         if (state.loading) {
@@ -312,6 +362,7 @@ fun NoteEditorScreen(
         }
         val textColor = MaterialTheme.colorScheme.onSurface
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(horizontal = Spacing.screen, vertical = Spacing.sm),
             verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
@@ -329,11 +380,17 @@ fun NoteEditorScreen(
                     }
                 }
             }
-            item(key = "title") {
+            item(key = NoteEditorViewModel.TITLE_FOCUS) {
                 val titleHint = stringResource(R.string.note_title_hint)
+                // The field owns its value while typing; the ViewModel's copy only wins when it
+                // changed the title itself (see NoteEditorState.titleRevision).
+                var title by remember(state.titleRevision) { mutableStateOf(state.title) }
                 BasicTextField(
-                    value = state.title,
-                    onValueChange = actions.onTitle,
+                    value = title,
+                    onValueChange = {
+                        title = it.copy(text = it.text.replace('\n', ' '))
+                        actions.onTitle(it)
+                    },
                     textStyle = MaterialTheme.typography.headlineSmall.copy(color = textColor),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
@@ -341,9 +398,10 @@ fun NoteEditorScreen(
                         .fillMaxWidth()
                         .padding(vertical = Spacing.md)
                         .focusRequester(requester(NoteEditorViewModel.TITLE_FOCUS))
+                        .onFocusChanged { titleFocused = it.isFocused }
                         .semantics { contentDescription = titleHint },
                     decorationBox = { inner ->
-                        if (state.title.text.isEmpty()) {
+                        if (title.text.isEmpty()) {
                             Text(titleHint, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.outline)
                         }
                         inner()
@@ -457,6 +515,10 @@ private fun BlockRow(block: EditorBlock, number: Int, focusRequester: FocusReque
             else -> R.string.note_block_hint
         },
     )
+    // The field owns its value while typing (fast typing and IME batch edits never meet a value
+    // that is a frame behind); it takes the ViewModel's value only when the ViewModel changed this
+    // block itself, which bumps EditorBlock.revision.
+    var value by remember(block.id, block.revision) { mutableStateOf(block.value) }
     Row(
         Modifier
             .fillMaxWidth()
@@ -487,8 +549,11 @@ private fun BlockRow(block: EditorBlock, number: Int, focusRequester: FocusReque
             else -> Unit
         }
         BasicTextField(
-            value = block.value,
-            onValueChange = { actions.onBlock(block.id, it) },
+            value = value,
+            onValueChange = {
+                value = it
+                actions.onBlock(block.id, it)
+            },
             textStyle = style,
             cursorBrush = SolidColor(scheme.primary),
             keyboardOptions = KeyboardOptions(
@@ -501,7 +566,7 @@ private fun BlockRow(block: EditorBlock, number: Int, focusRequester: FocusReque
                 .focusRequester(focusRequester)
                 .onFocusChanged { if (it.isFocused) actions.onFocus(block.id) }
                 .onPreviewKeyEvent { event ->
-                    val atStart = block.value.selection.start == 0 && block.value.selection.end == 0
+                    val atStart = value.selection.start == 0 && value.selection.end == 0
                     if (event.type == KeyEventType.KeyDown && event.key == Key.Backspace && atStart) {
                         actions.onBackspaceAtStart(block.id)
                         true
@@ -511,7 +576,7 @@ private fun BlockRow(block: EditorBlock, number: Int, focusRequester: FocusReque
                 },
             decorationBox = { inner ->
                 Box {
-                    if (block.value.text.isEmpty()) Text(hint, style = style.copy(color = scheme.outline, textDecoration = null))
+                    if (value.text.isEmpty()) Text(hint, style = style.copy(color = scheme.outline, textDecoration = null))
                     inner()
                 }
             },
@@ -520,7 +585,8 @@ private fun BlockRow(block: EditorBlock, number: Int, focusRequester: FocusReque
 }
 
 @Composable
-private fun BlockToolbar(focused: EditorBlock?, actions: NoteEditorActions, modifier: Modifier) {
+private fun BlockToolbar(focused: EditorBlock?, canMerge: Boolean, enabled: Boolean, actions: NoteEditorActions, modifier: Modifier) {
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.fillMaxWidth()) {
         LazyRow(
             contentPadding = PaddingValues(horizontal = Spacing.sm),
@@ -529,22 +595,35 @@ private fun BlockToolbar(focused: EditorBlock?, actions: NoteEditorActions, modi
             items(BlockType.entries.size) { i ->
                 val type = BlockType.entries[i]
                 PlannerIconButton(
-                    blockIcon(type),
+                    blockIcon(type, rtl),
                     blockTypeLabel(type),
                     { focused?.let { actions.onType(it.id, type) } ?: actions.onAddBlock() },
                     tint = if (focused?.type == type) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    enabled = enabled,
                 )
             }
             item { Spacer(Modifier.width(Spacing.sm)) }
             item {
-                PlannerIconButton(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.note_block_up), { focused?.let { actions.onMoveBlock(it.id, -1) } }, enabled = focused != null)
+                // Soft keyboards send nothing for Backspace at the very start of a field, so joining
+                // blocks also has a button.
+                PlannerIconButton(
+                    Icons.AutoMirrored.Rounded.MergeType,
+                    stringResource(R.string.note_block_merge),
+                    { focused?.let { actions.onMergeWithPrevious(it.id) } },
+                    enabled = enabled && focused != null && canMerge,
+                )
             }
             item {
-                PlannerIconButton(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.note_block_down), { focused?.let { actions.onMoveBlock(it.id, 1) } }, enabled = focused != null)
+                PlannerIconButton(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.note_block_up), { focused?.let { actions.onMoveBlock(it.id, -1) } }, enabled = enabled && focused != null)
             }
             item {
-                PlannerIconButton(Icons.Rounded.DeleteOutline, stringResource(R.string.note_block_delete), { focused?.let { actions.onDeleteBlock(it.id) } }, enabled = focused != null)
+                PlannerIconButton(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.note_block_down), { focused?.let { actions.onMoveBlock(it.id, 1) } }, enabled = enabled && focused != null)
+            }
+            item {
+                PlannerIconButton(Icons.Rounded.DeleteOutline, stringResource(R.string.note_block_delete), { focused?.let { actions.onDeleteBlock(it.id) } }, enabled = enabled && focused != null)
             }
         }
     }
 }
+
+private const val FOCUS_ATTEMPTS = 6

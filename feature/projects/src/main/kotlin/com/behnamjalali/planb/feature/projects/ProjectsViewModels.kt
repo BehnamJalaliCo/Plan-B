@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.repository.ProjectRepository
@@ -27,9 +28,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -41,6 +44,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -94,6 +98,7 @@ class ProjectDetailViewModel @Inject constructor(
     private val projects: ProjectRepository,
     private val tasks: TaskRepository,
     private val time: TimeProvider,
+    @ApplicationScope private val appScope: CoroutineScope,
 ) : ViewModel() {
     private val projectId = savedState.toRoute<ProjectDetailRoute>().projectId
     private val _events = MutableSharedFlow<ProjectEvent>(extraBufferCapacity = 4)
@@ -148,17 +153,44 @@ class ProjectDetailViewModel @Inject constructor(
 
     private var notesJob: Job? = null
 
+    /** Notes typed but not yet written; taken (set to null) by whichever write runs first. */
+    private var pendingNotes: String? = null
+
     /** Debounced autosave of the project's notes (stored as its description). */
     fun updateNotes(text: String) {
+        pendingNotes = text
         notesJob?.cancel()
         notesJob = viewModelScope.launch {
-            delay(600)
-            runCatchingSafely {
-                val project = projects.getProject(projectId) ?: return@runCatchingSafely
-                if (project.description != text) projects.save(project.copy(description = text))
-            }.onSuccess { _events.tryEmit(ProjectEvent.NotesSaved) }
-                .onFailure { _events.tryEmit(ProjectEvent.Failed) }
+            delay(NOTES_DEBOUNCE_MILLIS)
+            val pending = pendingNotes ?: return@launch
+            pendingNotes = null
+            // Once started, the write finishes even if the screen goes away meanwhile.
+            withContext(NonCancellable) { writeNotes(pending) }
         }
+    }
+
+    /**
+     * Writes notes still waiting for the debounce right away: called when the notes tab leaves the
+     * screen and when this ViewModel is cleared, so the last words typed are never lost.
+     */
+    fun flushNotes() {
+        notesJob?.cancel()
+        val pending = pendingNotes ?: return
+        pendingNotes = null
+        appScope.launch { writeNotes(pending) }
+    }
+
+    private suspend fun writeNotes(text: String) {
+        // Only the notes column: a full save would rewrite the project's tags.
+        runCatchingSafely { projects.updateNotes(projectId, text) }
+            .onSuccess { _events.tryEmit(ProjectEvent.NotesSaved) }
+            .onFailure { _events.tryEmit(ProjectEvent.Failed) }
+    }
+
+    override fun onCleared() = flushNotes()
+
+    private companion object {
+        const val NOTES_DEBOUNCE_MILLIS = 600L
     }
 }
 
@@ -239,15 +271,23 @@ class ProjectEditorViewModel @Inject constructor(
         savedState[KEY_FORM] = json.encodeToString(ProjectForm.serializer(), transform(form.value))
     }
 
+    /** True from the first Save until it fails; a second tap must not insert the project twice. */
+    private var saving = false
+
     fun save() {
-        if (form.value.title.isBlank()) return
+        val current = form.value
+        if (saving || current.title.isBlank()) return
+        saving = true
         viewModelScope.launch {
-            runCatchingSafely { projects.save(form.value.toProject()) }
+            runCatchingSafely { projects.save(current.toProject()) }
                 .onSuccess {
-                    original = form.value
+                    original = current
                     _saved.tryEmit(it)
                 }
-                .onFailure { _saved.tryEmit(null) }
+                .onFailure {
+                    saving = false
+                    _saved.tryEmit(null)
+                }
         }
     }
 

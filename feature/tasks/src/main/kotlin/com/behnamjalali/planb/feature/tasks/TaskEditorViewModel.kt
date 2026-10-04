@@ -74,6 +74,10 @@ data class TaskForm(
     val estimateValid: Boolean get() = estimate.isBlank() || Digits.toLatin(estimate).toIntOrNull() != null
     val actualValid: Boolean get() = actual.isBlank() || Digits.toLatin(actual).toIntOrNull() != null
 
+    /** A task can't start after it is due. */
+    val datesValid: Boolean get() = startDate == null || dueDate == null || startDate <= dueDate
+    val canSave: Boolean get() = title.isNotBlank() && estimateValid && actualValid && datesValid
+
     fun toTask(): Task = Task(
         id = id,
         title = title.trim(),
@@ -146,8 +150,17 @@ class TaskEditorViewModel @Inject constructor(
     private val needsLoad = !savedState.contains(KEY_FORM)
 
     val form: StateFlow<TaskForm> = savedState.getStateFlow(KEY_FORM, "")
-        .map { raw -> if (raw.isBlank()) TaskForm() else json.decodeFromString(TaskForm.serializer(), raw) }
+        .map(::decode)
         .stateIn(viewModelScope, SharingStarted.Eagerly, TaskForm())
+
+    private fun decode(raw: String?): TaskForm =
+        if (raw.isNullOrBlank()) TaskForm() else json.decodeFromString(TaskForm.serializer(), raw)
+
+    /**
+     * The latest form, read straight from the saved state. [form] reaches collectors a dispatch
+     * later, so edits made in quick succession (e.g. adding a tag and saving) must not build on it.
+     */
+    private fun currentForm(): TaskForm = decode(savedState.get<String>(KEY_FORM))
 
     private var original: TaskForm? = savedState.get<String>(KEY_ORIGINAL)?.let { json.decodeFromString(TaskForm.serializer(), it) }
 
@@ -190,13 +203,13 @@ class TaskEditorViewModel @Inject constructor(
         }
     }
 
-    val isDirty: Boolean get() = original != null && form.value != original
+    val isDirty: Boolean get() = original != null && currentForm() != original
 
     private fun write(value: TaskForm) {
         savedState[KEY_FORM] = json.encodeToString(TaskForm.serializer(), value)
     }
 
-    fun update(transform: (TaskForm) -> TaskForm) = write(transform(form.value))
+    fun update(transform: (TaskForm) -> TaskForm) = write(transform(currentForm()))
 
     fun setDueDate(date: LocalDate?) = update {
         it.copy(dueDate = date?.toEpochDay(), reminder = if (date == null) null else it.reminder)
@@ -242,7 +255,7 @@ class TaskEditorViewModel @Inject constructor(
             update { it.copy(pendingSubtasks = it.pendingSubtasks + clean) }
         } else {
             viewModelScope.launch {
-                runCatchingSafely { tasks.save(Task(title = clean, parentTaskId = route.taskId, projectId = form.value.projectId)) }
+                runCatchingSafely { tasks.save(Task(title = clean, parentTaskId = route.taskId, projectId = currentForm().projectId)) }
                     .onFailure { _events.tryEmit(EditorEvent.Failed) }
             }
         }
@@ -260,18 +273,31 @@ class TaskEditorViewModel @Inject constructor(
         runCatchingSafely { tasks.delete(listOf(id)) }.onFailure { _events.tryEmit(EditorEvent.Failed) }
     }
 
-    fun save() {
-        val current = form.value
-        if (current.title.isBlank() || !current.estimateValid || !current.actualValid) return
+    /** True from the first Save until it fails; a second tap must not insert the task twice. */
+    private var saving = false
+
+    /**
+     * Saves the form. [pendingTag] is tag text typed but not yet confirmed with the keyboard's
+     * Done key; it is added rather than silently dropped.
+     */
+    fun save(pendingTag: String = "") {
+        if (saving) return
+        addTag(pendingTag)
+        val current = currentForm()
+        if (!current.canSave) return
+        saving = true
         viewModelScope.launch {
             runCatchingSafely {
                 val id = tasks.save(current.toTask())
                 current.pendingSubtasks.forEach { tasks.save(Task(title = it, parentTaskId = id, projectId = current.projectId)) }
                 id
             }.onSuccess { id ->
-                original = form.value
+                original = current
                 _events.tryEmit(EditorEvent.Saved(id))
-            }.onFailure { _events.tryEmit(EditorEvent.Failed) }
+            }.onFailure {
+                saving = false
+                _events.tryEmit(EditorEvent.Failed)
+            }
         }
     }
 

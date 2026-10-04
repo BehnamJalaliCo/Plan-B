@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -29,20 +31,25 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,6 +66,7 @@ import com.behnamjalali.planb.core.designsystem.component.PlannerProgressRing
 import com.behnamjalali.planb.core.designsystem.component.PlannerSectionHeader
 import com.behnamjalali.planb.core.designsystem.component.PlannerTextField
 import com.behnamjalali.planb.core.designsystem.component.PlannerTopBar
+import com.behnamjalali.planb.core.designsystem.theme.MinTouchTarget
 import com.behnamjalali.planb.core.designsystem.theme.PlanBTheme
 import com.behnamjalali.planb.core.designsystem.theme.Spacing
 import com.behnamjalali.planb.core.model.EntityId
@@ -71,8 +79,7 @@ import com.behnamjalali.planb.core.ui.PlannerDatePickerDialog
 import com.behnamjalali.planb.core.ui.PlannerLocals
 import com.behnamjalali.planb.core.ui.PlannerTaskCard
 import com.behnamjalali.planb.core.ui.projectStatusLabel
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
+import com.behnamjalali.planb.core.ui.rememberOnce
 
 enum class ProjectTab(val label: Int) {
     OVERVIEW(R.string.project_tab_overview),
@@ -96,6 +103,7 @@ data class ProjectDetailCallbacks(
     val onArchive: (Boolean) -> Unit = {},
     val onDelete: () -> Unit = {},
     val onNotes: (String) -> Unit = {},
+    val onFlushNotes: () -> Unit = {},
 )
 
 @Composable
@@ -108,16 +116,18 @@ fun ProjectDetailDestination(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val resources = LocalResources.current
+    // Deleting emits Deleted and also makes the project missing; leave the screen only once.
+    val leaveOnce = rememberOnce(onBack)
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                ProjectEvent.Deleted -> onBack()
+                ProjectEvent.Deleted -> leaveOnce()
                 ProjectEvent.Failed -> snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
                 ProjectEvent.NotesSaved -> Unit
             }
         }
     }
-    LaunchedEffect(state.missing) { if (state.missing) onBack() }
+    LaunchedEffect(state.missing) { if (state.missing) leaveOnce() }
     ProjectDetailScreen(
         state = state,
         callbacks = ProjectDetailCallbacks(
@@ -134,6 +144,7 @@ fun ProjectDetailDestination(
             onArchive = viewModel::setArchived,
             onDelete = viewModel::delete,
             onNotes = viewModel::updateNotes,
+            onFlushNotes = viewModel::flushNotes,
         ),
     )
 }
@@ -183,7 +194,7 @@ fun ProjectDetailScreen(state: ProjectDetailUiState, callbacks: ProjectDetailCal
             ProjectTab.OVERVIEW -> Overview(state, callbacks)
             ProjectTab.TASKS -> TasksTab(state, callbacks)
             ProjectTab.MILESTONES -> MilestonesTab(state, callbacks)
-            ProjectTab.NOTES -> NotesTab(summary.project.description, callbacks.onNotes)
+            ProjectTab.NOTES -> NotesTab(summary.project.description, callbacks.onNotes, callbacks.onFlushNotes)
             ProjectTab.BOARD -> BoardTab(state, callbacks)
         }
     }
@@ -365,17 +376,21 @@ private fun MilestonesTab(state: ProjectDetailUiState, callbacks: ProjectDetailC
     }
 }
 
-@OptIn(FlowPreview::class)
 @Composable
-private fun NotesTab(initial: String, onNotes: (String) -> Unit) {
+private fun NotesTab(initial: String, onNotes: (String) -> Unit, onFlush: () -> Unit) {
     var text by rememberSaveable { mutableStateOf(initial) }
-    LaunchedEffect(Unit) {
-        androidx.compose.runtime.snapshotFlow { text }.debounce(300).collect { if (it != initial) onNotes(it) }
-    }
+    // Every edit goes to the ViewModel, which debounces the write (and compares with what is
+    // stored, so reverting to the original text is saved too). Leaving the tab or the screen writes
+    // whatever is still pending, so the last words typed are kept.
+    val currentFlush by rememberUpdatedState(onFlush)
+    DisposableEffect(Unit) { onDispose { currentFlush() } }
     Column(Modifier.fillMaxSize().padding(Spacing.screen)) {
         PlannerTextField(
             value = text,
-            onValueChange = { text = it },
+            onValueChange = {
+                if (it != text) onNotes(it)
+                text = it
+            },
             label = stringResource(R.string.project_tab_notes),
             placeholder = stringResource(R.string.project_notes_hint),
             singleLine = false,
@@ -400,12 +415,41 @@ private fun BoardTab(state: ProjectDetailUiState, callbacks: ProjectDetailCallba
         items(columns, key = { it.first }) { (status, label) ->
             val tasks = all.filter { it.status == status }
             Column(Modifier.width(280.dp), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                PlannerSectionHeader(stringResource(label), trailing = PlannerLocals.numbers.format(tasks.size))
+                BoardColumnHeader(stringResource(label), tasks.size)
                 if (tasks.isEmpty()) {
                     Text(stringResource(R.string.project_board_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 tasks.forEach { task -> BoardCard(task, status, callbacks) }
             }
+        }
+    }
+}
+
+/** The column's count sits right after its own title, never at the edge next to the following column. */
+@Composable
+private fun BoardColumnHeader(title: String, count: Int) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = MinTouchTarget)
+            .semantics(mergeDescendants = true) { heading() },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+    ) {
+        Text(
+            title,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer) {
+            Text(
+                PlannerLocals.numbers.format(count),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(horizontal = Spacing.sm, vertical = 2.dp),
+            )
         }
     }
 }

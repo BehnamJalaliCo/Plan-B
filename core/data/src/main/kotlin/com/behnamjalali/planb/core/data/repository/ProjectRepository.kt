@@ -21,6 +21,7 @@ import com.behnamjalali.planb.core.model.SearchEntityType
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 interface ProjectRepository {
@@ -28,8 +29,12 @@ interface ProjectRepository {
     fun observeProject(id: EntityId): Flow<ProjectSummary?>
     fun observeActiveProjects(): Flow<List<Project>>
     fun observeMilestones(projectId: EntityId): Flow<List<ProjectMilestone>>
+    /** The project with its tags (so saving it back keeps them). */
     suspend fun getProject(id: EntityId): Project?
     suspend fun save(project: Project): EntityId
+
+    /** Updates only the project's notes (its description); tags and other fields are untouched. */
+    suspend fun updateNotes(id: EntityId, notes: String)
     suspend fun setStatus(id: EntityId, status: ProjectStatus)
     suspend fun setArchived(id: EntityId, archived: Boolean)
 
@@ -53,7 +58,17 @@ class OfflineProjectRepository @Inject constructor(
     override fun observeProject(id: EntityId) = dao.observeProject(id).map { it?.toModel() }
     override fun observeActiveProjects() = dao.observeActiveEntities().map { list -> list.map { it.toModel() } }
     override fun observeMilestones(projectId: EntityId) = dao.observeMilestones(projectId).map { list -> list.map { it.toModel() } }
-    override suspend fun getProject(id: EntityId) = dao.getEntity(id)?.toModel()
+    override suspend fun getProject(id: EntityId): Project? = dao.observeProject(id).first()?.toModel()?.project
+
+    override suspend fun updateNotes(id: EntityId, notes: String) {
+        db.withTransaction {
+            val entity = dao.getEntity(id) ?: return@withTransaction
+            if (entity.description == notes) return@withTransaction
+            val updated = entity.copy(description = notes, updatedAt = time.now())
+            dao.update(updated)
+            searchDao.upsert(SearchIndexer.project(updated))
+        }
+    }
 
     override suspend fun save(project: Project): EntityId {
         require(project.title.isNotBlank()) { "Project title must not be blank" }

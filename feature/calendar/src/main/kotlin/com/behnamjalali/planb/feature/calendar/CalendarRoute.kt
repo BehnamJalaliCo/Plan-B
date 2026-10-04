@@ -1,7 +1,9 @@
 package com.behnamjalali.planb.feature.calendar
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,7 +25,20 @@ fun CalendarDestination(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val resources = LocalResources.current
     LaunchedEffect(viewModel) {
-        viewModel.failures.collect { snackbarHostState.showSnackbar(resources.getString(R.string.calendar_error)) }
+        viewModel.messages.collect { message ->
+            when (message) {
+                CalendarMessage.Failed -> snackbarHostState.showSnackbar(resources.getString(R.string.calendar_error))
+                is CalendarMessage.Completed -> {
+                    // A completed task leaves the calendar; offer the same undo as the task list.
+                    val result = snackbarHostState.showSnackbar(
+                        message = resources.getString(R.string.calendar_task_completed),
+                        actionLabel = resources.getString(R.string.calendar_undo),
+                        duration = SnackbarDuration.Short,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) viewModel.undoComplete(message.taskId, message.nextOccurrenceId)
+                }
+            }
+        }
     }
     CalendarScreen(
         state = state,

@@ -108,8 +108,9 @@ class NotebooksViewModel @Inject constructor(
                 val notebook = notes.ensureDefaultNotebook(defaultNotebookTitle)
                 notes.saveNote(Note(notebookId = notebook, title = imported.title, document = imported.document))
             }.onSuccess {
-                _events.tryEmit(NotebooksEvent.Imported)
+                // Open the note first; the confirmation must never hold up navigation.
                 _events.tryEmit(NotebooksEvent.OpenNote(it))
+                _events.tryEmit(NotebooksEvent.Imported)
             }.onFailure { _events.tryEmit(NotebooksEvent.ImportFailed) }
         }
     }
