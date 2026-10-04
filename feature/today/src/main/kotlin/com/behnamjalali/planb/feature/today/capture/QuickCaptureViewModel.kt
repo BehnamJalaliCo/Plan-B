@@ -71,14 +71,31 @@ class QuickCaptureViewModel @Inject constructor(
     }
     fun setTitle(value: String) { savedState[KEY_TITLE] = value }
     fun setBody(value: String) { savedState[KEY_BODY] = value }
-    fun setDate(value: LocalDate?) { savedState[KEY_DATE] = value?.toEpochDay() }
+    fun setDate(value: LocalDate?) {
+        savedState[KEY_DATE_PICKED] = true
+        savedState[KEY_DATE] = value?.toEpochDay()
+    }
+
+    /**
+     * Called each time the sheet opens. This ViewModel outlives the sheet, so a default date
+     * computed earlier (e.g. yesterday) is moved to today unless the user picked one.
+     */
+    fun onOpened() {
+        if (savedState.get<Boolean>(KEY_DATE_PICKED) != true) {
+            savedState[KEY_DATE] = today.toEpochDay()
+        }
+    }
     fun setTime(value: LocalTime?) { savedState[KEY_TIME] = value?.toSecondOfDay() }
     fun setHighPriority(value: Boolean) { savedState[KEY_PRIORITY] = value }
 
     val canSave: Boolean get() = title.value.isNotBlank() || (type.value == CaptureType.NOTE && body.value.isNotBlank())
 
+    /** True while a save runs; a second tap on Save must not capture the item twice. */
+    private var saving = false
+
     fun save(defaultNotebookTitle: String) {
-        if (!canSave) return
+        if (saving || !canSave) return
+        saving = true
         val text = title.value.trim()
         val date = dateEpoch.value?.let(LocalDate::ofEpochDay)
         val at = timeSeconds.value?.let { LocalTime.ofSecondOfDay(it.toLong()) }
@@ -121,6 +138,7 @@ class QuickCaptureViewModel @Inject constructor(
                 clear()
                 _events.tryEmit(CaptureEvent.Saved(kind, id))
             }.onFailure { _events.tryEmit(CaptureEvent.Failed) }
+            saving = false
         }
     }
 
@@ -130,6 +148,7 @@ class QuickCaptureViewModel @Inject constructor(
         savedState[KEY_TIME] = null
         savedState[KEY_PRIORITY] = false
         savedState[KEY_DATE] = time.today().toEpochDay()
+        savedState[KEY_DATE_PICKED] = false
     }
 
     private companion object {
@@ -139,5 +158,6 @@ class QuickCaptureViewModel @Inject constructor(
         const val KEY_DATE = "capture_date"
         const val KEY_TIME = "capture_time"
         const val KEY_PRIORITY = "capture_priority"
+        const val KEY_DATE_PICKED = "capture_date_picked"
     }
 }

@@ -30,12 +30,16 @@ import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -106,7 +110,21 @@ class TodayViewModel @Inject constructor(
     private val _messages = MutableSharedFlow<TodayMessage>(extraBufferCapacity = 4)
     val messages: SharedFlow<TodayMessage> = _messages
 
+    /** Test hook: overrides the wait between greeting checks (normally until the next minute). */
+    internal var greetingTickMillis: Long? = null
+
+    /** The greeting follows the clock, not data changes, so it never goes stale while the screen is open. */
+    private val greeting: Flow<Greeting> = flow {
+        while (true) {
+            val now = time.localNow()
+            emit(greetingFor(now.toLocalTime()))
+            val untilNextMinute = 60_000L - (now.second * 1000L + now.nano / 1_000_000L)
+            delay(greetingTickMillis ?: untilNextMinute.coerceIn(1_000L, 60_000L))
+        }
+    }.distinctUntilChanged()
+
     val uiState: StateFlow<TodayUiState> = time.todayFlow().flatMapLatest { today -> dayFlow(today) }
+        .combine(greeting) { data, greeting -> data.copy(greeting = greeting) }
         .map<TodayData, TodayUiState> { TodayUiState.Success(it) }
         .catch { emit(TodayUiState.Error) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayUiState.Loading)
