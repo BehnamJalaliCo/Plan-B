@@ -106,13 +106,14 @@ class TodayViewModelTest {
         awaitData { it.todayTasks.size == 2 }
 
         viewModel.setTaskCompleted(a, true)
-        val after = awaitData { it.completedToday == 1 }
+        // Counts and lists come from separate flows; wait until both reflect the change.
+        val after = awaitData { it.completedToday == 1 && it.todayTasks.size == 1 }
         assertThat(after.todayTasks.map { it.title }).containsExactly("B")
         assertThat(after.progress).isEqualTo(0.5f)
         assertThat(graph.tasks.getTask(a)!!.isCompleted).isTrue()
 
         viewModel.setTaskCompleted(a, false)
-        val reopened = awaitData { it.completedToday == 0 }
+        val reopened = awaitData { it.completedToday == 0 && it.todayTasks.size == 2 }
         assertThat(reopened.todayTasks.map { it.title }).containsExactly("A", "B")
     }
 
