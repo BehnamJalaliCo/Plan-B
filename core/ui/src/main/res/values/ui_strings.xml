@@ -21,7 +21,16 @@
     <string name="ui_next_month">Next month</string>
     <string name="ui_today">Today</string>
     <string name="ui_project_progress">%1$s of tasks complete</string>
-    <string name="ui_streak">%1$s day streak</string>
+    <plurals name="ui_streak_days">
+        <item quantity="one">%1$s day streak</item>
+        <item quantity="other">%1$s day streak</item>
+    </plurals>
+    <plurals name="ui_streak_weeks">
+        <item quantity="one">%1$s week streak</item>
+        <item quantity="other">%1$s week streak</item>
+    </plurals>
+    <!-- Joins inline pieces of metadata. Persian uses a comma: a middle dot next to a Persian digit reads as zero. -->
+    <string name="ui_separator">" · "</string>
     <string name="ui_habit_progress">%1$s of %2$s %3$s</string>
     <string name="ui_goal_progress">%1$s / %2$s %3$s</string>
     <string name="ui_due">Due %1$s</string>

@@ -8,6 +8,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import com.behnamjalali.planb.core.common.NumberFormatter
 import com.behnamjalali.planb.core.datetime.PlannerDateFormatter
 import com.behnamjalali.planb.core.model.CalendarSystem
@@ -18,6 +19,14 @@ val LocalDateFormatter = staticCompositionLocalOf<PlannerDateFormatter> { error(
 
 /** The current local date; the app root updates it when the day changes. */
 val LocalToday = staticCompositionLocalOf<LocalDate> { LocalDate.now() }
+
+/**
+ * Separator between inline pieces of metadata: " · ", or "، " in Persian, where a middle dot next to
+ * a Persian digit reads as a zero ("۱۳ · بلوک" looks like "۱۳۰").
+ */
+@Composable
+@ReadOnlyComposable
+fun metaSeparator(): String = stringResource(R.string.ui_separator)
 
 object PlannerLocals {
     val formatter: PlannerDateFormatter

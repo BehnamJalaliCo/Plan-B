@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -61,6 +62,7 @@ import com.behnamjalali.planb.core.model.AccentColor
 import com.behnamjalali.planb.core.model.CalendarEvent
 import com.behnamjalali.planb.core.model.Goal
 import com.behnamjalali.planb.core.model.Habit
+import com.behnamjalali.planb.core.model.HabitSchedule
 import com.behnamjalali.planb.core.model.Note
 import com.behnamjalali.planb.core.model.Priority
 import com.behnamjalali.planb.core.model.ProjectStatus
@@ -185,9 +187,10 @@ fun PlannerTaskCard(
                 ) {
                     val metaTint = if (overdue) scheme.error else scheme.onSurfaceVariant
                     if (showDate && task.dueDate != null) {
+                        val separator = metaSeparator()
                         val dateText = buildString {
                             append(formatter.relativeDate(task.dueDate!!, today))
-                            task.dueTime?.let { append(" · ").append(formatter.time(it)) }
+                            task.dueTime?.let { append(separator).append(formatter.time(it)) }
                         }
                         MetaItem(Icons.Rounded.Schedule, dateText, metaTint)
                     } else if (task.dueTime != null) {
@@ -293,7 +296,7 @@ fun PlannerEventCard(
                     else -> formatter.timeRange(event.startTime!!, event.endTime)
                 }
                 Text(
-                    listOfNotNull(dateLabel, time).joinToString(" · "),
+                    listOfNotNull(dateLabel, time).joinToString(metaSeparator()),
                     style = MaterialTheme.typography.labelMedium,
                     color = tones.onContainer.copy(alpha = 0.8f),
                 )
@@ -354,7 +357,12 @@ fun PlannerHabitCard(
                 if (streak > 0) {
                     MetaItem(
                         Icons.Rounded.LocalFireDepartment,
-                        stringResource(R.string.ui_streak, numbers.format(streak)),
+                        // A times-per-week habit counts its streak in weeks.
+                        pluralStringResource(
+                            if (habit.schedule is HabitSchedule.TimesPerWeek) R.plurals.ui_streak_weeks else R.plurals.ui_streak_days,
+                            streak,
+                            numbers.format(streak),
+                        ),
                         PlanBTheme.colors.warning,
                     )
                 }
@@ -412,7 +420,7 @@ fun PlannerProjectCard(
                     listOfNotNull(
                         projectStatusLabel(project.status),
                         project.dueDate?.let { stringResource(R.string.ui_due, formatter.shortDate(it, PlannerLocals.today)) },
-                    ).joinToString(" · "),
+                    ).joinToString(metaSeparator()),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

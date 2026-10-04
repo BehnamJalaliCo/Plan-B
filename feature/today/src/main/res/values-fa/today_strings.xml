@@ -31,8 +31,8 @@
     <string name="today_empty_projects">پروژهٔ فعالی ندارید.</string>
     <string name="today_empty_notes">یادداشت‌های سنجاق‌شده و اخیر اینجا نمایش داده می‌شوند.</string>
     <string name="today_focus_start">شروع جلسهٔ تمرکز</string>
-    <string name="today_focus_running">در حال تمرکز · %1$s باقی‌مانده</string>
-    <string name="today_focus_paused">تمرکز متوقف شده · %1$s باقی‌مانده</string>
+    <string name="today_focus_running">در حال تمرکز، %1$s باقی‌مانده</string>
+    <string name="today_focus_paused">تمرکز متوقف شده، %1$s باقی‌مانده</string>
     <string name="today_focus_today">تمرکز امروز: %1$s</string>
     <string name="today_summary_overdue">عقب‌افتاده</string>
     <string name="today_summary_due">سررسید امروز</string>

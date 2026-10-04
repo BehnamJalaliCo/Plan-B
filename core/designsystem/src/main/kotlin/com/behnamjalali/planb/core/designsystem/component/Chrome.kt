@@ -20,12 +20,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
@@ -54,6 +58,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.behnamjalali.planb.core.designsystem.R
 import com.behnamjalali.planb.core.designsystem.theme.IconSize
 import com.behnamjalali.planb.core.designsystem.theme.MinTouchTarget
@@ -127,7 +132,7 @@ fun PlannerNavigationBar(
                 onClick = { onSelect(index) },
                 modifier = if (item.testTag.isEmpty()) Modifier else Modifier.testTag(item.testTag),
                 icon = { Icon(if (selected) item.selectedIcon else item.icon, contentDescription = null) },
-                label = { Text(item.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                label = { NavigationLabel(item.label) },
                 colors = NavigationBarItemDefaults.colors(
                     indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -137,6 +142,27 @@ fun PlannerNavigationBar(
         }
     }
 }
+
+/**
+ * One-line navigation label. At the normal font size it is the plain label style; with large font
+ * scales it shrinks just enough to fit the item ("Calendar", "Notebooks" at 150% on a 360dp phone)
+ * instead of being cut off.
+ */
+@Composable
+private fun NavigationLabel(text: String) {
+    val style = LocalTextStyle.current
+    val color = LocalContentColor.current
+    BasicText(
+        text = text,
+        style = style.copy(color = color),
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Ellipsis,
+        autoSize = TextAutoSize.StepBased(minFontSize = NavLabelMinSize, maxFontSize = style.fontSize, stepSize = 0.5.sp),
+    )
+}
+
+private val NavLabelMinSize = 8.sp
 
 @Composable
 fun PlannerDialog(

@@ -1,5 +1,6 @@
 package com.behnamjalali.planb.core.ui
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,18 +10,24 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,16 +47,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.behnamjalali.planb.core.datetime.CalendarMonth
 import com.behnamjalali.planb.core.datetime.MonthGrid
 import com.behnamjalali.planb.core.designsystem.component.PlannerIconButton
 import com.behnamjalali.planb.core.designsystem.theme.IconSize
+import com.behnamjalali.planb.core.designsystem.theme.MinTouchTarget
 import com.behnamjalali.planb.core.designsystem.theme.PlanBTheme
 import com.behnamjalali.planb.core.designsystem.theme.Radius
 import com.behnamjalali.planb.core.designsystem.theme.Spacing
@@ -94,39 +104,55 @@ fun MonthGridView(
                     val isSelected = cell.date == selected
                     val isToday = cell.date == today
                     val count = markers(cell.date)
+                    // The whole cell is the touch target, at least 48dp tall; the day's circle sits inside.
                     Box(
                         Modifier
                             .weight(1f)
+                            .heightIn(min = MinTouchTarget)
                             .aspectRatio(1f)
-                            .padding(2.dp)
-                            .clip(CircleShape)
-                            .background(if (isSelected) scheme.primary else androidx.compose.ui.graphics.Color.Transparent)
-                            .then(if (isToday && !isSelected) Modifier.border(1.5.dp, scheme.primary, CircleShape) else Modifier)
                             .selectable(selected = isSelected, role = Role.Button, onClick = { onSelect(cell.date) })
                             .semantics { contentDescription = formatter.fullDate(cell.date) },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
+                        DayCircle(isSelected, isToday, count > 0) {
+                            Text(
                             formatter.dayNumber(cell.date),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = when {
-                                isSelected -> scheme.onPrimary
-                                !cell.inMonth -> scheme.outline
-                                else -> scheme.onSurface
-                            },
-                        )
-                        if (count > 0) {
-                            Box(
-                                Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .padding(bottom = 5.dp)
-                                    .size(4.dp)
-                                    .background(if (isSelected) scheme.onPrimary else scheme.tertiary, CircleShape),
+                                color = when {
+                                    isSelected -> scheme.onPrimary
+                                    !cell.inMonth -> scheme.outline
+                                    else -> scheme.onSurface
+                                },
                             )
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DayCircle(selected: Boolean, today: Boolean, marked: Boolean, content: @Composable () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Box(
+        Modifier
+            .padding(2.dp)
+            .aspectRatio(1f)
+            .clip(CircleShape)
+            .background(if (selected) scheme.primary else androidx.compose.ui.graphics.Color.Transparent)
+            .then(if (today && !selected) Modifier.border(1.5.dp, scheme.primary, CircleShape) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        content()
+        if (marked) {
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 5.dp)
+                    .size(4.dp)
+                    .background(if (selected) scheme.onPrimary else scheme.tertiary, CircleShape),
+            )
         }
     }
 }
@@ -154,6 +180,7 @@ fun MonthHeader(
 }
 
 /** Date picker dialog supporting Jalali and Gregorian display. */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PlannerDatePickerDialog(
     initial: LocalDate?,
@@ -168,30 +195,44 @@ fun PlannerDatePickerDialog(
     var monthOffset by rememberSaveable { mutableIntStateOf(0) }
     val baseMonth = formatter.monthOf(initial ?: today)
     val month = baseMonth.plus(monthOffset)
-    AlertDialog(
+    // Like Material's own date picker dialog, this one is up to 360dp wide with slim side padding,
+    // so each day cell is a full 48dp touch target even on a 360dp-wide phone.
+    BasicAlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(Radius.xl),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        title = { Text(formatter.fullDate(selected), style = MaterialTheme.typography.titleMedium) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier.widthIn(max = DatePickerMaxWidth),
+    ) {
+        Surface(shape = RoundedCornerShape(Radius.xl), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = DatePickerSidePadding, vertical = Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                Text(
+                    formatter.fullDate(selected),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = Spacing.md),
+                )
                 MonthHeader(month, { monthOffset-- }, { monthOffset++ })
                 MonthGridView(month, selected, { selectedEpoch = it.toEpochDay() })
-                TextButton(onClick = {
-                    selectedEpoch = today.toEpochDay()
-                    monthOffset = formatter.monthOf(today).let { m -> (m.year - baseMonth.year) * 12 + (m.month - baseMonth.month) }
-                }) { Text(stringResource(R.string.ui_today)) }
+                FlowRow(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
+                    TextButton(onClick = {
+                        selectedEpoch = today.toEpochDay()
+                        monthOffset = formatter.monthOf(today).let { m -> (m.year - baseMonth.year) * 12 + (m.month - baseMonth.month) }
+                    }) { Text(stringResource(R.string.ui_today)) }
+                    Spacer(Modifier.weight(1f))
+                    if (allowClear) TextButton(onClick = { onConfirm(null) }) { Text(stringResource(R.string.ui_clear)) }
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.ui_cancel)) }
+                    TextButton(onClick = { onConfirm(selected) }) { Text(stringResource(R.string.ui_done)) }
+                }
             }
-        },
-        confirmButton = { TextButton(onClick = { onConfirm(selected) }) { Text(stringResource(R.string.ui_done)) } },
-        dismissButton = {
-            Row {
-                if (allowClear) TextButton(onClick = { onConfirm(null) }) { Text(stringResource(R.string.ui_clear)) }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.ui_cancel)) }
-            }
-        },
-    )
+        }
+    }
 }
+
+private val DatePickerMaxWidth = 360.dp
+private val DatePickerSidePadding = 12.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -202,7 +243,9 @@ fun PlannerTimePickerDialog(
     allowClear: Boolean = true,
 ) {
     val start = initial ?: LocalTime.of(9, 0)
-    val state = rememberTimePickerState(start.hour, start.minute, is24Hour = true)
+    // Same clock as the app's time format: 24-hour in Persian, else the device's 12/24-hour setting.
+    val is24Hour = PlannerLocals.numbers.persianDigits || DateFormat.is24HourFormat(LocalContext.current)
+    val state = rememberTimePickerState(start.hour, start.minute, is24Hour = is24Hour)
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(Radius.xl),
@@ -238,23 +281,29 @@ fun AccentColorPicker(
     onSelect: (AccentColor) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         AccentColor.entries.forEach { accent ->
             val tones = PlanBTheme.colors.accent(accent)
             val isSelected = accent == selected
             val name = accentName(accent)
-            Surface(
-                shape = CircleShape,
-                color = tones.strong,
-                border = if (isSelected) BorderStroke(3.dp, MaterialTheme.colorScheme.onSurface) else null,
-                modifier = Modifier
-                    .size(44.dp)
+            // 48dp touch target around the 44dp swatch.
+            Box(
+                Modifier
+                    .size(MinTouchTarget)
                     .selectable(isSelected, role = Role.RadioButton) { onSelect(accent) }
                     .semantics { contentDescription = name },
+                contentAlignment = Alignment.Center,
             ) {
-                if (isSelected) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.Check, null, tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(IconSize.sm))
+                Surface(
+                    shape = CircleShape,
+                    color = tones.strong,
+                    border = if (isSelected) BorderStroke(3.dp, MaterialTheme.colorScheme.onSurface) else null,
+                    modifier = Modifier.size(44.dp),
+                ) {
+                    if (isSelected) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.Check, null, tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(IconSize.sm))
+                        }
                     }
                 }
             }
