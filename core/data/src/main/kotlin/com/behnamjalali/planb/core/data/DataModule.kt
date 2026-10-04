@@ -20,6 +20,8 @@ import com.behnamjalali.planb.core.data.repository.ProjectRepository
 import com.behnamjalali.planb.core.data.repository.ReviewRepository
 import com.behnamjalali.planb.core.data.repository.SearchRepository
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
+import com.behnamjalali.planb.core.data.repository.OfflineStatisticsRepository
+import com.behnamjalali.planb.core.data.repository.StatisticsRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.data.repository.TemplateRepository
 import dagger.Binds
@@ -41,4 +43,5 @@ internal abstract class DataModule {
     @Binds abstract fun search(impl: FtsSearchRepository): SearchRepository
     @Binds abstract fun review(impl: OfflineReviewRepository): ReviewRepository
     @Binds abstract fun settings(impl: DataStoreSettingsRepository): SettingsRepository
+    @Binds abstract fun statistics(impl: OfflineStatisticsRepository): StatisticsRepository
 }

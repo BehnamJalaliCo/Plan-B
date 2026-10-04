@@ -42,4 +42,5 @@ object DatabaseModule {
     @Provides fun challengeDao(db: PlanBDatabase) = db.challengeDao()
     @Provides fun activityLogDao(db: PlanBDatabase) = db.activityLogDao()
     @Provides fun calendarLinkDao(db: PlanBDatabase) = db.calendarLinkDao()
+    @Provides fun statisticsDao(db: PlanBDatabase) = db.statisticsDao()
 }
