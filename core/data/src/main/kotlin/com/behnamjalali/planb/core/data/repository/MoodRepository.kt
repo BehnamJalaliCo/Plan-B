@@ -33,6 +33,9 @@ interface MoodRepository {
     suspend fun update(id: EntityId, mood: Int?, energy: Int?, tags: List<String>)
 
     suspend fun delete(id: EntityId)
+
+    /** Puts a deleted check-in back as it was (undo); its journal page link is kept while the page exists. */
+    suspend fun restore(entry: MoodEntry): EntityId
 }
 
 @Singleton
@@ -87,6 +90,24 @@ class OfflineMoodRepository @Inject constructor(
     }
 
     override suspend fun delete(id: EntityId) = journal.deleteMood(id)
+
+    override suspend fun restore(entry: MoodEntry): EntityId {
+        validate(entry.mood, entry.energy)
+        val now = time.now()
+        val page = entry.noteId?.takeIf { db.noteDao().getNote(it) != null }
+        return journal.insertMood(
+            MoodEntryEntity(
+                date = entry.date,
+                time = entry.time,
+                mood = entry.mood,
+                energy = entry.energy,
+                tags = cleanTags(entry.tags),
+                noteId = page,
+                createdAt = entry.createdAt.takeIf { it.toEpochMilli() > 0 } ?: now,
+                updatedAt = now,
+            ),
+        )
+    }
 
     private fun validate(mood: Int?, energy: Int?) {
         require(mood == null || mood in MoodEntry.RANGE) { "Mood must be 1..5" }

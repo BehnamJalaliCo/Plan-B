@@ -93,6 +93,19 @@ class HealthHabitSync @Inject constructor(
         return runCatchingSafely { source.total(metric, from, to) }.getOrNull()?.let { HealthReading(metric, today, it) }
     }
 
+    /**
+     * Daily totals of [metric] for [days] (the mood tracker's comparison with sleep, #30), at most
+     * [MAX_DAILY_READS] days; empty without access. Days without data are left out.
+     */
+    suspend fun dailyTotals(metric: HealthMetric, days: Collection<LocalDate>): Map<LocalDate, Long> {
+        if (!hasPermission(metric)) return emptyMap()
+        val zone = time.zone()
+        return days.sortedDescending().take(MAX_DAILY_READS).mapNotNull { day ->
+            val (from, to) = HealthHabits.window(metric, day, zone)
+            runCatchingSafely { source.total(metric, from, to) }.getOrNull()?.takeIf { it > 0 }?.let { day to it }
+        }.toMap()
+    }
+
     /** Runs a sync unless one ran within [MIN_INTERVAL] ([force] skips that); returns the days checked off. */
     suspend fun sync(force: Boolean = false): Int = mutex.withLock {
         if (!runCatchingSafely { pro.isPro() }.getOrDefault(false)) return 0
@@ -132,5 +145,6 @@ class HealthHabitSync @Inject constructor(
     companion object {
         val MIN_INTERVAL: Duration = Duration.ofMinutes(15)
         private const val KEEP_DAYS = 14L
+        const val MAX_DAILY_READS = 31
     }
 }

@@ -91,7 +91,7 @@ internal val moodIcons: List<ImageVector> = listOf(
     Icons.Rounded.SentimentVerySatisfied,
 )
 
-private val energyIcons: List<ImageVector> = listOf(
+internal val energyIcons: List<ImageVector> = listOf(
     Icons.Rounded.Battery0Bar,
     Icons.Rounded.Battery2Bar,
     Icons.Rounded.Battery4Bar,
@@ -100,7 +100,7 @@ private val energyIcons: List<ImageVector> = listOf(
 )
 
 internal val moodLabels = listOf(R.string.journal_mood_1, R.string.journal_mood_2, R.string.journal_mood_3, R.string.journal_mood_4, R.string.journal_mood_5)
-private val energyLabels = listOf(R.string.journal_energy_1, R.string.journal_energy_2, R.string.journal_energy_3, R.string.journal_energy_4, R.string.journal_energy_5)
+internal val energyLabels = listOf(R.string.journal_energy_1, R.string.journal_energy_2, R.string.journal_energy_3, R.string.journal_energy_4, R.string.journal_energy_5)
 
 /** Mood level 1..5 as a color, from the error color (very low) to the success color (great). */
 @Composable
@@ -250,7 +250,7 @@ private fun TodayCard(state: JournalUi, actions: JournalActions) {
 }
 
 @Composable
-private fun LevelPicker(
+internal fun LevelPicker(
     label: String,
     selected: Int?,
     icons: List<ImageVector>,
