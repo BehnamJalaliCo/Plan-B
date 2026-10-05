@@ -26,6 +26,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -52,6 +53,8 @@ import com.behnamjalali.planb.feature.today.capture.CaptureType
 import com.behnamjalali.planb.feature.today.capture.QuickCaptureSheet
 import com.behnamjalali.planb.feature.today.capture.captureSavedMessage
 import com.behnamjalali.planb.navigation.PlanBNavHost
+import com.behnamjalali.planb.ui.onboarding.OnboardingHost
+import com.behnamjalali.planb.ui.onboarding.rememberFadeIn
 import com.behnamjalali.planb.navigation.TopLevelDestination
 import com.behnamjalali.planb.navigation.handleDeepLink
 import com.behnamjalali.planb.navigation.navigateTopLevel
@@ -72,10 +75,13 @@ fun PlanBApp(
     val resources = LocalResources.current
     var capturing by rememberSaveable { mutableStateOf(false) }
     var customizeToday by rememberSaveable { mutableStateOf(false) }
+    // After the first-run flow, the app fades in instead of cutting in.
+    val afterOnboarding = remember { !settings.onboardingCompleted }
     if (!settings.onboardingCompleted) {
-        OnboardingScreen(onDone = onOnboardingDone)
+        OnboardingHost(settings, onFinished = onOnboardingDone)
         return
     }
+    val appAlpha = rememberFadeIn(active = afterOnboarding)
     val backStack by navController.currentBackStackEntryAsState()
     val destination = backStack?.destination
     val current = TopLevelDestination.entries.firstOrNull { top -> destination?.hasRoute(top.route::class) == true }
@@ -100,7 +106,8 @@ fun PlanBApp(
     CompositionLocalProvider(LocalProAccess provides proAccess) {
         Scaffold(
             // Test tags double as resource ids so UiAutomator (benchmarks, baseline profiles) can find them.
-            modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true },
+            modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }
+                .graphicsLayer { alpha = appAlpha.value },
             containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = WindowInsets(0),
             snackbarHost = { SnackbarHost(snackbar) },

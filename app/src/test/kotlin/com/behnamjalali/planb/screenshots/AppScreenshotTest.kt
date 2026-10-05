@@ -12,6 +12,8 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.isSelected
@@ -131,7 +133,13 @@ class AppScreenshotTest(private val variant: Variant) {
         scenario?.close()
     }
 
-    private fun launch(seed: Boolean = true, onboarded: Boolean = true, pro: Boolean = false, beforeLaunch: suspend () -> Unit = {}) {
+    private fun launch(
+        seed: Boolean = true,
+        onboarded: Boolean = true,
+        languageChosen: Boolean = true,
+        pro: Boolean = false,
+        beforeLaunch: suspend () -> Unit = {},
+    ) {
         runBlocking {
             if (pro) {
                 developerBilling.setOwned(ProProduct.LIFETIME)
@@ -144,6 +152,7 @@ class AppScreenshotTest(private val variant: Variant) {
                     language = variant.language,
                     themeMode = if (variant.dark) ThemeMode.DARK else ThemeMode.LIGHT,
                     onboardingCompleted = onboarded,
+                    languageChosen = languageChosen,
                     animationsEnabled = false,
                 )
             }
@@ -534,12 +543,41 @@ class AppScreenshotTest(private val variant: Variant) {
         capture("settings", "appearance")
     }
 
+    // region First run: the language screen, the welcome (end of its animation), the three slides (settled)
+
     @Test
-    fun onboarding() {
-        launch(seed = false, onboarded = false)
-        compose.waitForIdle()
-        capture("onboarding", "onboarding")
+    fun onboardingLanguage() {
+        launch(seed = false, onboarded = false, languageChosen = false)
+        // Bilingual: both languages are offered whatever the app language is.
+        waitFor(hasTestTag("onboarding_language_fa"))
+        waitFor(hasTestTag("onboarding_language_en"))
+        capture("onboarding", "onboarding_language")
     }
+
+    @Test
+    fun onboardingWelcome() {
+        launch(seed = false, onboarded = false)
+        waitFor(hasText(s(AppR.string.onboarding_welcome_tagline)))
+        waitFor(hasTestTag("onboarding_welcome_start") and isEnabled())
+        capture("onboarding", "onboarding_welcome")
+    }
+
+    @Test
+    fun onboardingSlides() {
+        launch(seed = false, onboarded = false)
+        click(s(AppR.string.onboarding_welcome_start))
+        waitFor(hasText(s(AppR.string.onboarding_plan_title)))
+        capture("onboarding", "onboarding_plan")
+        click(s(AppR.string.onboarding_next))
+        waitFor(hasText(s(AppR.string.onboarding_grow_title)))
+        capture("onboarding", "onboarding_grow")
+        click(s(AppR.string.onboarding_next))
+        waitFor(hasText(s(AppR.string.onboarding_private_title)))
+        waitFor(hasText(s(AppR.string.onboarding_start)))
+        capture("onboarding", "onboarding_private")
+    }
+
+    // endregion
 
     companion object {
         @JvmStatic
