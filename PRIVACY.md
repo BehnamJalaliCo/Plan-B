@@ -74,6 +74,11 @@ other files in the folder are never touched. **Locked notes** are encrypted with
 only you know (PBKDF2-HMAC-SHA256 and AES-256-GCM); backups contain them encrypted, and nobody,
 including the developer, can recover a forgotten passphrase.
 
+**Save to Plan-B** (Plan-B Pro web clipper) appears in Android's share sheet. It receives only
+the text, page or link you share with it, saves it as a note on your device and never downloads
+the page or contacts any server. Note version history and the journal stay on your device like
+all other notes (and are part of your backups); locked notes keep no version history.
+
 ## Notifications on the lock screen
 
 Reminder notifications are marked private: on a locked screen Android shows a generic text
@@ -169,6 +174,12 @@ Plan-B به مخاطبین، موقعیت مکانی، دوربین، میکرو
 می‌شوند و به فایل‌های دیگر پوشه دست زده نمی‌شود. **یادداشت‌های قفل‌شده** با رمزی که فقط شما
 می‌دانید رمزنگاری می‌شوند؛ پشتیبان‌ها آن‌ها را رمزنگاری‌شده نگه می‌دارند و هیچ‌کس، حتی
 سازنده، نمی‌تواند رمز فراموش‌شده را بازیابی کند.
+
+گزینهٔ **ذخیره در Plan-B** (ذخیره‌ساز وب در Plan-B Pro) در فهرست هم‌رسانی اندروید دیده می‌شود. فقط
+متن، صفحه یا پیوندی را که خودتان با آن هم‌رسانی می‌کنید دریافت می‌کند، آن را به‌صورت یادداشت روی
+دستگاهتان ذخیره می‌کند و هرگز صفحه را دانلود نمی‌کند یا به سروری وصل نمی‌شود. تاریخچهٔ نسخه‌های
+یادداشت و دفتر روزانه هم مثل بقیهٔ یادداشت‌ها روی دستگاه می‌مانند (و در پشتیبان‌ها هستند)؛
+یادداشت‌های قفل‌شده تاریخچهٔ نسخه ندارند.
 
 ## اعلان‌ها روی صفحهٔ قفل
 

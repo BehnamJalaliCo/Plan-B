@@ -44,18 +44,18 @@ The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable;
 13. `eisenhower` — Eisenhower matrix ✅
 14. `dependencies` — task dependencies ✅
 
-**Notes**
+**Notes** (#16, #21, #22, #24, #25 implemented, see [Notes knowledge](#notes-knowledge-16-21-22-24-25))
 15. `rich_notes` — images, attachments, tables and pen drawing in notes
-16. `note_links` — links between notes and note version history
+16. `note_links` — links between notes and note version history ✅
 17. `document_scan` — document scan and text search inside images
 18. `handwriting` — handwriting to text
 19. `voice_notes` — voice recording in notes with transcription
 20. `note_databases` — simple database tables in notes
-21. `note_graph` — note graph view
-22. `web_clipper` — web clipper (save from the browser via Android share)
+21. `note_graph` — note graph view ✅
+22. `web_clipper` — web clipper (save from the browser via Android share) ✅
 23. `math_charts` — math formulas and charts in notes
-24. `focus_writing` — distraction-free writing with word goals
-25. `journal` — daily journal with prompts and a mood calendar
+24. `focus_writing` — distraction-free writing with word goals ✅
+25. `journal` — daily journal with prompts and a mood calendar ✅
 
 **Habits & focus**
 26. `focus_pro` — Focus Pro (ambient sounds, strict mode with Do Not Disturb)
@@ -89,6 +89,7 @@ The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable;
 | `feature:pro` | `PaywallRoute(featureId)`, `PaywallViewModel`, `PaywallScreen` (paywall and "Your Pro") |
 | `core:ai` | AI provider catalog, encrypted key storage, `AiClient` (infrastructure for #39) |
 | `core:calendarsync` | #3: `DeviceCalendarStore` (CalendarContract behind an interface; `ContentResolverCalendarStore`, `FakeDeviceCalendarStore`), `CalendarSyncEngine`, `CalendarSyncRepository`, `CalendarSyncController` + `CalendarSyncWorker` |
+| `feature:journal` | #25: `JournalRoute`, `MoodCalendarRoute` and their ViewModels |
 | `app` | `BillingModule` (Bazaar in release, fake in debug), `ProStatusViewModel`, provides `LocalProAccess`, Pro routes, More entry |
 
 ## Gating rules (for work packages)
@@ -351,6 +352,29 @@ ids 8 and 16, the free slot 0 of the `id × 8 + code` scheme), skipped on a day 
 done, opening `planb://open/ritual/morning|evening`; re-armed after delivery, boot, clock or zone
 changes and whenever the settings change (also after a restore). Switching one on asks for the
 notification permission (Android 13+) in context.
+
+## Notes knowledge (#16, #21, #22, #24, #25)
+
+No schema change: `note_links`, `note_versions`, `journal_entries` and `mood_entries` (v3) hold the
+data; writing goals, the journal reminder and custom prompts are user preferences (`writing_*`,
+`journal_*` keys, part of the exported preferences). Read queries live in `NoteKnowledgeDao` (no
+tables of its own). Pure rules are in `core:model` (`NoteLinks`, `NoteDiff`, `WordCount`,
+`HtmlToBlocks`, `GraphLayout`, `JournalPrompts`, `MoodCalendar`), repositories in `core:data`
+(`NoteLinkRepository`, `NoteHistoryRepository`, `JournalRepository`), screens in
+`feature:notebooks` (`knowledge/`, `history/`, `graph/`, `clipper/`, `writing/`) and the new
+`feature:journal`. Free users keep every note feature; the entry points (the `[[` hint, the
+editor menu items, the Notebooks chips with a Pro badge, the share sheet) show a teaser or open
+the Pro screen only when tapped. Data made with Pro stays: links keep working and showing,
+journal pages are ordinary notes, versions stay in backups.
+
+| # | Where | How it works |
+|---|---|---|
+| 16 links | Note editor: type `[[` | A picker above the block toolbar searches live notes by title (`SearchNormalizer`: Arabic/Persian letters, half-spaces, digits; every typed word must start a title word, titles starting with the search first). Choosing one replaces `[[search` with the token **`[[note:ID\|Title]]`** inside the block text. The editor draws tokens as the target's **current** title (underlined; a trashed or deleted target is struck through in the muted color) with a `VisualTransformation` whose caret never stops inside a link, and a deletion that cuts into a token removes the whole token. With the caret on a link, "Open …" opens it on top of the current note. The end of a note lists **Links in this note** and **Linked from** (backlinks of live notes). `NoteRepository` rewrites `note_links` from the tokens on every save (`saveNote`, `updateContent`, duplicate) in the same transaction: self-links and links to notes deleted for good are dropped (the token stays as text and shows its stored title), a locked note's links are left as they were. Search indexes a link as its title (`NoteDocument.plainText`). Exports: plain text uses the title, Markdown a relative link `[Title](<Title.md>)` (single note) or `[Title](<../Notebook/Title.md>)` in the notes ZIP. |
+| 16 history | Note editor › Version history | `NoteHistoryRepository.snapshot` stores the note's **stored** state in `note_versions` (Pro only; never for locked, encrypted or trashed notes; never a duplicate of the newest version). The editor takes one before the first save of an editing session (forced), at most one every **10 minutes** while saving, and one when a changed note is closed. Retention per note: the newest **50**, none older than **90 days**. The screen lists versions with relative times, word counts and "N added, M removed", previews a version and compares it with the note now (`NoteDiff`: block lines with type markers, LCS line diff, linear head/tail trim, above 1,500 lines everything counts as changed); **Restore** first saves the current state as a version, then writes the version back and reopens the editor. Versions are never indexed for search. |
+| 21 graph | Notebooks › Note graph | `NoteLinkRepository.observeGraph` (live notes, links between live notes, note tags). `GraphBuilder` filters by notebook and tag, can hide unlinked notes and, above **2,000** notes, keeps the best-connected ones. `GraphLayout` (Fruchterman–Reingold, Barnes–Hut quadtree with θ = 0.8, centre gravity, seeded random start) runs on `Dispatchers.Default`; the same notes always give the same picture. One Canvas draws lines and dots (size by links) with pan and pinch zoom around the fingers; labels for small graphs, when zoomed in, or for the selection. Tap a dot to highlight it with its neighbours (others fade), tap again or "Open" to open it. A list view (and the canvas's spoken summary) serve screen readers. |
+| 22 clipper | Android share sheet › **Save to Plan-B** | `ClipperActivity` (exported, `ACTION_SEND` of `text/plain` and `text/html` only, translucent, excluded from recents, behind `AppLockGate`). `ClipIntentInput` rejects other actions and types and reads only the text extras, capped before parsing; streams are never opened. `ClipParser` (offline, no page is fetched): HTML through the sanitizing `HtmlToBlocks` (only text survives; `script`/`style`/`iframe`/`svg`/forms and comments dropped whole; links keep their text plus an `http`/`https`/`mailto` address; entities decoded; control and bidi-override characters removed; at most 500,000 characters in, 2,000 blocks of 20,000 characters out), plain text through the Markdown importer (paragraphs, lists, quotes), the first `http(s)` address as the source link, the title from the sharing app (`EXTRA_TITLE`/`EXTRA_SUBJECT`), the text or the host. The sheet edits the title, picks the notebook, adds tags and opens the note (`planb://open/note/<id>`). Without Pro it shows the teaser; "Unlock" opens the Pro screen in the app. |
+| 24 writing mode | Note editor › Writing mode | A full-screen editor over the same editor state (autosave, drafts and history unchanged): no toolbars, a centred column of at most 640 dp, larger type, rich blocks of other kinds shown as a quiet placeholder. `WordCount`: a word is a run of letters and digits; ZWNJ/ZWJ and in-word apostrophes and hyphens keep it together («می‌روم» is one word); links count as their titles; characters exclude invisible marks. Words the note gains during a session count towards the **daily goal** (0, 100…2,000; default 300) shown as a ring; reaching it extends the **streak** (broken after a day without the goal). A session timer (minutes, monotonic clock) and optional **typewriter scrolling** (the focused block is kept mid-screen, without animation when motion is reduced). Back leaves writing mode. |
+| 25 journal | Notebooks › Journal (also `planb://open/journal`) | A page per day: a note in the notebook named «دفتر روزانه» / "Journal" (created when missing) linked from `journal_entries` — the same page the morning intention and evening reflection (#8) are appended to, so ritual reflections appear in the journal automatically. Prompts: 60 built-in (fa/en string arrays, keys `p01`…`p60`, append only) plus the user's own (`custom:<hash>`), rotated by date with a stride coprime with the count (every prompt once before any repeats, neighbours never on neighbouring days); "Another prompt" before the page exists; the page starts with the prompt as a quote and records its key. Mood and energy (1–5, icons) are one `mood_entries` row per page (`note_id`), other check-ins of the day are left alone; tags are the page note's tags. Streak = days in a row with a live page (today or up to yesterday). **Mood calendar**: the month in the user's calendar (Jalali or Gregorian, `MonthGrid`), days colored by their average mood, a dot for days with a page; insights over 90 days: average mood per weekday, averages, current and longest streak. Optional **daily reminder** (`JournalReminders`, inexact alarm, request code and notification id **24** = slot 0 of id 3 in the `id × 8 + code` scheme), skipped on a day with a page, re-armed after delivery, boot, clock changes and settings changes; switching it on asks for the notification permission (Android 13+). |
 
 ## Calendar (#2, #3, #6, #7)
 

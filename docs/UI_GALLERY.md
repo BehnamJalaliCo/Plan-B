@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **296**.
+Total screenshots: **368**.
 
 
 ## Today
@@ -150,17 +150,59 @@ Total screenshots: **296**.
 
 ## Notebooks
 
+### `journal`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/journal_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/journal_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/journal_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/journal_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/journal_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/journal_en_light_font150.png" width="220"/> |
+
+### `mood_calendar`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/mood_calendar_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_en_light_font150.png" width="220"/> |
+
 ### `note_editor`
 
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/notebooks/note_editor_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_en_light_font150.png" width="220"/> |
 
+### `note_graph`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/note_graph_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_graph_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_graph_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_graph_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_graph_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_graph_en_light_font150.png" width="220"/> |
+
+### `note_history`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/note_history_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_history_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_history_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_history_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_history_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_history_en_light_font150.png" width="220"/> |
+
+### `note_links`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/note_links_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_links_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_links_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_links_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_links_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_links_en_light_font150.png" width="220"/> |
+
 ### `notebooks`
 
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/notebooks/notebooks_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/notebooks_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/notebooks_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/notebooks_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/notebooks_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/notebooks_en_light_font150.png" width="220"/> |
+
+### `web_clipper`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/web_clipper_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/web_clipper_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/web_clipper_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/web_clipper_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/web_clipper_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/web_clipper_en_light_font150.png" width="220"/> |
+
+### `writing_mode`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/writing_mode_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_en_light_font150.png" width="220"/> |
 
 ## More
 

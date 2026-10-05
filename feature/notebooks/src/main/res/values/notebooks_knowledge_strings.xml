@@ -52,8 +52,6 @@
     <string name="graph_empty_title">No notes to show</string>
     <string name="graph_empty">Link notes by typing [[ in a note, and they appear here.</string>
     <string name="graph_reset">Reset view</string>
-    <string name="graph_arranging">Arranging notes…</string>
-    <string name="graph_node_cd">%1$s, %2$s links. Tap to show its links, tap again to open.</string>
     <string name="notebooks_graph">Note graph</string>
     <string name="notebooks_journal">Journal</string>
 

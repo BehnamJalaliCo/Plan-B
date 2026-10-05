@@ -52,8 +52,6 @@
     <string name="graph_empty_title">یادداشتی برای نمایش نیست</string>
     <string name="graph_empty">با نوشتن [[ در یادداشت‌ها آن‌ها را به هم پیوند دهید تا این‌جا دیده شوند.</string>
     <string name="graph_reset">بازنشانی نما</string>
-    <string name="graph_arranging">در حال چیدن یادداشت‌ها…</string>
-    <string name="graph_node_cd">%1$s، %2$s پیوند. یک بار بزنید تا پیوندهایش دیده شود و بار دوم تا باز شود.</string>
     <string name="notebooks_graph">گراف یادداشت‌ها</string>
     <string name="notebooks_journal">دفتر روزانه</string>
 
