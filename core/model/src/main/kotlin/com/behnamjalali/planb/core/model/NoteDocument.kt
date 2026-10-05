@@ -33,9 +33,9 @@ data class NoteDocument(
     val version: Int = CURRENT_VERSION,
     val blocks: List<NoteBlock> = emptyList(),
 ) {
-    /** Plain text used for previews and the search index. */
+    /** Plain text used for previews and the search index; links to notes read as their titles. */
     fun plainText(): String = blocks.filter { it.type != BlockType.DIVIDER }
-        .joinToString("\n") { it.text }
+        .joinToString("\n") { NoteLinks.plain(it.text) }
         .trim()
 
     fun isBlank(): Boolean = blocks.all { it.text.isBlank() }

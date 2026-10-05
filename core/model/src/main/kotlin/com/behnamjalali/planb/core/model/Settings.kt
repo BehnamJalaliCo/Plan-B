@@ -136,6 +136,10 @@ data class UserSettings(
     val dayPlan: DayPlanSettings = DayPlanSettings(),
     /** Today's top tasks and the days the rituals were done (Plan-B Pro #8). */
     val rituals: RitualState = RitualState(),
+    /** Word goal and streak of the writing mode (Plan-B Pro #24). */
+    val writing: WritingSettings = WritingSettings(),
+    /** Journal reminder and the user's own prompts (Plan-B Pro #25). */
+    val journal: JournalSettings = JournalSettings(),
 ) {
     /** The palette to draw with: premium themes fall back to the classic one without Pro. */
     fun effectiveColorTheme(isPro: Boolean): ColorTheme = if (isPro || !colorTheme.isPremium) colorTheme else ColorTheme.CLASSIC

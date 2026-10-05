@@ -14,11 +14,19 @@ package com.behnamjalali.planb.core.model
  * Arabic-Indic digits ("۱. مورد").
  */
 object Markdown {
-    fun export(title: String, document: NoteDocument): String = buildString {
+    /**
+     * [linkTarget] gives the relative path of the `.md` file of a linked note (Plan-B Pro #16)
+     * from its id and stored title, or null to write the link as its title only.
+     */
+    fun export(
+        title: String,
+        document: NoteDocument,
+        linkTarget: (EntityId, String) -> String? = { _, _ -> null },
+    ): String = buildString {
         if (title.isNotBlank()) append("# ").append(title.trim()).append("\n\n")
         var number = 0
         var previous: BlockType? = null
-        document.blocks.forEach { block ->
+        document.blocks.map { it.copy(text = linksToMarkdown(it.text, it.type, linkTarget)) }.forEach { block ->
             val listContinues = previous == block.type &&
                 block.type in setOf(BlockType.BULLET, BlockType.CHECKLIST, BlockType.NUMBERED)
             if (previous != null && !listContinues) append('\n')
@@ -42,6 +50,13 @@ object Markdown {
     }.trimEnd() + "\n"
 
     data class Imported(val title: String, val document: NoteDocument)
+
+    /** Links become `[Title](<path>)`, or the title alone without a path or inside code. */
+    private fun linksToMarkdown(text: String, type: BlockType, linkTarget: (EntityId, String) -> String?): String =
+        NoteLinks.replace(text) { id, title ->
+            val path = if (type == BlockType.CODE) null else linkTarget(id, title)?.replace(">", "%3E")
+            if (path == null) title else "[${title.ifBlank { path }}](<$path>)"
+        }
 
     private val checklist = Regex("""^\s*[-*+]\s+\[([ xX])]\s?(.*)$""")
     private val bullet = Regex("""^\s*[-*+]\s+(.*)$""")
@@ -183,11 +198,11 @@ object Markdown {
     }
 
     /** Plain-text export (no markup). */
-    fun plainText(title: String, document: NoteDocument): String = buildString {
+    fun plainText(title: String, document: NoteDocument, titles: (EntityId) -> String? = { null }): String = buildString {
         if (title.isNotBlank()) append(title.trim()).append("\n\n")
         var number = 0
         var previous: BlockType? = null
-        document.blocks.forEach { b ->
+        NoteLinks.plain(document, titles).blocks.forEach { b ->
             number = if (b.type == BlockType.NUMBERED) (if (previous == BlockType.NUMBERED) number + 1 else 1) else 0
             when (b.type) {
                 BlockType.CHECKLIST -> append(if (b.checked) "☑ " else "☐ ").append(b.text)
