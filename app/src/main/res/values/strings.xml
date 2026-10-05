@@ -110,4 +110,6 @@
     <string name="wear_habits">Habits</string>
     <string name="wear_empty">Nothing left for today.</string>
     <string name="wear_locked">The watch app needs Plan-B Pro on your phone.</string>
+    <!-- Share sheet entry of the web clipper (Plan-B Pro #22). -->
+    <string name="clipper_share_label">Save to Plan-B</string>
 </resources>

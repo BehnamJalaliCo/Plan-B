@@ -17,11 +17,13 @@ import com.behnamjalali.planb.core.model.ColorTheme
 import com.behnamjalali.planb.core.model.DashboardConfig
 import com.behnamjalali.planb.core.model.DashboardSection
 import com.behnamjalali.planb.core.model.DayPlanSettings
+import com.behnamjalali.planb.core.model.JournalSettings
 import com.behnamjalali.planb.core.model.NumberFormatMode
 import com.behnamjalali.planb.core.model.RitualState
 import com.behnamjalali.planb.core.model.TaskView
 import com.behnamjalali.planb.core.model.ThemeMode
 import com.behnamjalali.planb.core.model.UserSettings
+import com.behnamjalali.planb.core.model.WritingSettings
 import java.io.IOException
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -86,6 +88,17 @@ class UserPreferencesDataSource @Inject constructor(
         val focusTasks = stringPreferencesKey("ritual_focus_tasks")
         val morningDone = longPreferencesKey("ritual_morning_done")
         val eveningDone = longPreferencesKey("ritual_evening_done")
+
+        // Plan-B Pro notes: writing mode word goal and streak (#24), journal (#25).
+        val writingGoal = intPreferencesKey("writing_daily_goal")
+        val writingTypewriter = booleanPreferencesKey("writing_typewriter")
+        val writingDate = longPreferencesKey("writing_progress_date")
+        val writingWords = intPreferencesKey("writing_words_today")
+        val writingStreak = intPreferencesKey("writing_streak")
+        val writingGoalDate = longPreferencesKey("writing_goal_reached_on")
+        val journalReminder = booleanPreferencesKey("journal_reminder")
+        val journalTime = intPreferencesKey("journal_reminder_time")
+        val journalPrompts = stringPreferencesKey("journal_custom_prompts")
 
         /** Normalizer version the search index was built with (device state, never exported). */
         val searchIndexVersion = intPreferencesKey("search_index_version")
@@ -235,13 +248,34 @@ class UserPreferencesDataSource @Inject constructor(
                 morningDoneOn = date(Keys.morningDone, d.rituals.morningDoneOn),
                 eveningDoneOn = date(Keys.eveningDone, d.rituals.eveningDoneOn),
             ),
+            writing = WritingSettings(
+                dailyGoal = int(Keys.writingGoal)?.coerceIn(0, WritingSettings.MAX_GOAL) ?: d.writing.dailyGoal,
+                typewriter = bool(Keys.writingTypewriter) ?: d.writing.typewriter,
+                progressDate = date(Keys.writingDate, d.writing.progressDate),
+                wordsToday = int(Keys.writingWords)?.coerceIn(0, WritingSettings.MAX_WORDS_PER_DAY) ?: d.writing.wordsToday,
+                streak = int(Keys.writingStreak)?.coerceIn(0, MAX_STREAK) ?: d.writing.streak,
+                goalReachedOn = date(Keys.writingGoalDate, d.writing.goalReachedOn),
+            ),
+            journal = JournalSettings(
+                reminder = bool(Keys.journalReminder) ?: d.journal.reminder,
+                reminderTime = time(Keys.journalTime, d.journal.reminderTime),
+                customPrompts = str(Keys.journalPrompts)?.let(::parsePrompts) ?: d.journal.customPrompts,
+            ),
         )
     }
+
+    /** One prompt per line; blank, overlong and duplicate lines are dropped. */
+    private fun parsePrompts(raw: String): List<String> = raw.split('\n')
+        .map { it.trim() }
+        .filter { it.isNotEmpty() && it.length <= JournalSettings.MAX_PROMPT_LENGTH }
+        .distinct()
+        .take(JournalSettings.MAX_CUSTOM_PROMPTS)
 
     private companion object {
         const val AUTO = "AUTO"
         const val MINUTES_PER_DAY = 24 * 60
         const val MAX_BUFFER = 120
+        const val MAX_STREAK = 100_000
 
         /** Plausible epoch days (years 1900–2200); anything else is treated as malformed. */
         val DATE_RANGE = -25_567L..84_000L
@@ -295,6 +329,16 @@ class UserPreferencesDataSource @Inject constructor(
         prefs[Keys.focusTasks] = rituals.focusTaskIds.joinToString(",")
         rituals.morningDoneOn?.let { prefs[Keys.morningDone] = it.toEpochDay() } ?: prefs.remove(Keys.morningDone)
         rituals.eveningDoneOn?.let { prefs[Keys.eveningDone] = it.toEpochDay() } ?: prefs.remove(Keys.eveningDone)
+        val writing = s.writing
+        prefs[Keys.writingGoal] = writing.dailyGoal
+        prefs[Keys.writingTypewriter] = writing.typewriter
+        writing.progressDate?.let { prefs[Keys.writingDate] = it.toEpochDay() } ?: prefs.remove(Keys.writingDate)
+        prefs[Keys.writingWords] = writing.wordsToday
+        prefs[Keys.writingStreak] = writing.streak
+        writing.goalReachedOn?.let { prefs[Keys.writingGoalDate] = it.toEpochDay() } ?: prefs.remove(Keys.writingGoalDate)
+        prefs[Keys.journalReminder] = s.journal.reminder
+        prefs[Keys.journalTime] = s.journal.reminderTime.minutes()
+        prefs[Keys.journalPrompts] = s.journal.customPrompts.joinToString("\n") { it.replace('\n', ' ').replace('\r', ' ').trim() }
     }
 
     private fun LocalTime.minutes(): Int = hour * 60 + minute

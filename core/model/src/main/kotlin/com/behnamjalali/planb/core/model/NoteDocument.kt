@@ -93,10 +93,11 @@ data class NoteDocument(
 ) {
     /**
      * Plain text used for previews and the search index: text blocks, captions, table and
-     * database cells, chart labels and formulas (divider blocks excluded).
+     * database cells, chart labels and formulas (divider blocks excluded); links to notes read
+     * as their titles.
      */
     fun plainText(): String = blocks.filter { it.type != BlockType.DIVIDER }
-        .joinToString("\n") { RichBlocks.plainText(it) }
+        .joinToString("\n") { NoteLinks.plain(RichBlocks.plainText(it)) }
         .trim()
 
     /** True when nothing was written; a rich block (an image, a table, …) always counts. */

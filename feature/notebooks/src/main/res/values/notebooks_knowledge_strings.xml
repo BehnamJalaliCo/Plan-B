@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan-B Pro notes knowledge: links and history (#16), graph (#21), web clipper (#22), writing mode (#24). -->
+<resources>
+    <!-- Links between notes -->
+    <string name="link_picker_title">Link to a note</string>
+    <string name="link_picker_hint">Keep typing to search your notes</string>
+    <string name="link_picker_empty">No note matches “%1$s”</string>
+    <string name="link_pro_hint">Link notes by typing [[</string>
+    <string name="link_open">Open “%1$s”</string>
+    <string name="link_missing">This note was deleted</string>
+    <string name="link_trashed">This note is in the trash</string>
+    <string name="link_untitled">Untitled note</string>
+    <string name="links_title">Links in this note</string>
+    <string name="backlinks_title">Linked from</string>
+    <string name="link_cd">Linked note: %1$s</string>
+
+    <!-- Version history -->
+    <string name="history_title">Version history</string>
+    <string name="history_empty_title">No versions yet</string>
+    <string name="history_empty">Plan-B keeps a version when you close a note you changed, and every %1$s minutes while you write. The last %2$s versions of the past %3$s days are kept.</string>
+    <string name="history_locked">Locked notes keep no history.</string>
+    <string name="history_preview">Preview</string>
+    <string name="history_compare">Compare with now</string>
+    <string name="history_restore">Restore this version</string>
+    <string name="history_restore_confirm">Replace the note with this version? What it says now is kept as a version first.</string>
+    <string name="history_restored">Version restored</string>
+    <plurals name="history_words">
+        <item quantity="one">%1$s word</item>
+        <item quantity="other">%1$s words</item>
+    </plurals>
+    <string name="history_changes">%1$s added, %2$s removed</string>
+    <string name="history_no_changes">Same as the note now</string>
+    <string name="history_just_now">Just now</string>
+    <string name="history_minutes_ago">%1$s min ago</string>
+    <string name="history_added_cd">Added: %1$s</string>
+    <string name="history_removed_cd">Removed: %1$s</string>
+
+    <!-- Note graph -->
+    <string name="graph_title">Note graph</string>
+    <string name="graph_show_list">Show as a list</string>
+    <string name="graph_show_graph">Show as a graph</string>
+    <string name="graph_orphans">Unlinked notes</string>
+    <string name="graph_all_notebooks">All notebooks</string>
+    <string name="graph_all_tags">All tags</string>
+    <string name="graph_open">Open</string>
+    <plurals name="graph_links">
+        <item quantity="one">%1$s link</item>
+        <item quantity="other">%1$s links</item>
+    </plurals>
+    <string name="graph_summary">Graph of %1$s notes and %2$s links</string>
+    <string name="graph_capped">Showing the %1$s most linked notes</string>
+    <string name="graph_empty_title">No notes to show</string>
+    <string name="graph_empty">Link notes by typing [[ in a note, and they appear here.</string>
+    <string name="graph_reset">Reset view</string>
+    <string name="notebooks_graph">Note graph</string>
+    <string name="notebooks_journal">Journal</string>
+
+    <!-- Writing mode -->
+    <string name="writing_mode">Writing mode</string>
+    <string name="writing_exit">Exit writing mode</string>
+    <plurals name="writing_words">
+        <item quantity="one">%1$s word</item>
+        <item quantity="other">%1$s words</item>
+    </plurals>
+    <plurals name="writing_characters">
+        <item quantity="one">%1$s character</item>
+        <item quantity="other">%1$s characters</item>
+    </plurals>
+    <string name="writing_goal_progress">%1$s of %2$s words today</string>
+    <string name="writing_goal_done">Today’s goal reached</string>
+    <string name="writing_streak">%1$s-day streak</string>
+    <string name="writing_session">%1$s min</string>
+    <string name="writing_session_cd">Writing for %1$s minutes</string>
+    <string name="writing_settings">Writing settings</string>
+    <string name="writing_goal_title">Daily word goal</string>
+    <string name="writing_goal_off">No goal</string>
+    <string name="writing_typewriter">Typewriter scrolling</string>
+    <string name="writing_typewriter_sub">Keeps the line you write in the middle of the screen</string>
+    <string name="writing_other_block">(%1$s)</string>
+
+    <!-- Web clipper -->
+    <string name="clipper_title">Save to Plan-B</string>
+    <string name="clipper_note_title">Title</string>
+    <string name="clipper_notebook">Notebook</string>
+    <string name="clipper_tags">Tags (comma-separated)</string>
+    <string name="clipper_save">Save note</string>
+    <string name="clipper_saved">Saved to %1$s</string>
+    <string name="clipper_open">Open</string>
+    <string name="clipper_nothing">There is nothing to save in what was shared.</string>
+    <string name="clipper_truncated">The shared text was very long; only its beginning was kept.</string>
+    <string name="clipper_source">Source</string>
+    <string name="clipper_preview">Preview</string>
+    <string name="clipper_failed">The note could not be saved. Please try again.</string>
+    <string name="clipper_default_title">Saved from the web</string>
+    <plurals name="clipper_more_blocks">
+        <item quantity="one">and %1$s more paragraph</item>
+        <item quantity="other">and %1$s more paragraphs</item>
+    </plurals>
+</resources>

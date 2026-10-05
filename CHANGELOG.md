@@ -98,6 +98,25 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
     you finished, move leftovers, write one line into your journal notebook and pick
     tomorrow's top 3. Optional daily reminders at times you choose.
   - Settings › Day planning and rituals: working hours, lunch break, buffers, ritual reminders.
+- Plan-B Pro **notes knowledge** (#16, #21, #22, #24, #25):
+  - **Links between notes**: type `[[` in a note to pick another note by title (Persian and
+    English spellings match); links show the note's current title and open it, and the end of a
+    note lists its links and the notes that link to it. Exports turn links into titles, or into
+    relative `.md` links in Markdown.
+  - **Version history**: a version before each editing session, every 10 minutes while writing
+    and when a changed note is closed (the last 50 of 90 days; never for locked notes); compare
+    any version with the note now and restore it (the current text is kept as a version first).
+  - **Note graph** (Notebooks): notes and their links, with pan and zoom, notebook and tag
+    filters, unlinked notes on or off, neighbour highlighting and a list view.
+  - **Web clipper**: "Save to Plan-B" in Android's share sheet saves shared text, pages and
+    links as a note in a notebook you choose, with tags; nothing is downloaded.
+  - **Writing mode**: a quiet full-screen editor with larger type, word and character counts
+    (half-spaces keep Persian words whole), a daily word goal with a streak, a session timer and
+    optional typewriter scrolling.
+  - **Daily journal** (Notebooks › Journal): a prompt for each day (60 built in, plus your own),
+    mood and energy, tags, a streak and recent pages; the ritual reflections land on the same
+    page. A **mood calendar** in your calendar (Jalali or Gregorian) with simple insights, and
+    an optional daily reminder.
 
 ### Changed
 - Today's timeline also shows tasks at the start of their time block.

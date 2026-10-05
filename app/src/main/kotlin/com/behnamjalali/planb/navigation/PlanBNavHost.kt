@@ -45,6 +45,14 @@ import com.behnamjalali.planb.feature.notebooks.NotebookDetailDestination
 import com.behnamjalali.planb.feature.notebooks.NotebookDetailRoute
 import com.behnamjalali.planb.feature.notebooks.NotebooksDestination
 import com.behnamjalali.planb.feature.notebooks.NotebooksRoute
+import com.behnamjalali.planb.feature.notebooks.graph.NoteGraphDestination
+import com.behnamjalali.planb.feature.notebooks.graph.NoteGraphRoute
+import com.behnamjalali.planb.feature.notebooks.history.NoteHistoryDestination
+import com.behnamjalali.planb.feature.notebooks.history.NoteHistoryRoute
+import com.behnamjalali.planb.feature.journal.JournalDestination
+import com.behnamjalali.planb.feature.journal.JournalRoute
+import com.behnamjalali.planb.feature.journal.MoodCalendarDestination
+import com.behnamjalali.planb.feature.journal.MoodCalendarRoute
 import com.behnamjalali.planb.feature.pro.PaywallDestination
 import com.behnamjalali.planb.feature.pro.PaywallRoute
 import com.behnamjalali.planb.feature.projects.ProjectDetailDestination
@@ -177,6 +185,8 @@ fun PlanBNavHost(
                 onNewNote = { nav.navigate(NoteEditorRoute()) },
                 snackbarHostState = snackbarHostState,
                 contentPadding = contentPadding,
+                onOpenJournal = { nav.navigate(JournalRoute) },
+                onOpenGraph = { nav.navigate(NoteGraphRoute) },
             )
         }
         composable<MoreRoute> { entry ->
@@ -210,6 +220,8 @@ fun PlanBNavHost(
                 onClose = nav.back,
                 onOpenNote = { nav.go { navigate(NoteEditorRoute(noteId = it)) { popUpTo<NoteEditorRoute> { inclusive = true } } } },
                 onOpenActivity = { nav.navigate(ActivityRoute(ActivityEntityType.NOTE.name, it)) },
+                onOpenLinkedNote = { nav.navigate(NoteEditorRoute(noteId = it)) },
+                onOpenHistory = { nav.navigate(NoteHistoryRoute(it)) },
             )
         }
         composable<ProjectsRoute> { entry ->
@@ -342,6 +354,30 @@ fun PlanBNavHost(
             )
         }
         composable<DayPlanSettingsRoute> { entry -> DayPlanSettingsDestination(onBack = rememberScreenNavigator(navController, entry).back) }
+        // Plan-B Pro notes knowledge (WP3b): history (#16), graph (#21), journal and mood calendar (#25).
+        composable<NoteHistoryRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            NoteHistoryDestination(
+                onBack = nav.back,
+                // The editor below reloads the restored text: replace it with a fresh one.
+                onRestored = { id -> nav.go { navigate(NoteEditorRoute(noteId = id)) { popUpTo<NoteEditorRoute> { inclusive = true } } } },
+                snackbarHostState = snackbarHostState,
+            )
+        }
+        composable<NoteGraphRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            NoteGraphDestination(onBack = nav.back, onOpenNote = { nav.navigate(NoteEditorRoute(noteId = it)) })
+        }
+        composable<JournalRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            JournalDestination(
+                onBack = nav.back,
+                onOpenNote = { nav.navigate(NoteEditorRoute(noteId = it)) },
+                onOpenCalendar = { nav.navigate(MoodCalendarRoute) },
+                snackbarHostState = snackbarHostState,
+            )
+        }
+        composable<MoodCalendarRoute> { entry -> MoodCalendarDestination(onBack = rememberScreenNavigator(navController, entry).back) }
         composable<EisenhowerRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
             EisenhowerDestination(onBack = nav.back, onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) }, snackbarHostState = snackbarHostState)
@@ -439,6 +475,9 @@ fun NavHostController.handleDeepLink(uri: Uri) {
         "task" -> id?.let { navigate(TaskEditorRoute(taskId = it)) }
         "event" -> id?.let { navigate(EventEditorRoute(eventId = it)) }
         "habit" -> id?.let { navigate(HabitDetailRoute(it)) }
+        // A note saved with the web clipper (Plan-B Pro #22) and the journal reminder (#25).
+        "note" -> id?.let { navigate(NoteEditorRoute(noteId = it)) }
+        "journal" -> navigate(JournalRoute)
         "focus" -> navigate(FocusRoute)
         // Ritual reminders (Plan-B Pro #8): planb://open/ritual/morning|evening.
         "ritual" -> segments.getOrNull(1)?.takeIf { it == "morning" || it == "evening" }?.let { navigate(RitualRoute(it)) }

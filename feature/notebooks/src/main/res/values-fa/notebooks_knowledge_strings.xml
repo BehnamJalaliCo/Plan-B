@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan-B Pro notes knowledge: links and history (#16), graph (#21), web clipper (#22), writing mode (#24). -->
+<resources>
+    <!-- Links between notes -->
+    <string name="link_picker_title">پیوند به یادداشت</string>
+    <string name="link_picker_hint">بنویسید تا در یادداشت‌هایتان جستجو شود</string>
+    <string name="link_picker_empty">یادداشتی با «%1$s» پیدا نشد</string>
+    <string name="link_pro_hint">با نوشتن [[ یادداشت‌ها را به هم پیوند دهید</string>
+    <string name="link_open">باز کردن «%1$s»</string>
+    <string name="link_missing">این یادداشت حذف شده است</string>
+    <string name="link_trashed">این یادداشت در سطل زباله است</string>
+    <string name="link_untitled">یادداشت بی‌عنوان</string>
+    <string name="links_title">پیوندهای این یادداشت</string>
+    <string name="backlinks_title">یادداشت‌هایی که به این‌جا پیوند داده‌اند</string>
+    <string name="link_cd">یادداشت پیوندشده: %1$s</string>
+
+    <!-- Version history -->
+    <string name="history_title">تاریخچهٔ نسخه‌ها</string>
+    <string name="history_empty_title">هنوز نسخه‌ای نیست</string>
+    <string name="history_empty">Plan-B هر وقت یادداشتی را که تغییر داده‌اید ببندید و هنگام نوشتن هر %1$s دقیقه یک نسخه نگه می‌دارد. %2$s نسخهٔ آخرِ %3$s روز گذشته می‌ماند.</string>
+    <string name="history_locked">یادداشت‌های قفل‌شده تاریخچه ندارند.</string>
+    <string name="history_preview">پیش‌نمایش</string>
+    <string name="history_compare">مقایسه با حالا</string>
+    <string name="history_restore">بازگرداندن این نسخه</string>
+    <string name="history_restore_confirm">یادداشت با این نسخه جایگزین شود؟ متن فعلی پیش از آن به‌صورت یک نسخه نگه داشته می‌شود.</string>
+    <string name="history_restored">نسخه بازگردانده شد</string>
+    <plurals name="history_words">
+        <item quantity="one">%1$s واژه</item>
+        <item quantity="other">%1$s واژه</item>
+    </plurals>
+    <string name="history_changes">%1$s خط افزوده، %2$s خط حذف‌شده</string>
+    <string name="history_no_changes">با متن فعلی یکی است</string>
+    <string name="history_just_now">همین حالا</string>
+    <string name="history_minutes_ago">%1$s دقیقه پیش</string>
+    <string name="history_added_cd">افزوده: %1$s</string>
+    <string name="history_removed_cd">حذف‌شده: %1$s</string>
+
+    <!-- Note graph -->
+    <string name="graph_title">گراف یادداشت‌ها</string>
+    <string name="graph_show_list">نمایش فهرستی</string>
+    <string name="graph_show_graph">نمایش گراف</string>
+    <string name="graph_orphans">یادداشت‌های بی‌پیوند</string>
+    <string name="graph_all_notebooks">همهٔ دفترچه‌ها</string>
+    <string name="graph_all_tags">همهٔ برچسب‌ها</string>
+    <string name="graph_open">باز کردن</string>
+    <plurals name="graph_links">
+        <item quantity="one">%1$s پیوند</item>
+        <item quantity="other">%1$s پیوند</item>
+    </plurals>
+    <string name="graph_summary">گراف %1$s یادداشت و %2$s پیوند</string>
+    <string name="graph_capped">%1$s یادداشتِ پرپیوندتر نمایش داده می‌شود</string>
+    <string name="graph_empty_title">یادداشتی برای نمایش نیست</string>
+    <string name="graph_empty">با نوشتن [[ در یادداشت‌ها آن‌ها را به هم پیوند دهید تا این‌جا دیده شوند.</string>
+    <string name="graph_reset">بازنشانی نما</string>
+    <string name="notebooks_graph">گراف یادداشت‌ها</string>
+    <string name="notebooks_journal">دفتر روزانه</string>
+
+    <!-- Writing mode -->
+    <string name="writing_mode">حالت نوشتن</string>
+    <string name="writing_exit">خروج از حالت نوشتن</string>
+    <plurals name="writing_words">
+        <item quantity="one">%1$s واژه</item>
+        <item quantity="other">%1$s واژه</item>
+    </plurals>
+    <plurals name="writing_characters">
+        <item quantity="one">%1$s نویسه</item>
+        <item quantity="other">%1$s نویسه</item>
+    </plurals>
+    <string name="writing_goal_progress">امروز %1$s از %2$s واژه</string>
+    <string name="writing_goal_done">هدف امروز انجام شد</string>
+    <string name="writing_streak">%1$s روز پیاپی</string>
+    <string name="writing_session">%1$s دقیقه</string>
+    <string name="writing_session_cd">%1$s دقیقه است که می‌نویسید</string>
+    <string name="writing_settings">تنظیمات نوشتن</string>
+    <string name="writing_goal_title">هدف روزانهٔ واژه‌ها</string>
+    <string name="writing_goal_off">بدون هدف</string>
+    <string name="writing_typewriter">پیمایش ماشین‌تحریری</string>
+    <string name="writing_typewriter_sub">خطی که می‌نویسید وسط صفحه می‌ماند</string>
+    <string name="writing_other_block">(%1$s)</string>
+
+    <!-- Web clipper -->
+    <string name="clipper_title">ذخیره در Plan-B</string>
+    <string name="clipper_note_title">عنوان</string>
+    <string name="clipper_notebook">دفترچه</string>
+    <string name="clipper_tags">برچسب‌ها (با کاما جدا کنید)</string>
+    <string name="clipper_save">ذخیرهٔ یادداشت</string>
+    <string name="clipper_saved">در «%1$s» ذخیره شد</string>
+    <string name="clipper_open">باز کردن</string>
+    <string name="clipper_nothing">در آنچه هم‌رسانی شد چیزی برای ذخیره نیست.</string>
+    <string name="clipper_truncated">متن هم‌رسانی‌شده خیلی بلند بود؛ فقط بخش آغازینش نگه داشته شد.</string>
+    <string name="clipper_source">منبع</string>
+    <string name="clipper_preview">پیش‌نمایش</string>
+    <string name="clipper_failed">یادداشت ذخیره نشد. دوباره امتحان کنید.</string>
+    <string name="clipper_default_title">ذخیره‌شده از وب</string>
+    <plurals name="clipper_more_blocks">
+        <item quantity="one">و %1$s بند دیگر</item>
+        <item quantity="other">و %1$s بند دیگر</item>
+    </plurals>
+</resources>

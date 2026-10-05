@@ -26,6 +26,9 @@ object DeepLinks {
 
     /** The morning or evening ritual (Plan-B Pro #8): `planb://open/ritual/morning|evening`. */
     fun ritual(path: String): Uri = "$SCHEME://open/ritual/$path".toUri()
+
+    /** The daily journal (Plan-B Pro #25). */
+    fun journal(): Uri = "$SCHEME://open/journal".toUri()
 }
 
 /** Localized labels of a task reminder's "Done" and "Snooze" buttons; [nagging] tasks stop nagging when swiped away. */

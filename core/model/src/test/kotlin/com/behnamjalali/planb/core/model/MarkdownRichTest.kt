@@ -41,7 +41,7 @@ class MarkdownRichTest {
 
     @Test
     fun export_richBlocks_asGfmMathAndLinks() {
-        val md = Markdown.export("T", doc) { files[it] }
+        val md = Markdown.export("T", doc, attachments = { files[it] })
         assertThat(md).contains("| کالا | قیمت |\n| --- | --- |\n| a\\|b | line<br>break |")
         assertThat(md).contains("$$\n\\frac{a}{b}\n$$")
         assertThat(md).contains("![Receipt photo](attachments/photo%201.jpg)")
@@ -53,13 +53,13 @@ class MarkdownRichTest {
 
     @Test
     fun export_withoutFiles_namesThem() {
-        val md = Markdown.export("T", doc) { id -> files[id]?.copy(path = null) }
+        val md = Markdown.export("T", doc, attachments = { id -> files[id]?.copy(path = null) })
         assertThat(md).contains("![Receipt photo](photo.jpg)")
     }
 
     @Test
     fun import_readsTablesAndFormulasBack() {
-        val imported = Markdown.import(Markdown.export("T", doc) { files[it] }, "f", ids)
+        val imported = Markdown.import(Markdown.export("T", doc, attachments = { files[it] }), "f", ids)
         val blocks = imported.document.blocks
         assertThat(blocks.first().type).isEqualTo(BlockType.TABLE)
         assertThat(RichBlocks.table(blocks.first())).isEqualTo(table)

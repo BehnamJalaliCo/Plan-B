@@ -420,9 +420,11 @@ Index: `(note_id, created_at)`. `NoteVersionDao.prune(noteId, keep)` keeps the n
 ### 3.22 `note_links` (`NoteLinkEntity`, v3)
 
 Links between notes (backlinks and the graph view). PK `(from_note_id, to_note_id)`, both FK →
-`notes.id` **CASCADE**, index `to_note_id`. The note editor rewrites a note's outgoing links on
-save with `NoteLinkDao.replaceOutgoing` (self-links are dropped). Backlink and graph queries
-leave out notes in the trash.
+`notes.id` **CASCADE**, index `to_note_id`. `NoteRepository` rewrites a note's outgoing links
+from the `[[note:ID|Title]]` tokens in its blocks on every save (`saveNote`, `updateContent`,
+duplicate), inside the save's transaction, with `NoteLinkDao.replaceOutgoing` (self-links and
+links to notes that no longer exist are dropped; a locked note's links are kept as they are).
+Backlink and graph queries leave out notes in the trash. See [docs/PRO.md](docs/PRO.md#notes-knowledge-16-21-22-24-25).
 
 ### 3.23 `attachments` (`AttachmentEntity`, v3)
 
@@ -632,6 +634,7 @@ re-indexes the title only; edits of a locked note are encrypted again and never 
 | `TemplateDao` | User templates. |
 | `SearchDao` | FTS upsert (`REPLACE`), delete by rowid, clear, `MATCH` search. |
 | `TaskReminderDao`, `TaskDependencyDao`, `SavedFilterDao`, `NoteVersionDao`, `NoteLinkDao`, `AttachmentDao`, `JournalDao` (journal + mood), `ChallengeDao` (challenges + badges), `ActivityLogDao`, `CalendarLinkDao` | v3 tables (`dao/ProDaos.kt`): CRUD and observe queries for the Pro work packages. |
+| `NoteKnowledgeDao` | Plan-B Pro notes knowledge (no tables of its own): note references (title, notebook, locked, trashed) for links, the link picker, backlinks and the graph; note tags; version retention by age; journal pages with live notes, page dates and the page's mood row. |
 | `BackupDao` | Whole-table reads and inserts for backup and restore. Tasks are read parents first (`ORDER BY parent_task_id IS NOT NULL, id`). `clearAll()` deletes children before parents: the v3 tables, tag joins, focus sessions, tasks, milestones, goals, projects, notes, sections, notebooks, completions, habits, events, templates, tags, then the search index. |
 
 Date and time parameters in DAO queries are raw canonical numbers (`Long` epoch day or epoch

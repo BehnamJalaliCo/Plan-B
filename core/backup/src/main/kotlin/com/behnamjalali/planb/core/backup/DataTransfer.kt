@@ -181,33 +181,49 @@ class DataTransfer @Inject constructor(
         val notebooks = dao.notebooks().associate { it.id to it.title }
         val notes = dao.notes().filter { it.deletedAt == null }
         val rows = dao.attachments().filter { it.ownerType == AttachmentOwner.NOTE.name }.associateBy { it.id }
+        // File names first, so links between notes (Plan-B Pro #16) become relative .md links.
+        val used = mutableSetOf<String>()
+        val folders = mutableMapOf<Long, String>()
+        val paths = notes.associate { n ->
+            val folder = safeName(notebooks[n.notebookId] ?: "Notebook")
+            folders[n.id] = folder
+            var base = "$folder/${safeName(n.title.ifBlank { "Note ${n.id}" })}"
+            if (!used.add(base)) base = "$base (${n.id})".also { used += it }
+            n.id to "$base.md"
+        }
         files.output(uri) { out ->
             ZipOutputStream(out).use { zip ->
-                val used = mutableSetOf<String>()
                 val written = mutableSetOf<String>()
                 notes.forEach { n ->
-                    val folder = safeName(notebooks[n.notebookId] ?: "Notebook")
-                    var base = "$folder/${safeName(n.title.ifBlank { "Note ${n.id}" })}"
-                    if (!used.add(base)) base = "$base (${n.id})".also { used += it }
+                    val path = paths.getValue(n.id)
+                    val folder = folders.getValue(n.id)
                     val document = NoteDocument.decode(n.content)
-                    val links = document.blocks.mapNotNull { it.attachmentId }.mapNotNull { id ->
+                    val fileLinks = document.blocks.mapNotNull { it.attachmentId }.mapNotNull { id ->
                         val row = rows[id]?.takeIf { it.ownerId == n.id } ?: return@mapNotNull null
                         val file = attachmentFiles?.let { f -> runCatching { f.file(row.fileName) }.getOrNull() }?.takeIf { it.isFile }
-                        val path = file?.let { "$ATTACHMENTS_FOLDER/${row.fileName}" }
-                        if (file != null && written.add("$folder/$path")) {
-                            zip.putNextEntry(ZipEntry("$folder/$path"))
+                        val filePath = file?.let { "$ATTACHMENTS_FOLDER/${row.fileName}" }
+                        if (file != null && written.add("$folder/$filePath")) {
+                            zip.putNextEntry(ZipEntry("$folder/$filePath"))
                             file.inputStream().use { it.copyTo(zip) }
                             zip.closeEntry()
                         }
-                        id to MarkdownAttachment(path, row.displayName.ifBlank { row.fileName }, row.transcript, row.ocrText)
+                        id to MarkdownAttachment(filePath, row.displayName.ifBlank { row.fileName }, row.transcript, row.ocrText)
                     }.toMap()
-                    zip.putNextEntry(ZipEntry("$base.md"))
-                    zip.write(Markdown.export(n.title, document) { links[it] }.toByteArray(Charsets.UTF_8))
+                    zip.putNextEntry(ZipEntry(path))
+                    val markdown = Markdown.export(n.title, document, attachments = { fileLinks[it] }) { id, _ -> paths[id]?.let { relativePath(path, it) } }
+                    zip.write(markdown.toByteArray(Charsets.UTF_8))
                     zip.closeEntry()
                 }
             }
         }
         return notes.size
+    }
+
+    /** [to] as seen from the folder of [from]; both are "folder/name.md". */
+    private fun relativePath(from: String, to: String): String {
+        val fromFolder = from.substringBeforeLast('/', "")
+        val toFolder = to.substringBeforeLast('/', "")
+        return if (fromFolder == toFolder) to.substringAfterLast('/') else "../$to"
     }
 
     suspend fun exportNotesJson(uri: Uri): Int {

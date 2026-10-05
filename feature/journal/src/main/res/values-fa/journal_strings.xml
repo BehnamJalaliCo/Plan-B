@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan-B Pro #25: daily journal with prompts and a mood calendar. -->
+<resources>
+    <string name="journal_title">دفتر روزانه</string>
+    <!-- Same name as the ritual reflections' notebook (feature:today), so both use one notebook. -->
+    <string name="journal_notebook">دفتر روزانه</string>
+    <string name="journal_prompt_label">پرسش امروز</string>
+    <string name="journal_another_prompt">پرسشی دیگر</string>
+    <string name="journal_write">شروع نوشتن</string>
+    <string name="journal_continue">ادامهٔ نوشتن</string>
+    <string name="journal_mood">حال</string>
+    <string name="journal_energy">انرژی</string>
+    <string name="journal_mood_1">خیلی بد</string>
+    <string name="journal_mood_2">بد</string>
+    <string name="journal_mood_3">معمولی</string>
+    <string name="journal_mood_4">خوب</string>
+    <string name="journal_mood_5">عالی</string>
+    <string name="journal_energy_1">بی‌رمق</string>
+    <string name="journal_energy_2">خسته</string>
+    <string name="journal_energy_3">متعادل</string>
+    <string name="journal_energy_4">پرانرژی</string>
+    <string name="journal_energy_5">سرشار از انرژی</string>
+    <string name="journal_level_cd">%1$s: %2$s</string>
+    <string name="journal_tags">برچسب‌ها</string>
+    <string name="journal_tags_hint">برچسب‌ها (با کاما جدا کنید)</string>
+    <string name="journal_tags_save">ذخیرهٔ برچسب‌ها</string>
+    <string name="journal_tags_edit">ویرایش برچسب‌ها</string>
+    <plurals name="journal_streak">
+        <item quantity="one">%1$s روز پیاپی</item>
+        <item quantity="other">%1$s روز پیاپی</item>
+    </plurals>
+    <string name="journal_streak_start">امروز بنویسید تا زنجیرهٔ روزهایتان شروع شود</string>
+    <string name="journal_recent">صفحه‌های اخیر</string>
+    <string name="journal_empty">صفحه‌هایی که می‌نویسید این‌جا می‌آیند. نیت صبح و مرور شبِ آیین‌های روزانه هم در همین صفحه‌ها نگه داشته می‌شوند.</string>
+    <string name="journal_locked">صفحهٔ قفل‌شده</string>
+    <string name="journal_calendar">تقویم حال</string>
+    <string name="journal_settings">تنظیمات دفتر روزانه</string>
+    <string name="journal_reminder">یادآور روزانه</string>
+    <string name="journal_reminder_sub">ساعت %1$s، مگر اینکه آن روز نوشته باشید</string>
+    <string name="journal_reminder_time">ساعت یادآوری</string>
+    <string name="journal_my_prompts">پرسش‌های خودتان</string>
+    <string name="journal_my_prompts_sub">به نوبت با پرسش‌های آمادهٔ برنامه نشان داده می‌شوند.</string>
+    <string name="journal_add_prompt">افزودن</string>
+    <string name="journal_prompt_hint">پرسشی برای خودتان بنویسید</string>
+    <string name="journal_delete_prompt">حذف «%1$s»</string>
+    <string name="journal_failed">انجام نشد. دوباره امتحان کنید.</string>
+
+    <!-- Mood calendar -->
+    <string name="calendar_previous">ماه قبل</string>
+    <string name="calendar_next">ماه بعد</string>
+    <string name="calendar_day_mood_cd">%1$s، حال %2$s</string>
+    <string name="calendar_day_journal_cd">%1$s، صفحهٔ دفتر روزانه</string>
+    <string name="calendar_day_empty_cd">%1$s، بدون ثبت حال</string>
+    <string name="calendar_legend">حال</string>
+    <string name="insights_title">%1$s روز گذشته</string>
+    <string name="insights_weekday">میانگین حال در روزهای هفته</string>
+    <string name="insights_average_mood">میانگین حال: %1$s از %2$s</string>
+    <string name="insights_average_energy">میانگین انرژی: %1$s از %2$s</string>
+    <plurals name="insights_streak">
+        <item quantity="one">زنجیرهٔ فعلی: %1$s روز</item>
+        <item quantity="other">زنجیرهٔ فعلی: %1$s روز</item>
+    </plurals>
+    <plurals name="insights_longest">
+        <item quantity="one">بلندترین زنجیره: %1$s روز</item>
+        <item quantity="other">بلندترین زنجیره: %1$s روز</item>
+    </plurals>
+    <string name="insights_pages">%1$s صفحه، %2$s ثبت حال</string>
+    <string name="insights_none">چند روز حالتان را ثبت کنید تا الگوهایتان را ببینید.</string>
+    <string name="insights_weekday_cd">%1$s: %2$s</string>
+    <string name="insights_no_data">بدون ثبت</string>
+</resources>

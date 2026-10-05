@@ -31,6 +31,7 @@ class PlanBApplication : Application() {
     @Inject lateinit var personalization: PersonalizationSync
     @Inject lateinit var calendarSync: com.behnamjalali.planb.core.calendarsync.CalendarSyncController
     @Inject lateinit var rituals: com.behnamjalali.planb.core.notifications.RitualReminders
+    @Inject lateinit var journalReminder: com.behnamjalali.planb.core.notifications.JournalReminders
 
     override fun onCreate() {
         super.onCreate()
@@ -64,6 +65,13 @@ class PlanBApplication : Application() {
                 .map { listOf(it.dayPlan.morningReminder, it.dayPlan.morningTime, it.dayPlan.eveningReminder, it.dayPlan.eveningTime) }
                 .distinctUntilChanged()
                 .collect { runCatching { rituals.sync() } }
+        }
+        appScope.launch {
+            // The journal reminder (Plan-B Pro #25) follows its settings, also after a restore.
+            settings.settings
+                .map { it.journal.reminder to it.journal.reminderTime }
+                .distinctUntilChanged()
+                .collect { runCatching { journalReminder.sync() } }
         }
     }
 

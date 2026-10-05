@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.NoteAdd
 import androidx.compose.material.icons.rounded.Archive
+import androidx.compose.material.icons.rounded.AutoStories
+import androidx.compose.material.icons.rounded.Hub
 import androidx.compose.material.icons.rounded.CreateNewFolder
 import androidx.compose.material.icons.rounded.FileOpen
 import androidx.compose.material.icons.rounded.MoreVert
@@ -83,6 +85,9 @@ data class NotebooksCallbacks(
     val onToggleArchive: () -> Unit = {},
     val onRestoreNote: (EntityId) -> Unit = {},
     val onImport: () -> Unit = {},
+    /** The journal and the note graph (Plan-B Pro #25, #21); null hides the entry. */
+    val onOpenJournal: (() -> Unit)? = null,
+    val onOpenGraph: (() -> Unit)? = null,
 )
 
 @Composable
@@ -93,6 +98,8 @@ fun NotebooksDestination(
     snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues,
     viewModel: NotebooksViewModel = hiltViewModel(),
+    onOpenJournal: (() -> Unit)? = null,
+    onOpenGraph: (() -> Unit)? = null,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val resources = LocalResources.current
@@ -126,6 +133,8 @@ fun NotebooksDestination(
             onToggleArchive = viewModel::toggleArchive,
             onRestoreNote = viewModel::restoreNote,
             onImport = { importer.launch(arrayOf("text/markdown", "text/plain", "text/*")) },
+            onOpenJournal = onOpenJournal,
+            onOpenGraph = onOpenGraph,
         ),
     )
 }
@@ -154,6 +163,9 @@ fun NotebooksScreen(state: NotebooksUiState, callbacks: NotebooksCallbacks, cont
                 contentPadding = PaddingValues(start = Spacing.screen, end = Spacing.screen, bottom = contentPadding.calculateBottomPadding() + 96.dp),
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm),
             ) {
+                if (callbacks.onOpenJournal != null || callbacks.onOpenGraph != null) {
+                    item(key = "knowledge") { NotebooksKnowledgeRow(callbacks.onOpenJournal, callbacks.onOpenGraph) }
+                }
                 if (state.pinned.isNotEmpty()) {
                     item(key = "pinned_h") { PlannerSectionHeader(stringResource(R.string.notebooks_pinned)) }
                     item(key = "pinned") {
@@ -303,5 +315,20 @@ private fun NotebookDialog(notebook: Notebook, onDismiss: () -> Unit, onSave: (N
         AccentColorPicker(color, { color = it })
         Text(stringResource(R.string.notebook_icon), style = MaterialTheme.typography.labelLarge)
         PlannerIconPicker(icon, { icon = it }, color)
+    }
+}
+
+/** Entries to the journal and the note graph (Plan-B Pro); free users see them with a Pro badge. */
+@Composable
+private fun NotebooksKnowledgeRow(onOpenJournal: (() -> Unit)?, onOpenGraph: (() -> Unit)?) {
+    val isPro = com.behnamjalali.planb.core.ui.LocalProAccess.current.isPro
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
+        onOpenJournal?.let { open ->
+            item(key = "journal") { PlannerChip(stringResource(R.string.notebooks_journal), selected = false, onClick = open, icon = Icons.Rounded.AutoStories) }
+        }
+        onOpenGraph?.let { open ->
+            item(key = "graph") { PlannerChip(stringResource(R.string.notebooks_graph), selected = false, onClick = open, icon = Icons.Rounded.Hub) }
+        }
+        if (!isPro) item(key = "pro") { com.behnamjalali.planb.core.ui.ProBadge() }
     }
 }

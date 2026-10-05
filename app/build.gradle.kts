@@ -132,6 +132,7 @@ dependencies {
     implementation(projects.feature.pro)
     implementation(projects.feature.security)
     implementation(projects.feature.reports)
+    implementation(projects.feature.journal)
     implementation(projects.core.backup)
     implementation(projects.core.billing)
     implementation(projects.core.ai)

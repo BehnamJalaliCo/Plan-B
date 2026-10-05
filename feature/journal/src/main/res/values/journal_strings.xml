@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan-B Pro #25: daily journal with prompts and a mood calendar. -->
+<resources>
+    <string name="journal_title">Journal</string>
+    <!-- Same name as the ritual reflections' notebook (feature:today), so both use one notebook. -->
+    <string name="journal_notebook">Journal</string>
+    <string name="journal_prompt_label">Today’s prompt</string>
+    <string name="journal_another_prompt">Another prompt</string>
+    <string name="journal_write">Start writing</string>
+    <string name="journal_continue">Continue writing</string>
+    <string name="journal_mood">Mood</string>
+    <string name="journal_energy">Energy</string>
+    <string name="journal_mood_1">Very low</string>
+    <string name="journal_mood_2">Low</string>
+    <string name="journal_mood_3">Okay</string>
+    <string name="journal_mood_4">Good</string>
+    <string name="journal_mood_5">Great</string>
+    <string name="journal_energy_1">Exhausted</string>
+    <string name="journal_energy_2">Tired</string>
+    <string name="journal_energy_3">Steady</string>
+    <string name="journal_energy_4">Energetic</string>
+    <string name="journal_energy_5">Full of energy</string>
+    <string name="journal_level_cd">%1$s: %2$s</string>
+    <string name="journal_tags">Tags</string>
+    <string name="journal_tags_hint">Tags (comma-separated)</string>
+    <string name="journal_tags_save">Save tags</string>
+    <string name="journal_tags_edit">Edit tags</string>
+    <plurals name="journal_streak">
+        <item quantity="one">%1$s day in a row</item>
+        <item quantity="other">%1$s days in a row</item>
+    </plurals>
+    <string name="journal_streak_start">Write today to start a streak</string>
+    <string name="journal_recent">Recent pages</string>
+    <string name="journal_empty">Pages you write appear here. Morning intentions and evening reflections from the daily rituals are kept on the same pages.</string>
+    <string name="journal_locked">Locked page</string>
+    <string name="journal_calendar">Mood calendar</string>
+    <string name="journal_settings">Journal settings</string>
+    <string name="journal_reminder">Daily reminder</string>
+    <string name="journal_reminder_sub">At %1$s, unless you already wrote that day</string>
+    <string name="journal_reminder_time">Reminder time</string>
+    <string name="journal_my_prompts">Your own prompts</string>
+    <string name="journal_my_prompts_sub">They take turns with the built-in prompts.</string>
+    <string name="journal_add_prompt">Add</string>
+    <string name="journal_prompt_hint">Write a question for yourself</string>
+    <string name="journal_delete_prompt">Delete “%1$s”</string>
+    <string name="journal_failed">That did not work. Please try again.</string>
+
+    <!-- Mood calendar -->
+    <string name="calendar_previous">Previous month</string>
+    <string name="calendar_next">Next month</string>
+    <string name="calendar_day_mood_cd">%1$s, mood %2$s</string>
+    <string name="calendar_day_journal_cd">%1$s, journal page</string>
+    <string name="calendar_day_empty_cd">%1$s, no check-in</string>
+    <string name="calendar_legend">Mood</string>
+    <string name="insights_title">The last %1$s days</string>
+    <string name="insights_weekday">Average mood by weekday</string>
+    <string name="insights_average_mood">Average mood: %1$s of %2$s</string>
+    <string name="insights_average_energy">Average energy: %1$s of %2$s</string>
+    <plurals name="insights_streak">
+        <item quantity="one">Current streak: %1$s day</item>
+        <item quantity="other">Current streak: %1$s days</item>
+    </plurals>
+    <plurals name="insights_longest">
+        <item quantity="one">Longest streak: %1$s day</item>
+        <item quantity="other">Longest streak: %1$s days</item>
+    </plurals>
+    <string name="insights_pages">%1$s pages, %2$s check-ins</string>
+    <string name="insights_none">Check in your mood for a few days to see your patterns.</string>
+    <string name="insights_weekday_cd">%1$s: %2$s</string>
+    <string name="insights_no_data">no check-ins</string>
+</resources>

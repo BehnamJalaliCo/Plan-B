@@ -20,6 +20,10 @@
         <receiver
             android:name=".RitualReminderReceiver"
             android:exported="false" />
+        <!-- Daily journal reminder (Plan-B Pro #25): only our own immutable PendingIntent reaches it. -->
+        <receiver
+            android:name=".JournalReminderReceiver"
+            android:exported="false" />
         <receiver
             android:name=".RescheduleReceiver"
             android:exported="true">

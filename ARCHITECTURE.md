@@ -59,6 +59,7 @@ graph TD
 | `core:ui` | Planner-specific shared composables: cards, pickers (date/time/color/icon), editor rows, recurrence and reminder menus, heatmap, formatting locals, and Pro gating (`ProFeature`, `LocalProAccess`, `ProGate`, `rememberProGuard`). |
 | `core:testing` | Test helpers (`FakeTimeProvider`). |
 | `feature:*` | One module per feature: screens, ViewModels and type-safe navigation routes. Features never depend on each other; the app wires navigation between them. `feature:pro` is the Plan-B Pro screen; other features gate Pro actions only through `core:ui` (`LocalProAccess`), which the app provides. |
+| `feature:journal` | Plan-B Pro daily journal (prompts, mood and energy, tags, streak) and the mood calendar with insights (#25). Notes knowledge screens (#16 links and history, #21 graph, #22 web clipper sheet, #24 writing mode) live in `feature:notebooks`; the share target `ClipperActivity` is in `app`. |
 | `feature:reports` | Plan-B Pro statistics, "My year" and their PDF export (aggregation in `core:model`, `StatisticsDao` reads, `PdfReportWriter` in `core:ui`). |
 | `app` | `Application`, `MainActivity`, root scaffold, navigation host, onboarding, locale bootstrap; Plan-B Pro widgets (Glance), quick-settings tiles, launcher shortcuts, launcher icon aliases and the phone side of the Wear OS sync. |
 | `wear` | Wear OS companion app (Plan-B Pro): today's tasks and habits over the Wearable Data Layer. Built separately; not part of the Cafe Bazaar upload. |
