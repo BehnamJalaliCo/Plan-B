@@ -754,6 +754,10 @@ class AppScreenshotTest(private val variant: Variant) {
         // The calendar list is below the fold at 150% font.
         if (variant.fontScale == 1f) waitFor(hasText("Family"))
         capture("calendar", "calendar_sync_settings")
+    }
+
+    // endregion
+
     // region Plan-B Pro smart day (#1, #5, #8), captured as a Pro user.
 
     @Test

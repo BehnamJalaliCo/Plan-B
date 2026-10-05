@@ -26,7 +26,7 @@ internal object QuickAddText {
     )
 
     /** Invisible joiners and direction marks, dropped so «پس‌فردا» matches «پسفردا». */
-    private val invisible = setOf('‌', '‍', '‎', '‏', '⁠', '﻿')
+    private val invisible = setOf('\u200C', '\u200D', '\u200E', '\u200F', '\u2060', '\uFEFF')
 
     private val leading = "\"'«“‘([{".toSet()
     private val trailing = "\"'»”’)]}.,،؛;:?؟!…".toSet()
