@@ -13,6 +13,8 @@ import com.behnamjalali.planb.core.billing.EntitlementPreferences
 import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.data.security.SecurityStore
 import com.behnamjalali.planb.core.data.security.SecurityStoreModule
+import com.behnamjalali.planb.core.notifications.NagStateStoreModule
+import com.behnamjalali.planb.core.notifications.NagStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -77,6 +79,19 @@ object TestAutoBackupStoreModule {
         @ApplicationContext context: Context,
         @ApplicationScope scope: CoroutineScope,
     ): DataStore<Preferences> = freshDataStore(context, scope, "test-auto-backup")
+}
+
+/** Like [TestDataStoreModule]: a fresh nagging-reminder state file (snoozes, dismissals) for every Hilt graph. */
+@Module
+@TestInstallIn(components = [SingletonComponent::class], replaces = [NagStateStoreModule::class])
+object TestNagStateStoreModule {
+    @Provides
+    @Singleton
+    @NagStore
+    fun provideNagDataStore(
+        @ApplicationContext context: Context,
+        @ApplicationScope scope: CoroutineScope,
+    ): DataStore<Preferences> = freshDataStore(context, scope, "test-nag-state")
 }
 
 private fun freshDataStore(context: Context, scope: CoroutineScope, prefix: String): DataStore<Preferences> =

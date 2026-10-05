@@ -449,6 +449,55 @@ class BackupTest {
     private fun readStaged(bytes: ByteArray, maxAttachmentBytes: Long = BackupFormat.MAX_ATTACHMENTS_TOTAL_BYTES) =
         BackupCodec.read(ByteArrayInputStream(bytes), stagingDirectory = attachments.newStagingDirectory(), maxAttachmentBytes = maxAttachmentBytes)
 
+    /** Plan-B Pro planning (#4, #10–#14) data as the features write it survives a backup and restore. */
+    @Test
+    fun planningData_roundTrips_andExtraOnlyRemindersAreCancelledOnRestore() = runBlocking<Unit> {
+        seed()
+        val dao = db.backupDao()
+        val rule = com.behnamjalali.planb.core.model.RecurrenceRule(
+            com.behnamjalali.planb.core.model.RecurrenceFrequency.MONTHLY,
+            weekdays = setOf(java.time.DayOfWeek.MONDAY), setPosition = 2, calendarSystem = com.behnamjalali.planb.core.model.CalendarSystem.JALALI,
+        )
+        val afterDone = com.behnamjalali.planb.core.model.RecurrenceRule(
+            com.behnamjalali.planb.core.model.RecurrenceFrequency.DAILY, interval = 3,
+            basis = com.behnamjalali.planb.core.model.RecurrenceBasis.COMPLETION, count = 4,
+        )
+        dao.insertTasks(
+            listOf(
+                task(20, "گزارش ماهانه").copy(deadline = LocalDate.of(2026, 3, 25), nag = true, recurrence = rule.encode()),
+                task(21, "آبیاری").copy(recurrence = afterDone.encode()),
+            ),
+        )
+        dao.insertTaskReminders(
+            listOf(
+                TaskReminderEntity(1, 20, "DEADLINE", 1440, null),
+                TaskReminderEntity(2, 20, "NAG", 15, null),
+                TaskReminderEntity(3, 21, "ABSOLUTE", null, t0),
+            ),
+        )
+        dao.insertTaskDependencies(listOf(TaskDependencyEntity(20, 1), TaskDependencyEntity(21, 20)))
+        val filter = com.behnamjalali.planb.core.model.SmartFilter(
+            projectIds = setOf(1), priorities = setOf(com.behnamjalali.planb.core.model.Priority.HIGH),
+            dateRange = com.behnamjalali.planb.core.model.SmartDateRange.NEXT_7_DAYS, hasDeadline = true, text = "گزارش",
+            sort = com.behnamjalali.planb.core.model.TaskSort.DEADLINE,
+        )
+        dao.insertSavedFilters(listOf(SavedFilterEntity(5, "فوری", "rocket", "rose", com.behnamjalali.planb.core.model.SmartFilterCodec.encode(filter), 2, t0, t0)))
+        val before = listOf(dao.tasks(), dao.taskReminders(), dao.taskDependencies(), dao.savedFilters())
+
+        val archive = roundTrip(manager.snapshot())
+        manager.restore(archive)
+
+        assertThat(listOf(dao.tasks(), dao.taskReminders(), dao.taskDependencies(), dao.savedFilters())).isEqualTo(before)
+        val restored = dao.tasks().associateBy { it.id }
+        assertThat(com.behnamjalali.planb.core.model.RecurrenceRule.decode(restored.getValue(20).recurrence)).isEqualTo(rule)
+        assertThat(com.behnamjalali.planb.core.model.RecurrenceRule.decode(restored.getValue(21).recurrence)).isEqualTo(afterDone)
+        assertThat(restored.getValue(20).deadline).isEqualTo(LocalDate.of(2026, 3, 25))
+        assertThat(restored.getValue(20).nag).isTrue()
+        assertThat(com.behnamjalali.planb.core.model.SmartFilterCodec.decode(dao.savedFilters().single().query)).isEqualTo(filter)
+        // Tasks that only had extra reminders or nagging had their alarms cleared before the restore.
+        assertThat(reminders.cancelled).containsAtLeast("task:20", "task:21")
+    }
+
     @Test
     fun v3TablesAndAttachments_roundTripThroughTheZip() = runBlocking<Unit> {
         seedV3()
