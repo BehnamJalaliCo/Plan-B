@@ -12,9 +12,11 @@ import com.behnamjalali.planb.core.data.ReminderScheduler
 import com.behnamjalali.planb.core.data.repository.EventRepository
 import com.behnamjalali.planb.core.data.repository.FocusRepository
 import com.behnamjalali.planb.core.data.repository.HabitRepository
+import com.behnamjalali.planb.core.data.repository.TaskPlanningRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.FocusStatus
+import com.behnamjalali.planb.core.model.Task
 import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
@@ -23,7 +25,9 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 
 /**
- * Schedules one alarm per item via [AlarmManager]. Exact alarms are used when
+ * Schedules one alarm per item via [AlarmManager]. A task's alarm holds its next reminder of
+ * all of them (primary, up to four extra ones, a snooze or a nag repetition, Plan-B Pro #12;
+ * see [ReminderPlanner.forTask]), so request codes stay one per item. Exact alarms are used when
  * the user allowed them (planner/calendar reminders are time-critical); otherwise
  * an inexact while-idle alarm is used so reminders still arrive.
  *
@@ -42,6 +46,8 @@ class AlarmReminderScheduler @Inject constructor(
     private val focus: Lazy<FocusRepository>,
     private val notifier: Notifier,
     private val time: TimeProvider,
+    private val planning: Lazy<TaskPlanningRepository>,
+    private val nagState: NagStateStore,
 ) : ReminderScheduler {
     private val alarmManager: AlarmManager? get() = context.getSystemService(AlarmManager::class.java)
 
@@ -71,7 +77,11 @@ class AlarmReminderScheduler @Inject constructor(
     }
 
     private suspend fun planTask(taskId: EntityId): PlannedReminder? =
-        tasks.get().getTask(taskId)?.let { ReminderPlanner.forTask(it, time.now(), time.zone()) }
+        tasks.get().getTask(taskId)?.let { planTask(it, time.now()) }
+
+    /** The plan of [task] as of [now], with its extra reminders and nag state. */
+    suspend fun planTask(task: Task, now: Instant): PlannedReminder? =
+        ReminderPlanner.forTask(task, now, time.zone(), planning.get().planning(task.id), nagState.state(task.id))
 
     private suspend fun planEvent(eventId: EntityId): PlannedReminder? =
         events.get().getEvent(eventId)?.let { ReminderPlanner.forEvent(it, time.now(), time.zone()) }
@@ -81,7 +91,10 @@ class AlarmReminderScheduler @Inject constructor(
             ReminderPlanner.forHabit(it, habits.get().amountOn(habitId, time.today()), time.now(), time.zone())
         }
 
-    override suspend fun cancelTask(taskId: EntityId) = cancel(ReminderKind.TASK, taskId)
+    override suspend fun cancelTask(taskId: EntityId) {
+        cancel(ReminderKind.TASK, taskId)
+        nagState.clear(taskId)
+    }
     override suspend fun cancelEvent(eventId: EntityId) = cancel(ReminderKind.EVENT, eventId)
     override suspend fun cancelHabit(habitId: EntityId) = cancel(ReminderKind.HABIT, habitId)
 
@@ -92,7 +105,7 @@ class AlarmReminderScheduler @Inject constructor(
     override suspend fun rescheduleAll() {
         val now = time.now()
         val zone = time.zone()
-        each("task", { tasks.get().tasksWithReminders() }) { t -> ReminderPlanner.forTask(t, now, zone)?.let(::schedule) }
+        each("task", { tasks.get().tasksWithReminders() }) { t -> planTask(t, now)?.let(::schedule) }
         each("event", { events.get().eventsWithReminders() }) { e -> ReminderPlanner.forEvent(e, now, zone)?.let(::schedule) }
         each("habit", { habits.get().habitsWithReminders() }) { h ->
             ReminderPlanner.forHabit(h, habits.get().amountOn(h.id, time.today()), now, zone)?.let(::schedule)

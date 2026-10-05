@@ -3,8 +3,10 @@ package com.behnamjalali.planb.core.notifications
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.text.format.DateFormat
 import android.util.Log
+import androidx.core.net.toUri
 import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.common.NumberFormatter
 import com.behnamjalali.planb.core.common.TimeProvider
@@ -12,12 +14,15 @@ import com.behnamjalali.planb.core.data.repository.EventRepository
 import com.behnamjalali.planb.core.data.repository.FocusRepository
 import com.behnamjalali.planb.core.data.repository.HabitRepository
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
+import com.behnamjalali.planb.core.data.repository.TaskPlanningRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.data.repository.recordFocusSession
 import com.behnamjalali.planb.core.datetime.PlannerDateFormatter
 import com.behnamjalali.planb.core.model.FocusStatus
+import com.behnamjalali.planb.core.model.TaskReminderRules
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
@@ -44,6 +49,7 @@ class ReminderDelivery @Inject constructor(
     private val scheduler: AlarmReminderScheduler,
     private val time: TimeProvider,
     private val settings: SettingsRepository,
+    private val planning: TaskPlanningRepository,
 ) {
     /** [plannedAt] is the trigger time the alarm was set for (null for alarms set by older versions). */
     suspend fun deliver(kind: ReminderKind, id: Long, occurrence: LocalDate, plannedAt: Instant?) {
@@ -58,17 +64,30 @@ class ReminderDelivery @Inject constructor(
         val zone = time.zone()
         // The plan as seen just before the alarm's time must name this very alarm.
         val asOf = plannedAt?.minusMillis(1)
-        fun stillPlanned(plan: () -> PlannedReminder?): Boolean = asOf == null || plan()?.at == plannedAt
+        suspend fun stillPlanned(plan: suspend () -> PlannedReminder?): Boolean = asOf == null || plan()?.at == plannedAt
 
         when (kind) {
             ReminderKind.TASK -> {
                 val task = tasks.getTask(id) ?: return
-                if (!task.isCompleted && !task.archived && task.deletedAt == null && task.dueDate != null && stillPlanned { ReminderPlanner.forTask(task, asOf!!, zone) }) {
+                // Alarms from older versions (no intended time) were only set for a due date.
+                val live = !task.isCompleted && !task.archived && task.deletedAt == null && (task.dueDate != null || plannedAt != null)
+                if (live && stillPlanned { scheduler.planTask(task, asOf!!) }) {
                     val text = buildString {
                         append(task.title)
                         task.dueTime?.let { append(separator).append(formatter.time(it)) }
                     }
-                    notifier.showReminder(kind, id, context.getString(R.string.notif_task_title), text, DeepLinks.task(id), context)
+                    val planning = planning.planning(id)
+                    // "Done"/"Snooze" come with Plan-B Pro reminders (extra ones or nagging) only.
+                    val buttons = if (task.nag || planning.reminders.isNotEmpty()) {
+                        TaskReminderButtons(
+                            doneLabel = context.getString(R.string.notif_action_done),
+                            snoozeLabel = context.getString(R.string.notif_action_snooze, formatter.numbers.format(TaskReminderRules.SNOOZE_MINUTES)),
+                            nagging = task.nag,
+                        )
+                    } else {
+                        null
+                    }
+                    notifier.showReminder(kind, id, context.getString(R.string.notif_task_title), text, DeepLinks.task(id), context, buttons)
                 }
                 scheduler.renewTaskAlarm(id)
             }
@@ -176,5 +195,81 @@ class RescheduleReceiver : BroadcastReceiver() {
                 pending.finish()
             }
         }
+    }
+}
+
+/**
+ * What the "Done", "Snooze" and swipe-away of a task reminder do (Plan-B Pro #12), apart from
+ * the receiver so it can be tested. Completing goes through the repository like a tap in the
+ * app (a recurring task continues; a blocked task is completed anyway, the user asked for it).
+ */
+class ReminderActions @Inject constructor(
+    private val tasks: TaskRepository,
+    private val notifier: Notifier,
+    private val scheduler: AlarmReminderScheduler,
+    private val nagState: NagStateStore,
+    private val time: TimeProvider,
+) {
+    suspend fun done(taskId: Long) {
+        nagState.clear(taskId)
+        tasks.setCompleted(taskId, true)
+        // The repository syncs after its write too; this makes sure alarm and notification are gone.
+        scheduler.syncTask(taskId)
+        notifier.cancel(ReminderKind.TASK, taskId)
+    }
+
+    /** One more reminder in [TaskReminderRules.SNOOZE_MINUTES]; earlier ones stop nagging. */
+    suspend fun snooze(taskId: Long) {
+        val now = time.now()
+        nagState.snooze(taskId, now, now.plus(Duration.ofMinutes(TaskReminderRules.SNOOZE_MINUTES.toLong())))
+        notifier.cancel(ReminderKind.TASK, taskId)
+        scheduler.renewTaskAlarm(taskId)
+    }
+
+    /** The notification was swiped away: the reminders that fired stop nagging. */
+    suspend fun dismiss(taskId: Long) {
+        nagState.stop(taskId, time.now())
+        scheduler.renewTaskAlarm(taskId)
+    }
+}
+
+/** Handles the buttons of task reminders; not exported, reached only through our own PendingIntents. */
+@AndroidEntryPoint
+class ReminderActionReceiver : BroadcastReceiver() {
+    @Inject lateinit var actions: ReminderActions
+    @Inject @ApplicationScope lateinit var scope: CoroutineScope
+
+    override fun onReceive(context: Context, intent: Intent) {
+        val action = intent.action
+        if (action !in HANDLED) return
+        val taskId = intent.getLongExtra(EXTRA_TASK_ID, -1L).takeIf { it > 0 } ?: return
+        val pending = goAsync()
+        scope.launch {
+            try {
+                when (action) {
+                    ACTION_DONE -> actions.done(taskId)
+                    ACTION_SNOOZE -> actions.snooze(taskId)
+                    ACTION_DISMISS -> actions.dismiss(taskId)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Never log item content.
+                Log.w(TAG, "Could not handle a reminder action (${e.javaClass.simpleName})")
+            } finally {
+                pending.finish()
+            }
+        }
+    }
+
+    companion object {
+        const val ACTION_DONE = "com.behnamjalali.planb.action.REMINDER_DONE"
+        const val ACTION_SNOOZE = "com.behnamjalali.planb.action.REMINDER_SNOOZE"
+        const val ACTION_DISMISS = "com.behnamjalali.planb.action.REMINDER_DISMISS"
+        const val EXTRA_TASK_ID = "task_id"
+        private val HANDLED = setOf(ACTION_DONE, ACTION_SNOOZE, ACTION_DISMISS)
+
+        /** Distinct per task and button, so each PendingIntent is its own. */
+        fun dataUri(action: String, taskId: Long): Uri = "planb-action://${action.substringAfterLast('_').lowercase()}/$taskId".toUri()
     }
 }

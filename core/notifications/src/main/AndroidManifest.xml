@@ -12,6 +12,10 @@
         <receiver
             android:name=".ReminderReceiver"
             android:exported="false" />
+        <!-- Done / Snooze buttons of task reminders: only our own immutable PendingIntents reach it. -->
+        <receiver
+            android:name=".ReminderActionReceiver"
+            android:exported="false" />
         <receiver
             android:name=".RescheduleReceiver"
             android:exported="true">

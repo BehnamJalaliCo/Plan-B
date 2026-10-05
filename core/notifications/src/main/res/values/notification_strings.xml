@@ -14,5 +14,9 @@
     <string name="notif_habit_text">Time for: %1$s</string>
     <string name="notif_focus_title">Focus session complete</string>
     <string name="notif_focus_text">Nice work. Take a short break.</string>
+    <!-- Buttons of a task reminder (Plan-B Pro multiple reminders and nagging). -->
+    <string name="notif_action_done">Done</string>
+    <!-- %1$s: minutes, already formatted with the user's digits. -->
+    <string name="notif_action_snooze">Snooze %1$s min</string>
     <string name="app_label_fallback" translatable="false">Plan-B</string>
 </resources>
