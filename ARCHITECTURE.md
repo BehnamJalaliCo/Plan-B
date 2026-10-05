@@ -41,7 +41,7 @@ graph TD
 |---|---|
 | `core:model` | Plain Kotlin domain types (tasks, projects, notes, habits, goals, events, focus sessions, templates, settings), recurrence and habit-schedule encodings, habit statistics, goal pace, Markdown conversion. No Android framework types in its API. |
 | `core:common` | `TimeProvider` (the only clock), dispatchers and the application scope, digit localisation (`Digits`, `NumberFormatter`), `SearchNormalizer`, `runCatchingSafely`, a minute ticker for "today". |
-| `core:datetime` | Calendar engines (Jalali via ICU, Gregorian), month grids, the recurrence engine, reminder trigger computation with DST handling, and the resource-backed `PlannerDateFormatter`. |
+| `core:datetime` | Calendar engines (Jalali via ICU, Gregorian), Iran's official holidays, occasions and Hijri dates (`iran/`), month grids, the recurrence engine, reminder trigger computation with DST handling, and the resource-backed `PlannerDateFormatter`. |
 | `core:database` | Room entities, DAOs, relations, the FTS4 `search_index`, migrations and exported schemas. |
 | `core:datastore` | User preferences in Preferences DataStore with tolerant per-key parsing. |
 | `core:data` | Repositories (the single source of truth for each feature), entity↔model mappers, search indexing, `ReminderScheduler` contract, SAF file helpers. |
@@ -49,6 +49,7 @@ graph TD
 | `core:backup` | Versioned ZIP backup (with attachment files), validation, transactional restore, CSV/JSON/Markdown export and import. |
 | `core:billing` | Plan-B Pro: `BillingClient` (Cafe Bazaar via Poolakey, or a fake in debug builds), on-device purchase verification, `EntitlementRepository` with an offline cache. See [docs/PRO.md](docs/PRO.md). |
 | `feature:security` | Plan-B Pro #36–#38 screens: `AppLockGate` and the lock screen, Security settings, Trash, Activity. App lock state (`AppLockController`), the note vault (`NoteVault`, `NoteCrypto`), `DataHistory` and the trash/activity repositories live in `core:data`. |
+| `core:calendarsync` | Plan-B Pro two-way sync with device calendars: CalendarContract behind `DeviceCalendarStore`, the sync engine over `calendar_links`, read-only device events for the calendar views, change observer and periodic WorkManager job. Declares `READ_CALENDAR`/`WRITE_CALENDAR` (asked only when sync is turned on). |
 | `core:ai` | Optional AI assistant infrastructure: provider catalog, settings with the key encrypted by the Android Keystore, `AiClient` (OkHttp; OpenAI and Anthropic wire formats). The only module that declares `INTERNET`. |
 | `core:designsystem` | Theme, color/typography/tokens and generic components. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md). |
 | `core:ui` | Planner-specific shared composables: cards, pickers (date/time/color/icon), editor rows, recurrence and reminder menus, heatmap, formatting locals, and Pro gating (`ProFeature`, `LocalProAccess`, `ProGate`, `rememberProGuard`). |

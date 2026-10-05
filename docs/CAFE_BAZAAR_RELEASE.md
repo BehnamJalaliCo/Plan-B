@@ -30,6 +30,7 @@ the app has no ads, analytics or tracking):
 | `PAY_THROUGH_BAZAAR` | Plan-B Pro purchases through Cafe Bazaar | خرید Plan-B Pro از طریق کافه‌بازار |
 | `USE_BIOMETRIC`, `USE_FINGERPRINT` | Plan-B Pro App lock and locked notes (the device's own fingerprint, face or screen lock) | قفل برنامه و یادداشت‌های قفل‌شدهٔ Plan-B Pro (اثر انگشت، چهره یا قفل صفحهٔ خود گوشی) |
 | `WAKE_LOCK` | Let short background jobs finish (Plan-B Pro automatic backups, emptying the 30-day trash, home-screen widget updates) | تمام شدن کارهای کوتاه پس‌زمینه (پشتیبان‌گیری خودکار Plan-B Pro، خالی شدن سطل زبالهٔ ۳۰ روزه، به‌روزرسانی ابزارک‌ها) |
+| `READ_CALENDAR`, `WRITE_CALENDAR` | Plan-B Pro sync with device calendars (Google Calendar), only when you turn on calendar sync | همگام‌سازی Plan-B Pro با تقویم‌های گوشی (تقویم گوگل)، فقط وقتی همگام‌سازی تقویم را روشن کنید |
 
 | Permission | English | فارسی |
 |---|---|---|
@@ -38,6 +39,7 @@ the app has no ads, analytics or tracking):
 | `RECEIVE_BOOT_COMPLETED` | Restore reminders after a restart | بازگرداندن یادآورها پس از روشن شدن دوباره |
 | `INTERNET` | Optional AI assistant only, with your own key | فقط دستیار هوش مصنوعی اختیاری، با کلید خودتان |
 | `PAY_THROUGH_BAZAAR` | Buy Plan-B Pro through Cafe Bazaar | خرید Plan-B Pro از کافه‌بازار |
+| `READ_CALENDAR`, `WRITE_CALENDAR` | Only when you turn on calendar sync (Plan-B Pro) | فقط وقتی همگام‌سازی تقویم را روشن کنید (Plan-B Pro) |
 
 The last three are normal permissions (granted at install, never asked) and appear because the
 Plan-B Pro widgets use Jetpack Glance. The Wear OS companion is a separate app and is not part of

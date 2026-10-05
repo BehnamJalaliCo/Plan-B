@@ -19,14 +19,14 @@ amounts above (`FallbackPrices` in `feature/pro`), formatted with the user's dig
 
 The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable; never rename).
 
-**Planning & calendar** (#4 and #9–#14 implemented, see [Planning](#planning-4-914))
+**Planning & calendar** (#2–#4, #6, #7 and #9–#14 implemented, see [Planning](#planning-4-914) and [Calendar](#calendar-2-3-6-7))
 1. `persian_quick_add` — Persian natural-language quick add
-2. `iran_holidays` — official Iranian holidays, occasions and Hijri (lunar) dates
-3. `calendar_sync` — two-way sync with the device calendar (Google Calendar through Android's calendar provider)
+2. `iran_holidays` — official Iranian holidays, occasions and Hijri (lunar) dates ✅
+3. `calendar_sync` — two-way sync with the device calendar (Google Calendar through Android's calendar provider) ✅
 4. `advanced_recurrence` — advanced recurrence ("second Monday of every month", "3 days after completion") ✅
 5. `auto_planning` — automatic day planning (auto-schedule tasks into free time)
-6. `time_blocking` — time blocking (drag tasks onto calendar hours)
-7. `day_timeline` — vertical day timeline
+6. `time_blocking` — time blocking (drag tasks onto calendar hours) ✅
+7. `day_timeline` — vertical day timeline ✅
 8. `daily_rituals` — morning planning and evening shutdown ritual
 9. `project_timeline` — project Gantt/timeline view ✅
 10. `smart_lists` — custom smart lists and filters ✅
@@ -79,6 +79,7 @@ The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable;
 | `core:ui` | `ProFeature` (+ groups, strings, icons), `LocalProAccess`, `ProGate`, `rememberProGuard`, `ProTeaser`, `ProBadge` |
 | `feature:pro` | `PaywallRoute(featureId)`, `PaywallViewModel`, `PaywallScreen` (paywall and "Your Pro") |
 | `core:ai` | AI provider catalog, encrypted key storage, `AiClient` (infrastructure for #39) |
+| `core:calendarsync` | #3: `DeviceCalendarStore` (CalendarContract behind an interface; `ContentResolverCalendarStore`, `FakeDeviceCalendarStore`), `CalendarSyncEngine`, `CalendarSyncRepository`, `CalendarSyncController` + `CalendarSyncWorker` |
 | `app` | `BillingModule` (Bazaar in release, fake in debug), `ProStatusViewModel`, provides `LocalProAccess`, Pro routes, More entry |
 
 ## Gating rules (for work packages)
@@ -234,6 +235,55 @@ firing, deadlines and locks keep showing).
 | 14 | Task editor › Waits for; task rows; timeline | `task_dependencies` (task waits for blocker). The editor picks tasks with search; a choice that would close a circle (DFS over all dependencies, tolerant of cycles already in restored data) is refused with a message, and the repository rejects it too (`DependencyCycleException`). Task lists carry the number of open blockers: a lock badge, and checking off a blocked task (checkbox, swipe, editor status) asks "Complete anyway?". Completing or deleting a blocker unblocks at once. |
 
 
+
+## Calendar (#2, #3, #6, #7)
+
+No schema change: #6/#7 use `tasks.scheduled_start`/`scheduled_end`, #3 uses `calendar_links`.
+Free users keep the Month, Week, Day and Agenda views as they were; the new "Timeline" segment
+shows a `ProTeaser`, the free Day view ends with one "Plan your day hour by hour" line (Pro
+badge), and Settings › Holidays and device calendars shows teasers. Blocks made with Pro keep
+their times if Pro ends (the free views list the tasks as before).
+
+| # | Where | How it works |
+|---|---|---|
+| 2 | Month grid, week header, day/agenda headers; Settings › Holidays and device calendars | `IranCalendar` (`core:datetime/iran`): the 26 official holidays — 10 solar from a fixed table (1–4, 12, 13 Farvardin; 14, 15 Khordad; 22 Bahman; 29 Esfand) and 16 lunar by Hijri date (the last day of Safar for Imam Reza) — plus a curated list of occasions, names in fa/en resources. Holidays and, in the Jalali calendar, Fridays are drawn in the error color; occasion names and the Hijri date («۲۲ ربیع‌الثانی ۱۴۴۸») sit under the selected day with the note «تاریخ‌های قمری ممکن است یک روز جابه‌جا شوند». Three toggles (`CalendarDecorations`, backed-up preferences). Works in English and in the Gregorian calendar (holidays still marked; Fridays only in Jalali). |
+| 3 | Settings › Holidays and device calendars; all calendar views | Opt-in: a rationale dialog, then `READ_CALENDAR`/`WRITE_CALENDAR`. The user picks the calendars to **show** (read only, outlined in their color, never stored in Plan-B unless "Copy into Plan-B" makes an unlinked copy) and one **target** calendar for Plan-B's events (or a new local "Plan-B" calendar, `ACCOUNT_TYPE_LOCAL`, no account). See "Sync rules" below. |
+| 6 | Calendar › Day and Week (Pro) | Hour grids. Long-press a task in the "Unscheduled" tray (open tasks of the day/week without a block or time) and drop it on an hour: a block of its estimate or 30 minutes (a task without a date is planned for that day). Long-press drag a block to move it (to another day in the week), drag its top or bottom edge to resize; everything snaps to 15 minutes with haptic ticks and auto-scrolls near the edges. Overlaps sit side by side (`TimeBlocks.layout`). RTL-aware hit testing; hour height and gutter grow with the font scale. TalkBack: "Schedule at…", "Move…", "Change length…", "Remove from schedule". Tap opens the task/event; a device event opens its details. |
+| 7 | Calendar › Timeline (Pro) | `TimelineBuilder`: events, time blocks, timed tasks and device events in time order on one rail with colored icons, free gaps of 15 minutes or more ("1 hr 30 min free"), a "now" marker on today (ticks every minute) and inline check-off; all-day and untimed items under "Anytime". Only in Calendar (Today's timeline belongs to `feature:today`, not changed here). |
+
+**Holiday data and accuracy.** Solar holidays are fixed by law and computed exactly from the
+Jalali calendar. Lunar holidays follow the Hijri calendar, which Iran fixes by **sighting the
+new moon**, so a date is only certain shortly before it and can differ by a day from any
+calculation. Plan-B uses ICU's `islamic-civil` calendar, corrected for the solar years
+**1405 and 1406** by the month starts of the published Iranian calendar
+(`core/datetime/src/main/resources/iran_calendar/hijri_month_starts.json`, from holidayapi.ir,
+which republishes time.ir's calendar; retrieved 2026-10-05; not checked against the printed
+official calendar). Against that calendar `islamic-civil` matched 13 of the 25 month starts and
+was one day off for the others; `islamic-umalqura` matched 6. Tests check that 1405's and 1406's
+official holidays equal the published lists and that the calculation alone stays within a day.
+time.ir and the Iranian Calendar Center's site were not reachable from the build environment.
+To add a year, append its month starts to the JSON (with the source) and extend the tests.
+
+**Sync rules (#3).** `CalendarSyncEngine` mirrors Plan-B events (`calendar_events`) into the
+target calendar and records each pair in `calendar_links` (`local_version` = the event's
+`updated_at`, `remote_version` = a fingerprint of the device event). On each sync:
+- a Plan-B edit updates the device event; a Plan-B deletion deletes it;
+- a device edit (title, notes, times) comes back into Plan-B; color, reminder and the Plan-B
+  recurrence stay Plan-B's; a device deletion deletes the Plan-B event unless it was edited in
+  Plan-B since the last sync (then it is written again);
+- **conflicts: last writer wins** — Plan-B's `updated_at` against the time Plan-B noticed the
+  device change (provider notification, or the sync); a tie keeps Plan-B's version;
+- only device events carrying `CUSTOM_APP_PACKAGE` = Plan-B are ever updated or deleted;
+  links whose calendar is missing on this device (for example restored from another phone's
+  backup) or whose event is not Plan-B's are dropped, never followed;
+- recurrences without a standard RRULE (Jalali months/years, "after completion") stay in
+  Plan-B only; imported copies (`remote_version` = `import:…`) are never written back;
+- turning sync off stops it and leaves the device events in place.
+Sync runs at app start, after provider change notifications and `calendar_events`
+invalidations (debounced 2 s), and hourly via WorkManager (`planb_calendar_sync`), only while
+it is on, the user has Pro and the permission is granted. Settings (enabled, shown calendars,
+target, last sync) are device-only keys of the user preferences file: never exported, never
+overwritten by a restore.
 
 `core:ai` holds the provider catalog (`AiProviders`: generic Iranian OpenAI-compatible gateway,
 AvalAI, DeepSeek, Qwen/DashScope, OpenRouter, Groq, OpenAI, Anthropic, Gemini, custom), the

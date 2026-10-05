@@ -1,6 +1,6 @@
 # Privacy Policy — Plan-B
 
-_Last updated: 4 October 2026 (12 Mehr 1405) · Applies to Plan-B with Plan-B Pro (`com.behnamjalali.planb`)_
+_Last updated: 5 October 2026 (13 Mehr 1405) · Applies to Plan-B with Plan-B Pro (`com.behnamjalali.planb`)_
 
 [فارسی](#سیاست-حریم-خصوصی--plan-b)
 
@@ -29,12 +29,15 @@ device (a local database and a preferences file) and are readable only by Plan-B
 | Pay through Cafe Bazaar (`com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR`) | Lets the installed Cafe Bazaar app handle Plan-B Pro purchases. |
 | Biometrics (`USE_BIOMETRIC`, `USE_FINGERPRINT`) | Plan-B Pro App lock and locked notes: your device's own fingerprint, face or screen lock confirms it's you. Plan-B never sees or stores biometric data. |
 | Keep awake (`WAKE_LOCK`) | Lets short background jobs finish: Plan-B Pro automatic backups and emptying the 30-day trash. |
+| Calendars (`READ_CALENDAR`, `WRITE_CALENDAR`) | Plan-B Pro sync with your device calendars (for example Google Calendar). Asked only when you turn on **Settings → Holidays and device calendars → Sync with device calendars**. Plan-B reads the events of the calendars you choose to show them in its calendar (they are not copied into Plan-B unless you copy one), and writes, changes or deletes only the events it created itself in the one calendar you choose. Plan-B sends nothing to any server; your calendar app syncs its own calendars as it always does. |
 
 With Plan-B Pro and a paired Wear OS watch, today's open tasks and habits are sent directly to
 your watch over Google's Wearable Data Layer (Bluetooth or your own Wi-Fi); this needs Google
 Play services and nothing goes to a server of ours.
 
-Plan-B does not access contacts, location, camera, microphone, accounts or shared storage.
+Plan-B does not access contacts, location, camera, microphone, accounts or shared storage. Your
+calendars are read only after you turn on calendar sync (above); the choice of calendars stays
+on this device and is not part of backups.
 
 ## Plan-B Pro purchases
 
@@ -100,7 +103,7 @@ https://github.com/BehnamJalaliCo/Plan-B.
 
 # سیاست حریم خصوصی — Plan-B
 
-_آخرین به‌روزرسانی: ۱۲ مهر ۱۴۰۵ · Plan-B همراه با Plan-B Pro_
+_آخرین به‌روزرسانی: ۱۳ مهر ۱۴۰۵ · Plan-B همراه با Plan-B Pro_
 
 ## خلاصه
 
@@ -127,8 +130,10 @@ Plan-B یک برنامه‌ریز آفلاین است. **هر چیزی که وا
 | پرداخت از طریق کافه‌بازار | برنامهٔ کافه‌بازار نصب‌شده روی دستگاه، خرید Plan-B Pro را انجام می‌دهد. |
 | بیومتریک (اثر انگشت) | قفل برنامه و یادداشت‌های قفل‌شدهٔ Plan-B Pro: اثر انگشت، چهره یا قفل صفحهٔ خود گوشی هویت شما را تأیید می‌کند. Plan-B هیچ دادهٔ بیومتریکی نمی‌بیند و ذخیره نمی‌کند. |
 | بیدار نگه داشتن دستگاه | تمام شدن کارهای کوتاه پس‌زمینه: پشتیبان‌گیری خودکار Plan-B Pro و خالی شدن سطل زبالهٔ ۳۰ روزه. |
+| تقویم‌ها (خواندن و نوشتن) | همگام‌سازی Plan-B Pro با تقویم‌های گوشی (برای نمونه تقویم گوگل). فقط وقتی درخواست می‌شود که در **تنظیمات ← مناسبت‌ها و تقویم‌های گوشی ← همگام‌سازی با تقویم‌های گوشی** آن را روشن کنید. Plan-B رویدادهای تقویم‌هایی را که انتخاب می‌کنید می‌خواند تا در تقویم خودش نشان دهد (مگر اینکه خودتان رویدادی را کپی کنید، چیزی در Plan-B ذخیره نمی‌شود) و فقط رویدادهایی را که خودش ساخته، در همان یک تقویمی که انتخاب می‌کنید، می‌نویسد، تغییر می‌دهد یا پاک می‌کند. Plan-B چیزی به هیچ سروری نمی‌فرستد؛ برنامهٔ تقویم شما مثل همیشه تقویم‌هایش را همگام می‌کند. |
 
-Plan-B به مخاطبین، موقعیت مکانی، دوربین، میکروفون، حساب‌ها یا حافظهٔ مشترک دسترسی ندارد.
+Plan-B به مخاطبین، موقعیت مکانی، دوربین، میکروفون، حساب‌ها یا حافظهٔ مشترک دسترسی ندارد. تقویم‌های شما
+فقط پس از روشن کردن همگام‌سازی تقویم (بالا) خوانده می‌شوند؛ انتخاب تقویم‌ها روی همین گوشی می‌ماند و در پشتیبان‌ها نیست.
 
 ## خرید Plan-B Pro
 

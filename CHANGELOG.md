@@ -60,6 +60,22 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
   - **Eisenhower matrix** with long-press drag between quadrants.
   - **Dependencies**: tasks can wait for other tasks (cycles are refused), show a lock and ask
     before being completed early.
+- Plan-B Pro **calendar** (#2, #3, #6, #7):
+  - **Iran's official calendar**: the 26 official holidays in red (and Fridays as the weekend in
+    the Jalali calendar), occasions such as Teachers' Day or Yalda, and the Hijri date under the
+    day, in Persian and English and in both calendars. Lunar holidays follow the published
+    calendar for 1405–1406 and a calculation otherwise; the app notes that they may shift by a
+    day. Toggles in Settings › Holidays and device calendars.
+  - **Sync with device calendars** (Google Calendar and others, opt-in): events of the calendars
+    you choose appear in Plan-B (read only, "Copy into Plan-B" for one), and Plan-B events are
+    written to one calendar you choose (or a new local "Plan-B" calendar), both ways. The latest
+    change wins; Plan-B never changes events it did not create. Calendar permission is asked
+    only when you turn sync on.
+  - **Time blocking**: Day and Week become hour grids; drag a task from "Unscheduled" onto an
+    hour, drag blocks to move them and their edges to resize, snapped to 15 minutes, with
+    TalkBack actions for every drag.
+  - **Timeline**: a vertical day timeline with events, time blocks and timed tasks, free time
+    between them, a "now" marker and check-off in place.
 
 ### Changed
 - Overdue tasks: a task with a deadline is late only after its deadline.

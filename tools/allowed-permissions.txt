@@ -19,6 +19,12 @@ com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR
 android.permission.USE_BIOMETRIC
 android.permission.USE_FINGERPRINT
 
+# Plan-B Pro two-way sync with device calendars (core:calendarsync): runtime permissions asked
+# only when the user turns on "Sync with device calendars" in Settings. Reads the calendars the
+# user chooses to show; writes and deletes only events Plan-B created (CUSTOM_APP_PACKAGE marker).
+android.permission.READ_CALENDAR
+android.permission.WRITE_CALENDAR
+
 # WorkManager (automatic backups, 30-day trash purge, Pro home-screen widgets via Glance): keeps the device awake while a short
 # background job runs. Its network and foreground-service permissions are removed in the manifest.
 android.permission.WAKE_LOCK

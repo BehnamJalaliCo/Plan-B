@@ -501,7 +501,12 @@ Two-way sync with device calendars (CalendarContract): `id`, `local_type` (`EVEN
 `remote_version` (a fingerprint of the remote event at the last sync). Unique indices
 `(local_type, local_id)` and `(calendar_id, external_event_id)`. Links are restored from
 backups; the sync must treat a link whose calendar or event no longer exists on the device as
-stale (re-create or drop it) instead of failing.
+stale (re-create or drop it) instead of failing. **Use (Plan-B Pro #3, `core:calendarsync`):** only `EVENT` links are
+created. `remote_version` is `v1:` + a SHA-256 prefix of the synced device fields; a link made by
+importing a device event has `remote_version` = `import:…` and is never written back. Links
+whose calendar is missing, or whose device event lacks Plan-B's `CUSTOM_APP_PACKAGE` marker, are
+deleted by the next sync. Time blocks (#6) are `tasks.scheduled_start`/`scheduled_end`;
+`TaskFilter.scheduledFrom/To` lets the calendar find a task by its block's day.
 
 ### 3.29 New columns in existing tables (v3)
 
