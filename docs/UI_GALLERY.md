@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **398**.
+Total screenshots: **470**.
 
 
 ## Today
@@ -270,11 +270,53 @@ Total screenshots: **398**.
 
 ## Habits
 
+### `badge_unlocked`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/habits/badge_unlocked_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/badge_unlocked_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/badge_unlocked_en_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/badge_unlocked_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/badge_unlocked_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/habits/badge_unlocked_en_light_font150.png" width="220"/> |
+
+### `badges`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/habits/badges_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/badges_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/badges_en_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/badges_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/badges_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/habits/badges_en_light_font150.png" width="220"/> |
+
+### `challenges`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/habits/challenges_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/challenges_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/challenges_en_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/challenges_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/challenges_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/habits/challenges_en_light_font150.png" width="220"/> |
+
 ### `habit_detail`
 
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/habits/habit_detail_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_en_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_en_light_font150.png" width="220"/> |
+
+### `habit_detail_pro`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/habits/habit_detail_pro_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_pro_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_pro_en_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_pro_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_pro_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_detail_pro_en_light_font150.png" width="220"/> |
+
+### `habit_editor_health`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/habits/habit_editor_health_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_editor_health_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_editor_health_en_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_editor_health_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_editor_health_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_editor_health_en_light_font150.png" width="220"/> |
+
+### `habit_stats`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/habits/habit_stats_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_en_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_en_light_font150.png" width="220"/> |
+
+### `habit_stats_year`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/habits/habit_stats_year_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_year_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_year_en_light.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_year_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_year_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/habits/habit_stats_year_en_light_font150.png" width="220"/> |
 
 ### `habits`
 
@@ -297,6 +339,18 @@ Total screenshots: **398**.
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/focus/focus_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_en_light.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_en_light_font150.png" width="220"/> |
+
+### `focus_pro`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/focus/focus_pro_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_en_light.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_en_light_font150.png" width="220"/> |
+
+### `focus_pro_running`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/focus/focus_pro_running_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_running_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_running_en_light.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_running_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_running_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/focus/focus_pro_running_en_light_font150.png" width="220"/> |
 
 ## Search
 
@@ -421,6 +475,26 @@ Total screenshots: **398**.
 | launcher icon themed |
 |---|
 | <img src="../artifacts/screenshots/icon/launcher_icon_themed.png" width="220"/> |
+
+## Journal
+
+### `mood_check_in`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/journal/mood_check_in_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_check_in_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_check_in_en_light.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_check_in_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_check_in_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_check_in_en_light_font150.png" width="220"/> |
+
+### `mood_patterns`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/journal/mood_patterns_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_patterns_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_patterns_en_light.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_patterns_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_patterns_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_patterns_en_light_font150.png" width="220"/> |
+
+### `mood_tracker`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/journal/mood_tracker_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_tracker_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_tracker_en_light.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_tracker_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_tracker_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/journal/mood_tracker_en_light_font150.png" width="220"/> |
 
 ## Pro
 
