@@ -181,9 +181,10 @@
     <string name="rich_chart_source_database">از پایگاه داده: %1$s</string>
     <string name="rich_chart_edit">ویرایش داده‌ها</string>
     <string name="rich_chart_done_editing">تمام</string>
-    <string name="rich_chart_summary_bar">نمودار میله‌ای %1$s: %2$s</string>
-    <string name="rich_chart_summary_line">نمودار خطی %1$s: %2$s</string>
-    <string name="rich_chart_summary_pie">نمودار دایره‌ای %1$s: %2$s</string>
+    <string name="rich_chart_kind_bar">نمودار میله‌ای</string>
+    <string name="rich_chart_kind_line">نمودار خطی</string>
+    <string name="rich_chart_kind_pie">نمودار دایره‌ای</string>
+    <string name="rich_chart_summary">%1$s: %2$s</string>
     <string name="rich_chart_point">%1$s %2$s</string>
     <string name="rich_chart_empty">هنوز داده‌ای نیست</string>
     <string name="rich_chart_default_a">الف</string>

@@ -181,9 +181,10 @@
     <string name="rich_chart_source_database">From database: %1$s</string>
     <string name="rich_chart_edit">Edit data</string>
     <string name="rich_chart_done_editing">Done</string>
-    <string name="rich_chart_summary_bar">Bar chart %1$s: %2$s</string>
-    <string name="rich_chart_summary_line">Line chart %1$s: %2$s</string>
-    <string name="rich_chart_summary_pie">Pie chart %1$s: %2$s</string>
+    <string name="rich_chart_kind_bar">Bar chart</string>
+    <string name="rich_chart_kind_line">Line chart</string>
+    <string name="rich_chart_kind_pie">Pie chart</string>
+    <string name="rich_chart_summary">%1$s: %2$s</string>
     <string name="rich_chart_point">%1$s %2$s</string>
     <string name="rich_chart_empty">No data yet</string>
     <string name="rich_chart_default_a">A</string>

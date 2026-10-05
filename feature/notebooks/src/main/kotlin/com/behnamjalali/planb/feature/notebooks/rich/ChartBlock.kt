@@ -93,13 +93,16 @@ internal fun ChartBlock(block: EditorBlock, blocks: List<EditorBlock>, ui: RichU
     val numbers = PlannerLocals.numbers
     val values = points.joinToString("، ".takeIf { numbers.persianDigits } ?: ", ") { pointText(it, numbers) }
     val title = chart.title
-    val summary = stringResource(
+    val kindName = stringResource(
         when (chart.kind) {
-            ChartKind.BAR -> R.string.rich_chart_summary_bar
-            ChartKind.LINE -> R.string.rich_chart_summary_line
-            ChartKind.PIE -> R.string.rich_chart_summary_pie
+            ChartKind.BAR -> R.string.rich_chart_kind_bar
+            ChartKind.LINE -> R.string.rich_chart_kind_line
+            ChartKind.PIE -> R.string.rich_chart_kind_pie
         },
-        title,
+    )
+    val summary = stringResource(
+        R.string.rich_chart_summary,
+        if (title.isBlank()) kindName else "$kindName $title",
         values.ifBlank { stringResource(R.string.rich_chart_empty) },
     )
     Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest, shape = RoundedCornerShape(Radius.md), modifier = Modifier.fillMaxWidth()) {

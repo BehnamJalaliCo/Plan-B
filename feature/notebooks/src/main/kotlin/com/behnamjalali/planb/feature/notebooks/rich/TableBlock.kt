@@ -77,7 +77,10 @@ internal fun TableBlock(block: EditorBlock, ui: RichUi?, editable: Boolean) {
                             .fillMaxHeight()
                             .border(BorderStroke(0.5.dp, outline))
                             .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
-                            .semantics { contentDescription = label; customActions = actions },
+                            .semantics {
+                                contentDescription = label
+                                if (actions.isNotEmpty()) customActions = actions
+                            },
                     ) {
                         val style = (if (header) MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.bodyMedium)
                             .copy(color = MaterialTheme.colorScheme.onSurface)
