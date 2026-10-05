@@ -2,8 +2,9 @@
 # the manifest asks for anything else (tools/check_permissions.sh). Adding a line here is a
 # product decision: update PRIVACY.md, docs/SECURITY_REVIEW.md and the store listings too.
 
-# Optional AI assistant only (core:ai): sends the text the user chooses to the provider the
-# user configured with their own key. Nothing else in the app uses the network.
+# Optional AI assistant (core:ai): sends the text the user chooses to the provider the user
+# configured with their own key. Also the one-time handwriting model download of Plan-B Pro
+# notes (#18, ML Kit, only after the user agrees). Nothing else in the app uses the network.
 android.permission.INTERNET
 
 # Reminders (core:notifications).
@@ -26,8 +27,18 @@ android.permission.READ_CALENDAR
 android.permission.WRITE_CALENDAR
 
 # WorkManager (automatic backups, 30-day trash purge, Pro home-screen widgets via Glance): keeps the device awake while a short
-# background job runs. Its network and foreground-service permissions are removed in the manifest.
+# background job runs. Its foreground-service permission is removed in the manifest.
 android.permission.WAKE_LOCK
+
+# Plan-B Pro voice notes (#19): runtime permission asked in context, with an explanation, only
+# when the user records a voice note (or dictates a transcript on Android 12 and older). The
+# recording stays in the note on the device.
+android.permission.RECORD_AUDIO
+
+# Normal (install-time, no prompt). Plan-B Pro handwriting to text (#18): ML Kit downloads the
+# handwriting model only after the user agrees, through WorkManager, waiting for a network (or
+# for Wi-Fi when "Only over Wi-Fi" is on). Nothing else reads the network state.
+android.permission.ACCESS_NETWORK_STATE
 
 # Added by AndroidX core: protects the app's own non-exported dynamic receivers.
 com.behnamjalali.planb.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION

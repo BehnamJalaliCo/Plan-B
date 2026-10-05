@@ -2,9 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- WorkManager (automatic backups, trash purge) asks for these, but Plan-B's work has no
-         network constraint and never runs as a foreground service. -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+    <!-- WorkManager (automatic backups, trash purge) asks for this, but Plan-B's work never runs
+         as a foreground service. ACCESS_NETWORK_STATE (normal, no prompt) stays: the handwriting
+         model download of Plan-B Pro notes (only after the user agrees) waits for a network or
+         for Wi-Fi through WorkManager. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
 
     <application

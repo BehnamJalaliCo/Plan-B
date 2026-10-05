@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--
         Plan-B Pro voice notes (#19): asked at runtime, in context, only when the user records a
@@ -22,6 +23,15 @@
     </queries>
 
     <application>
+        <!--
+            No analytics: ML Kit would send anonymous usage logs through Google's data transport
+            ("cct" backend). Without its backend registration nothing can be uploaded; queued
+            events are dropped. Recognition itself never sends images, drawings or audio.
+        -->
+        <service
+            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+            tools:node="remove" />
+
         <!--
             Read-only content URIs for one attachment at a time (open/share) and for the camera
             to write a new photo into the app's cache. Not exported; access is granted per URI.

@@ -15,4 +15,6 @@
     <string name="search_type_goal">Goals</string>
     <string name="search_type_event">Events</string>
     <string name="search_archived">Archived</string>
+    <string name="search_found_in_image">Found in an image</string>
+    <string name="search_found_in_recording">Found in a recording</string>
 </resources>

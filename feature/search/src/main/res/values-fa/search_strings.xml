@@ -15,4 +15,6 @@
     <string name="search_type_goal">هدف‌ها</string>
     <string name="search_type_event">رویدادها</string>
     <string name="search_archived">بایگانی‌شده</string>
+    <string name="search_found_in_image">پیدا شده در تصویر</string>
+    <string name="search_found_in_recording">پیدا شده در صدای ضبط‌شده</string>
 </resources>

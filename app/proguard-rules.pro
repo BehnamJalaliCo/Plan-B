@@ -23,3 +23,8 @@
 # Readable crash stack traces from the uploaded mapping file.
 -keepattributes SourceFile, LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# Tesseract4Android (Persian OCR in notes, Plan-B Pro #17) ships no consumer rules; its native
+# code reads fields and calls methods of these classes by name.
+-keep class com.googlecode.tesseract.android.** { *; }
+-keep class com.googlecode.leptonica.android.** { *; }

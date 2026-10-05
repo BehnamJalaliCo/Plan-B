@@ -73,6 +73,9 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            // Native code of the rich-notes engines (Tesseract OCR, ML Kit handwriting) only for
+            // the ARM devices Cafe Bazaar serves; x86 builds would add ~25 MB for emulators.
+            ndk { abiFilters += listOf("armeabi-v7a", "arm64-v8a") }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release")
         }
@@ -86,6 +89,8 @@ android {
 
     packaging {
         resources.excludes += listOf("/META-INF/{AL2.0,LGPL2.1}", "DebugProbesKt.bin", "kotlin-tooling-metadata.json")
+        // Compressed native libraries (extracted on install): the download stays about half as large.
+        jniLibs.useLegacyPackaging = true
     }
 }
 
@@ -93,6 +98,8 @@ android {
 // the debug key so they never need production credentials.
 android.buildTypes.matching { it.name.startsWith("benchmark") || it.name.startsWith("nonMinified") }.configureEach {
     signingConfig = android.signingConfigs.getByName("debug")
+    // They run on x86_64 emulators: every ABI.
+    ndk.abiFilters.clear()
 }
 
 baselineProfile {

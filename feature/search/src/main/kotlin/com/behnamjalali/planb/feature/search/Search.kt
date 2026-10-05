@@ -56,6 +56,7 @@ import com.behnamjalali.planb.core.designsystem.component.PlannerTopBar
 import com.behnamjalali.planb.core.designsystem.theme.IconSize
 import com.behnamjalali.planb.core.designsystem.theme.Spacing
 import com.behnamjalali.planb.core.model.SearchEntityType
+import com.behnamjalali.planb.core.model.SearchMatchSource
 import com.behnamjalali.planb.core.model.SearchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -193,6 +194,14 @@ fun SearchScreen(
                                     Column(Modifier.weight(1f)) {
                                         Text(r.title.ifBlank { stringResource(com.behnamjalali.planb.core.ui.R.string.ui_untitled) },
                                             style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        if (r.foundIn != null && r.snippet.isNotBlank()) {
+                                            // Plan-B Pro #17/#19: the words were found in an image or a recording.
+                                            Text(
+                                                stringResource(if (r.foundIn == SearchMatchSource.IMAGE) R.string.search_found_in_image else R.string.search_found_in_recording),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
                                         if (r.snippet.isNotBlank()) {
                                             Text(r.snippet, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 maxLines = 2, overflow = TextOverflow.Ellipsis)
