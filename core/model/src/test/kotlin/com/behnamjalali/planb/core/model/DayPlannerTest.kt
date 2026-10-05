@@ -283,6 +283,29 @@ class DayPlannerTest {
     }
 
     @Test
+    fun busyRanges_fromEventsAndTasks() {
+        val event = CalendarEvent(title = "e", date = day, startTime = LocalTime.of(9, 0), endTime = LocalTime.of(10, 0), allDay = false)
+        val overnight = CalendarEvent(title = "o", date = day, startTime = LocalTime.of(22, 0), endTime = LocalTime.of(1, 0), allDay = false)
+        val allDay = CalendarEvent(title = "a", date = day, allDay = true)
+        val ranges = DayPlanner.eventRanges(
+            listOf(EventOccurrence(event, day), EventOccurrence(overnight, day), EventOccurrence(allDay, day), EventOccurrence(event, day.plusDays(1))),
+            day,
+            tehran,
+        )
+        assertThat(ranges).containsExactly(range(9, 0, 10, 0), TimeRange(at(22), day.plusDays(1).atStartOfDay(tehran).toInstant())).inOrder()
+
+        val blocked = Task(id = 1, title = "b", scheduledStart = at(11), scheduledEnd = at(12))
+        val timed = Task(id = 2, title = "t", dueDate = day, dueTime = LocalTime.of(15, 0))
+        val timedLong = Task(id = 3, title = "l", dueDate = day, dueTime = LocalTime.of(16, 0), estimatedMinutes = 90)
+        val otherDay = Task(id = 4, title = "o", dueDate = day.plusDays(1), dueTime = LocalTime.of(9, 0))
+        assertThat(DayPlanner.taskRanges(listOf(blocked, timed, timedLong, otherDay), day, tehran))
+            .containsExactly(range(11, 0, 12, 0), range(15, 0, 15, 30), range(16, 0, 17, 30)).inOrder()
+        val open = Task(id = 5, title = "open", dueDate = day)
+        val done = Task(id = 6, title = "done", dueDate = day, status = TaskStatus.DONE)
+        assertThat(DayPlanner.candidates(listOf(blocked, timed, open, done, otherDay), day).map { it.id }).containsExactly(5L, 4L).inOrder()
+    }
+
+    @Test
     fun ritualState_focusOnlyForItsDay() {
         val state = RitualState(focusDate = day, focusTaskIds = listOf(3, 1))
         assertThat(state.focusFor(day)).containsExactly(3L, 1L).inOrder()

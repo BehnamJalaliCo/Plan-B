@@ -232,6 +232,49 @@ object DayPlanner {
         return existing.filter { block -> block.start < start || busy.any { it.overlaps(block.range) } }
     }
 
+    /**
+     * Busy time of [date] from timed events: start to end (an end at or before the start, or
+     * a missing one, runs to the end of the day; events without a start or all-day events
+     * don't block hours).
+     */
+    fun eventRanges(occurrences: List<EventOccurrence>, date: LocalDate, zone: ZoneId): List<TimeRange> =
+        occurrences.filter { it.date == date && !it.event.allDay && it.event.startTime != null }.map { occurrence ->
+            val start = ZonedDateTime.of(date, occurrence.event.startTime, zone).toInstant()
+            val endTime = occurrence.event.endTime
+            val end = if (endTime != null && endTime > occurrence.event.startTime) {
+                ZonedDateTime.of(date, endTime, zone).toInstant()
+            } else {
+                date.plusDays(1).atStartOfDay(zone).toInstant()
+            }
+            TimeRange(start, end)
+        }.filterNot { it.isEmpty }
+
+    /**
+     * Busy time from tasks: an existing time block, or else a fixed time on [date] (the due
+     * time) for its estimate (default [DEFAULT_ESTIMATE] minutes).
+     */
+    fun taskRanges(tasks: List<Task>, date: LocalDate, zone: ZoneId): List<TimeRange> = tasks.mapNotNull { task ->
+        val start = task.scheduledStart
+        val end = task.scheduledEnd
+        when {
+            start != null && end != null -> TimeRange(start, end)
+            task.dueDate == date && task.dueTime != null -> {
+                val at = ZonedDateTime.of(date, task.dueTime, zone).toInstant()
+                TimeRange(at, at.plus(Duration.ofMinutes((task.estimatedMinutes ?: DEFAULT_ESTIMATE).coerceAtLeast(MIN_BLOCK_MINUTES).toLong())))
+            }
+            else -> null
+        }
+    }.filterNot { it.isEmpty }
+
+    /**
+     * Which of [tasks] (Today's list) "Plan my day" schedules: open ones without a time block
+     * and without a fixed time on [date]. Tasks blocked by others stay in the list so the
+     * plan can say why they were left out.
+     */
+    fun candidates(tasks: List<Task>, date: LocalDate): List<PlanTask> = tasks
+        .filter { !it.isCompleted && it.scheduledStart == null && !(it.dueDate == date && it.dueTime != null) }
+        .map(PlanTask::of)
+
     private fun durationOf(task: PlanTask): Int = (task.estimatedMinutes ?: DEFAULT_ESTIMATE).coerceAtLeast(MIN_BLOCK_MINUTES)
 
     private fun urgency(task: PlanTask, date: LocalDate): Int {
