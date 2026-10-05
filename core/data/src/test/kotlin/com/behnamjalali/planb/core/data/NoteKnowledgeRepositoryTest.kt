@@ -104,7 +104,7 @@ class NoteKnowledgeRepositoryTest {
 
     @Test
     fun searchNotes_matchesNormalizedTitlePrefixes() = runTest {
-        val a = note("كتاب‌های خوب") // Arabic kaf, half-space
+        val a = note("كتاب" + Char(0x200C) + "های خوب") // Arabic kaf, half-space
         note("Books to read")
         val c = note("Reading list")
         assertThat(links.searchNotes("کتاب").map { it.id }).containsExactly(a)

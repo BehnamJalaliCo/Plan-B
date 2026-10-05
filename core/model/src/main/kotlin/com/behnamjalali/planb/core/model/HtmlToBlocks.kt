@@ -328,7 +328,7 @@ object HtmlToBlocks {
     }
 
     /** Removes control characters (but line breaks and tabs) and bidirectional overrides. */
-    internal fun clean(text: String): String {
+    fun clean(text: String): String {
         if (text.none { isUnsafe(it) }) return text
         return text.filterNot { isUnsafe(it) }
     }
