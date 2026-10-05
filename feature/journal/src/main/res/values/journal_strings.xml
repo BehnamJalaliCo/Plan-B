@@ -24,6 +24,7 @@
     <string name="journal_tags">Tags</string>
     <string name="journal_tags_hint">Tags (comma-separated)</string>
     <string name="journal_tags_save">Save tags</string>
+    <string name="journal_tags_edit">Edit tags</string>
     <plurals name="journal_streak">
         <item quantity="one">%1$s day in a row</item>
         <item quantity="other">%1$s days in a row</item>

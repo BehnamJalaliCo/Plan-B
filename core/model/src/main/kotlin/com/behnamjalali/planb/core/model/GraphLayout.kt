@@ -101,7 +101,7 @@ object GraphLayout {
 
     private const val SPACING = 10f
     private const val MIN_DISTANCE = 0.01f
-    private const val GRAVITY = 0.02f
+    private const val GRAVITY = 0.4f
 
     /**
      * Barnes–Hut quadtree stored in flat arrays (rebuilt each iteration, no allocation after

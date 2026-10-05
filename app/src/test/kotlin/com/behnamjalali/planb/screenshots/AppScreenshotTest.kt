@@ -102,6 +102,7 @@ import com.behnamjalali.planb.feature.review.R as ReviewR
 import com.behnamjalali.planb.feature.settings.R as SettingsR
 import com.behnamjalali.planb.feature.templates.R as TemplatesR
 import com.behnamjalali.planb.feature.today.R as TodayR
+import com.behnamjalali.planb.feature.journal.R as JournalR
 
 /**
  * Full-app screenshots: the real Hilt graph, Room and navigation with seeded data and a
@@ -812,6 +813,181 @@ class AppScreenshotTest(private val variant: Variant) {
         waitFor(hasText(s(TodayR.string.dayplan_hours_section)))
         waitFor(hasText(s(TodayR.string.dayplan_lunch)))
         capture("settings", "day_planning")
+    }
+
+    // endregion
+
+    // region Plan-B Pro notes knowledge (#16, #21, #22, #24, #25), captured as a Pro user.
+
+    @Inject lateinit var noteHistory: com.behnamjalali.planb.core.data.repository.NoteHistoryRepository
+    @Inject lateinit var journalPages: com.behnamjalali.planb.core.data.repository.JournalRepository
+
+    private fun knowledgeDoc(vararg blocks: Pair<com.behnamjalali.planb.core.model.BlockType, String>) =
+        com.behnamjalali.planb.core.model.NoteDocument(blocks = blocks.mapIndexed { i, (type, text) -> com.behnamjalali.planb.core.model.NoteBlock("k$i", type, text) })
+
+    /** A travel notebook whose notes link to each other; returns the id of the trip plan. */
+    private suspend fun seedLinkedNotes(): Long {
+        val travel = notes.saveNotebook(Notebook(title = t("سفر", "Travel"), icon = PlannerIcon.STAR, color = AccentColor.MINT))
+        fun note(title: String, vararg blocks: Pair<com.behnamjalali.planb.core.model.BlockType, String>) =
+            com.behnamjalali.planb.core.model.Note(notebookId = travel, title = title, document = knowledgeDoc(*blocks))
+        val text = com.behnamjalali.planb.core.model.BlockType.TEXT
+        val bullet = com.behnamjalali.planb.core.model.BlockType.BULLET
+        val packing = notes.saveNote(note(t("فهرست وسایل سفر", "Packing list"), bullet to t("کیسه‌خواب", "Sleeping bag"), bullet to t("چراغ‌قوه", "Flashlight")))
+        val budget = notes.saveNote(note(t("بودجهٔ سفر", "Trip budget"), text to t("حدود ۱۲ میلیون تومان", "About 600 euros")))
+        val map = notes.saveNote(note(t("مسیر جاده‌ای", "Road route"), text to t("رشت، ماسوله، فومن", "Rasht, Masuleh, Fuman")))
+        val trip = notes.saveNote(
+            note(
+                t("سفر شمال", "Trip to the north"),
+                text to t("سه روز در گیلان. ", "Three days in Gilan. ") + com.behnamjalali.planb.core.model.NoteLinks.token(budget, t("بودجهٔ سفر", "Trip budget")) + t(" را ببینید.", " is ready."),
+                bullet to com.behnamjalali.planb.core.model.NoteLinks.token(packing, t("فهرست وسایل سفر", "Packing list")),
+                bullet to com.behnamjalali.planb.core.model.NoteLinks.token(map, t("مسیر جاده‌ای", "Road route")),
+            ),
+        )
+        notes.saveNote(note(t("ایده‌های تعطیلات", "Holiday ideas"), text to t("شاید ", "Maybe ") + com.behnamjalali.planb.core.model.NoteLinks.token(trip, t("سفر شمال", "Trip to the north"))))
+        notes.saveNote(note(t("عکس‌های سفر", "Trip photos"), text to com.behnamjalali.planb.core.model.NoteLinks.token(trip, t("سفر شمال", "Trip to the north"))))
+        return trip
+    }
+
+    private fun openTrip() {
+        click(s(AppR.string.nav_notebooks))
+        click(t("سفر", "Travel"))
+        click(t("سفر شمال", "Trip to the north"))
+        waitFor(hasContentDescription(s(NotesR.string.note_title_hint)))
+    }
+
+    @Test
+    fun noteLinks() {
+        launch(pro = true) { seedLinkedNotes() }
+        openTrip()
+        // Links show as their notes' titles; the end of the note lists links and backlinks.
+        waitFor(hasText(t("بودجهٔ سفر", "Trip budget"), substring = true))
+        click(s(NotesR.string.backlinks_title))
+        waitFor(hasText(t("عکس‌های سفر", "Trip photos")))
+        capture("notebooks", "note_links")
+    }
+
+    @Test
+    fun noteHistory() {
+        launch(pro = true) {
+            val trip = seedLinkedNotes()
+            val start = com.behnamjalali.planb.e2e.TestClockModule.START
+            // Two earlier versions: yesterday evening and an hour ago.
+            clock.instant = start.minus(Duration.ofHours(15))
+            notes.updateContent(trip, t("سفر شمال (پیش‌نویس)", "Trip to the north (draft)"), knowledgeDoc(com.behnamjalali.planb.core.model.BlockType.TEXT to t("دو روز در گیلان.", "Two days in Gilan.")))
+            noteHistory.snapshot(trip, force = true)
+            clock.instant = start.minus(Duration.ofHours(1))
+            notes.updateContent(
+                trip,
+                t("سفر شمال", "Trip to the north"),
+                knowledgeDoc(
+                    com.behnamjalali.planb.core.model.BlockType.TEXT to t("سه روز در گیلان.", "Three days in Gilan."),
+                    com.behnamjalali.planb.core.model.BlockType.BULLET to t("رزرو اقامتگاه", "Book a guesthouse"),
+                ),
+            )
+            noteHistory.snapshot(trip, force = true)
+            clock.instant = start
+            notes.updateContent(
+                trip,
+                t("سفر شمال", "Trip to the north"),
+                knowledgeDoc(
+                    com.behnamjalali.planb.core.model.BlockType.TEXT to t("سه روز در گیلان و مازندران.", "Three days in Gilan and Mazandaran."),
+                    com.behnamjalali.planb.core.model.BlockType.BULLET to t("رزرو اقامتگاه", "Book a guesthouse"),
+                    com.behnamjalali.planb.core.model.BlockType.CHECKLIST to t("بلیت قطار", "Train tickets"),
+                ),
+            )
+        }
+        openTrip()
+        clickDescription(s(UiR.string.ui_more))
+        click(s(NotesR.string.history_title))
+        click(t("سفر شمال (پیش‌نویس)", "Trip to the north (draft)"))
+        waitFor(hasText(s(NotesR.string.history_restore)))
+        capture("notebooks", "note_history")
+    }
+
+    @Test
+    fun noteGraph() {
+        launch(pro = true) { seedLinkedNotes() }
+        click(s(AppR.string.nav_notebooks))
+        click(s(NotesR.string.notebooks_graph))
+        waitFor(hasText(s(NotesR.string.graph_orphans)))
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasContentDescription(s(com.behnamjalali.planb.core.designsystem.R.string.ds_loading))).fetchSemanticsNodes().isEmpty()
+        }
+        capture("notebooks", "note_graph")
+    }
+
+    @Test
+    fun writingMode() {
+        launch(pro = true) {
+            seedLinkedNotes()
+            settings.update { it.copy(writing = it.writing.copy(dailyGoal = 500, progressDate = fixtures.today, wordsToday = 320, streak = 4, goalReachedOn = fixtures.today.minusDays(1))) }
+        }
+        openTrip()
+        clickDescription(s(UiR.string.ui_more))
+        click(s(NotesR.string.writing_mode))
+        waitFor(hasContentDescription(s(NotesR.string.writing_exit)))
+        capture("notebooks", "writing_mode")
+    }
+
+    @Test
+    fun webClipper() {
+        launch(pro = true)
+        scenario?.close()
+        scenario = null
+        val intent = android.content.Intent(context, com.behnamjalali.planb.clipper.ClipperActivity::class.java)
+            .setAction(android.content.Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(android.content.Intent.EXTRA_SUBJECT, t("ده عادت برای صبح‌های آرام", "Ten habits for calm mornings"))
+            .putExtra(
+                android.content.Intent.EXTRA_TEXT,
+                t(
+                    "صبح‌ها را با یک لیوان آب شروع کنید.\n\n- ده دقیقه پیاده‌روی\n- نوشتن سه هدف روز\n\nhttps://example.com/calm-mornings",
+                    "Start the morning with a glass of water.\n\n- Ten minutes of walking\n- Write down three goals for the day\n\nhttps://example.com/calm-mornings",
+                ),
+            )
+        val clipper = ActivityScenario.launch<com.behnamjalali.planb.clipper.ClipperActivity>(intent)
+        try {
+            waitFor(hasText(s(NotesR.string.clipper_save)))
+            capture("notebooks", "web_clipper")
+        } finally {
+            clipper.close()
+        }
+    }
+
+    /** Journal pages with moods over the last weeks, today's page with a check-in and tags. */
+    private suspend fun seedJournal() {
+        val today = fixtures.today
+        val moods = listOf(4, 5, 3, 4, 2, 3, 4, 5, 4, 3, 1, 3, 4, 4, 5, 3, 2, 4, 5, 4)
+        moods.forEachIndexed { i, mood ->
+            val day = today.minusDays(i.toLong() + 1)
+            if (i % 4 == 3) return@forEachIndexed // a few days without a page
+            val id = journalPages.openPage(day, t("دفتر روزانه", "Journal"), day.toString(), null, null)
+            val page = notes.getNote(id)!!
+            notes.updateContent(id, page.title, page.document.copy(blocks = listOf(com.behnamjalali.planb.core.model.NoteBlock("t", com.behnamjalali.planb.core.model.BlockType.TEXT, t("روز آرامی بود؛ کمی کتاب خواندم.", "A calm day; I read for a while.")))))
+            journalPages.setPageMood(day, id, mood, (mood % 5) + 1)
+        }
+        val id = journalPages.openPage(today, t("دفتر روزانه", "Journal"), today.toString(), "p02", null)
+        journalPages.setPageMood(today, id, 4, 3)
+        journalPages.setTags(id, listOf(t("آرامش", "calm"), t("خانواده", "family")))
+    }
+
+    @Test
+    fun journal() {
+        launch(pro = true) { seedJournal() }
+        click(s(AppR.string.nav_notebooks))
+        click(s(NotesR.string.notebooks_journal))
+        waitFor(hasText(s(JournalR.string.journal_continue)))
+        capture("notebooks", "journal")
+    }
+
+    @Test
+    fun moodCalendar() {
+        launch(pro = true) { seedJournal() }
+        click(s(AppR.string.nav_notebooks))
+        click(s(NotesR.string.notebooks_journal))
+        clickDescription(s(JournalR.string.journal_calendar))
+        waitFor(hasText(s(JournalR.string.insights_weekday)))
+        capture("notebooks", "mood_calendar")
     }
 
     // endregion

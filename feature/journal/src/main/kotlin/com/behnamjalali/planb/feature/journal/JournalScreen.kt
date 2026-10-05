@@ -292,7 +292,7 @@ private fun TagsRow(state: JournalUi, onTags: (String) -> Unit) {
     Column(Modifier.padding(top = Spacing.sm)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.journal_tags), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-            if (!editing) TextButton(onClick = { editing = true }) { Text(stringResource(R.string.journal_tags_hint)) }
+            if (!editing) TextButton(onClick = { editing = true }) { Text(stringResource(R.string.journal_tags_edit)) }
         }
         if (state.tags.isNotEmpty() && !editing) {
             Text(state.tags.joinToString("  ") { "#$it" }, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)

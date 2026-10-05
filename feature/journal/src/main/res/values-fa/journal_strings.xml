@@ -24,6 +24,7 @@
     <string name="journal_tags">برچسب‌ها</string>
     <string name="journal_tags_hint">برچسب‌ها (با کاما جدا کنید)</string>
     <string name="journal_tags_save">ذخیرهٔ برچسب‌ها</string>
+    <string name="journal_tags_edit">ویرایش برچسب‌ها</string>
     <plurals name="journal_streak">
         <item quantity="one">%1$s روز پیاپی</item>
         <item quantity="other">%1$s روز پیاپی</item>

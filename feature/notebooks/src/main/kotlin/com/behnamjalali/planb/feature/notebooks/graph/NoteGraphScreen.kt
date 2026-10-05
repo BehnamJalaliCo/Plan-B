@@ -298,6 +298,8 @@ private fun GraphCanvas(
     val summary = stringResource(R.string.graph_summary, numbers.format(state.nodes.size), numbers.format(state.edges.size))
     val minRadius = with(density) { 4.dp.toPx() }
     val tapSlop = with(density) { 24.dp.toPx() }
+    // Room for the dots and their labels at the edges.
+    val margin = with(density) { 56.dp.toPx() }
     val currentZoom by androidx.compose.runtime.rememberUpdatedState(zoom)
     val currentPan by androidx.compose.runtime.rememberUpdatedState(pan)
     Canvas(
@@ -317,7 +319,7 @@ private fun GraphCanvas(
             .pointerInput(state.nodes) {
                 detectTapGestures { tap ->
                     val center = Offset(size.width / 2f, size.height / 2f)
-                    val base = min(size.width, size.height) / 2f * FILL
+                    val base = (min(size.width, size.height) / 2f - margin).coerceAtLeast(1f)
                     var best = -1
                     var bestDistance = Float.MAX_VALUE
                     state.nodes.forEachIndexed { i, node ->
@@ -332,11 +334,11 @@ private fun GraphCanvas(
             },
     ) {
         val center = Offset(size.width / 2f, size.height / 2f)
-        val base = min(size.width, size.height) / 2f * FILL
+        val base = (min(size.width, size.height) / 2f - margin).coerceAtLeast(1f)
         val positions = state.nodes.map { position(it, center, base, zoom, pan) }
         val dim = selectedIndex >= 0
         // Links first, so dots sit on top.
-        val lineColor = scheme.outlineVariant
+        val lineColor = scheme.outline.copy(alpha = 0.55f)
         state.edges.forEach { (a, b) ->
             val highlighted = a == selectedIndex || b == selectedIndex
             drawLine(
@@ -381,7 +383,6 @@ private fun DrawScope.drawLabel(label: TextLayoutResult, at: Offset, radius: Flo
     drawText(label, topLeft = Offset(at.x - label.size.width / 2f, at.y + radius + 2f))
 }
 
-private const val FILL = 0.88f
 private const val MIN_ZOOM = 0.4f
 private const val MAX_ZOOM = 6f
 private const val LABEL_LIMIT = 60
