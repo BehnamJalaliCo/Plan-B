@@ -97,4 +97,6 @@
     <string name="wear_habits">عادت‌ها</string>
     <string name="wear_empty">برای امروز کاری نمانده.</string>
     <string name="wear_locked">برنامهٔ ساعت به Plan-B Pro روی گوشی نیاز دارد.</string>
+    <!-- Share sheet entry of the web clipper (Plan-B Pro #22). -->
+    <string name="clipper_share_label">ذخیره در Plan-B</string>
 </resources>

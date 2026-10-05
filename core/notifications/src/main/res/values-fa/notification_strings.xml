@@ -18,4 +18,6 @@
     <string name="notif_ritual_morning_text">چند دقیقه برای چیدن روزتان وقت بگذارید.</string>
     <string name="notif_ritual_evening_title">جمع‌بندی پایان روز</string>
     <string name="notif_ritual_evening_text">روزتان را مرور کنید و با خیال راحت تمامش کنید.</string>
+    <string name="notif_journal_title">دفتر روزانه</string>
+    <string name="notif_journal_text">چند خط دربارهٔ امروز می‌نویسید؟</string>
 </resources>

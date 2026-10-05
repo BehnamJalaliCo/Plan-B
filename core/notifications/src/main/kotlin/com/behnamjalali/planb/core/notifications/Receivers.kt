@@ -179,6 +179,7 @@ class RescheduleReceiver : BroadcastReceiver() {
 
     @Inject lateinit var scheduler: AlarmReminderScheduler
     @Inject lateinit var rituals: RitualReminders
+    @Inject lateinit var journal: JournalReminders
     @Inject @ApplicationScope lateinit var scope: CoroutineScope
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -189,6 +190,7 @@ class RescheduleReceiver : BroadcastReceiver() {
             try {
                 scheduler.rescheduleAll()
                 rituals.sync()
+                journal.sync()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

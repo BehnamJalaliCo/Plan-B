@@ -23,4 +23,6 @@
     <string name="notif_ritual_morning_text">Take a few minutes to shape your day.</string>
     <string name="notif_ritual_evening_title">Evening shutdown</string>
     <string name="notif_ritual_evening_text">Look back on your day and close it with a clear mind.</string>
+    <string name="notif_journal_title">Your journal</string>
+    <string name="notif_journal_text">A few lines about today?</string>
 </resources>

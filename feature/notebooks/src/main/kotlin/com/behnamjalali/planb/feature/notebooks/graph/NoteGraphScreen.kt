@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -165,7 +166,7 @@ fun NoteGraphScreen(
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                     Text(
-                                        stringResource(R.string.graph_links, numbers.format(node.degree)),
+                                        pluralStringResource(R.plurals.graph_links, node.degree, numbers.format(node.degree)),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -266,7 +267,7 @@ private fun GraphList(state: GraphUi, onOpenNote: (EntityId) -> Unit) {
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
                     )
-                    Text(stringResource(R.string.graph_links, numbers.format(node.degree)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(pluralStringResource(R.plurals.graph_links, node.degree, numbers.format(node.degree)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

@@ -24,7 +24,10 @@
     <string name="history_restore">Restore this version</string>
     <string name="history_restore_confirm">Replace the note with this version? What it says now is kept as a version first.</string>
     <string name="history_restored">Version restored</string>
-    <string name="history_words">%1$s words</string>
+    <plurals name="history_words">
+        <item quantity="one">%1$s word</item>
+        <item quantity="other">%1$s words</item>
+    </plurals>
     <string name="history_changes">%1$s added, %2$s removed</string>
     <string name="history_no_changes">Same as the note now</string>
     <string name="history_just_now">Just now</string>
@@ -40,7 +43,10 @@
     <string name="graph_all_notebooks">All notebooks</string>
     <string name="graph_all_tags">All tags</string>
     <string name="graph_open">Open</string>
-    <string name="graph_links">%1$s links</string>
+    <plurals name="graph_links">
+        <item quantity="one">%1$s link</item>
+        <item quantity="other">%1$s links</item>
+    </plurals>
     <string name="graph_summary">Graph of %1$s notes and %2$s links</string>
     <string name="graph_capped">Showing the %1$s most linked notes</string>
     <string name="graph_empty_title">No notes to show</string>
@@ -54,8 +60,14 @@
     <!-- Writing mode -->
     <string name="writing_mode">Writing mode</string>
     <string name="writing_exit">Exit writing mode</string>
-    <string name="writing_words">%1$s words</string>
-    <string name="writing_characters">%1$s characters</string>
+    <plurals name="writing_words">
+        <item quantity="one">%1$s word</item>
+        <item quantity="other">%1$s words</item>
+    </plurals>
+    <plurals name="writing_characters">
+        <item quantity="one">%1$s character</item>
+        <item quantity="other">%1$s characters</item>
+    </plurals>
     <string name="writing_goal_progress">%1$s of %2$s words today</string>
     <string name="writing_goal_done">Today’s goal reached</string>
     <string name="writing_streak">%1$s-day streak</string>
@@ -82,5 +94,8 @@
     <string name="clipper_preview">Preview</string>
     <string name="clipper_failed">The note could not be saved. Please try again.</string>
     <string name="clipper_default_title">Saved from the web</string>
-    <string name="clipper_more_blocks">and %1$s more paragraphs</string>
+    <plurals name="clipper_more_blocks">
+        <item quantity="one">and %1$s more paragraph</item>
+        <item quantity="other">and %1$s more paragraphs</item>
+    </plurals>
 </resources>

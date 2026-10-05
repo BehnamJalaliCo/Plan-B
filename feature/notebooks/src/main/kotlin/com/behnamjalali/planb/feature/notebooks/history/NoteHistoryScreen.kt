@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -256,7 +257,7 @@ private fun VersionCard(row: VersionRow, state: NoteHistoryState, onClick: () ->
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            stringResource(R.string.history_words, PlannerLocals.numbers.format(row.words)) + metaSeparator() + changesText(row),
+            pluralStringResource(R.plurals.history_words, row.words, PlannerLocals.numbers.format(row.words)) + metaSeparator() + changesText(row),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

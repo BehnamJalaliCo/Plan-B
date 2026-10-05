@@ -77,3 +77,28 @@ object ClipParser {
 
     private fun host(url: String): String? = url.substringAfter("://").substringBefore('/').substringBefore('?').removePrefix("www.").takeIf { it.isNotBlank() }
 }
+
+/** Validation of what the share sheet delivers (Plan-B Pro #22): only text shares are accepted. */
+object ClipIntentInput {
+    const val ACTION_SEND = "android.intent.action.SEND"
+
+    /** Reading stops here even before parsing, so a huge extra is never copied whole. */
+    private const val READ_LIMIT = ClipParser.MAX_HTML + 1
+
+    /**
+     * The share's text parts, or null when it is not an `ACTION_SEND` of `text/plain` or
+     * `text/html` or carries no text at all. Streams (files) are never read.
+     */
+    fun from(action: String?, type: String?, text: CharSequence?, html: String?, subject: String?, title: String?): ClipInput? {
+        if (action != ACTION_SEND) return null
+        val mime = type?.substringBefore(';')?.trim()?.lowercase()
+        if (mime != "text/plain" && mime != "text/html") return null
+        val input = ClipInput(
+            text = text?.let { it.subSequence(0, minOf(it.length, READ_LIMIT)).toString() },
+            html = html?.take(READ_LIMIT),
+            subject = subject?.take(ClipParser.MAX_TITLE * 2),
+            title = title?.take(ClipParser.MAX_TITLE * 2),
+        )
+        return input.takeIf { !it.text.isNullOrBlank() || !it.html.isNullOrBlank() }
+    }
+}

@@ -103,6 +103,26 @@
                 android:resource="@xml/shortcuts" />
         </activity-alias>
 
+        <!--
+          Web clipper (Plan-B Pro #22): "Save to Plan-B" in the share sheet. Only text shares
+          (plain text, HTML, links) are accepted; streams are never read. Behind the app lock.
+        -->
+        <activity
+            android:name=".clipper.ClipperActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/clipper_share_label"
+            android:taskAffinity=""
+            android:theme="@style/Theme.PlanB.Clipper"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="text/html" />
+            </intent-filter>
+        </activity>
+
         <!-- "Start focus" launcher shortcut (Plan-B Pro #34): no UI, forwards to MainActivity. -->
         <activity
             android:name=".quick.QuickActionActivity"

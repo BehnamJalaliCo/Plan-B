@@ -50,6 +50,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -202,7 +203,7 @@ private fun WritingStatusBar(
         Column(Modifier.weight(1f)) {
             val separator = metaSeparator()
             Text(
-                stringResource(R.string.writing_words, numbers.format(words)) + separator + stringResource(R.string.writing_characters, numbers.format(characters)),
+                pluralStringResource(R.plurals.writing_words, words, numbers.format(words)) + separator + pluralStringResource(R.plurals.writing_characters, characters, numbers.format(characters)),
                 style = MaterialTheme.typography.labelLarge,
                 color = muted,
                 maxLines = 1,

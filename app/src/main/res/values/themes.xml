@@ -6,6 +6,13 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
+    <!-- The web clipper's sheet floats over the app that shared (Plan-B Pro #22). -->
+    <style name="Theme.PlanB.Clipper" parent="Theme.PlanB">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+
     <!-- Launch theme: the system splash shows the brand mark on the app background and
          stays only until stored settings are loaded (see MainActivity). -->
     <style name="Theme.PlanB.Starting" parent="Theme.SplashScreen">

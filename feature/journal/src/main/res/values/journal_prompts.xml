@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Daily journal prompts (Plan-B Pro #25). Keys p01…p60 are the positions in this list: only append, never reorder. -->
+<resources>
+    <string-array name="journal_prompts">
+        <item>What are three things you are grateful for today?</item>
+        <item>What made you smile today?</item>
+        <item>What is one thing you learned today?</item>
+        <item>What drained your energy today, and what gave you energy?</item>
+        <item>What would make tomorrow a good day?</item>
+        <item>Describe a moment from today you want to remember.</item>
+        <item>What is on your mind right now?</item>
+        <item>Who helped you recently, and how could you thank them?</item>
+        <item>What challenge did you face today, and how did you handle it?</item>
+        <item>What are you looking forward to this week?</item>
+        <item>What did you do today that you are proud of?</item>
+        <item>If today had a title, what would it be?</item>
+        <item>What small thing could you do tomorrow to take care of yourself?</item>
+        <item>What did you put off today, and why?</item>
+        <item>What would you tell yourself from a year ago?</item>
+        <item>Which conversation stayed with you today?</item>
+        <item>What surprised you today?</item>
+        <item>Where did you feel most at ease today?</item>
+        <item>Which worry can you let go of tonight?</item>
+        <item>What does a perfect ordinary day look like for you?</item>
+        <item>What habit are you building, and how is it going?</item>
+        <item>What have you changed your mind about lately?</item>
+        <item>Describe a place where you feel calm.</item>
+        <item>What are you curious about these days?</item>
+        <item>What did you notice outdoors today?</item>
+        <item>Write about someone you miss.</item>
+        <item>Which goal matters to you most, and what is the next step?</item>
+        <item>What kind words did you hear or say today?</item>
+        <item>What took more time today than it should have?</item>
+        <item>What would you do with a free afternoon tomorrow?</item>
+        <item>What made today different from yesterday?</item>
+        <item>Which of your strengths did you use today?</item>
+        <item>What are you holding on to that you could let go of?</item>
+        <item>Which memory still makes you laugh?</item>
+        <item>Which book, film or song has stayed with you recently?</item>
+        <item>How did you rest today?</item>
+        <item>Which boundary did you keep today, or wish you had kept?</item>
+        <item>What do you want to remember about this time of your life?</item>
+        <item>When did you feel most focused today?</item>
+        <item>What did you eat today that you enjoyed?</item>
+        <item>What would you love to learn next?</item>
+        <item>What would make this week feel complete?</item>
+        <item>Write a short letter to your future self.</item>
+        <item>What did today teach you about yourself?</item>
+        <item>Who would you like to spend more time with?</item>
+        <item>What are you ready to start?</item>
+        <item>What was a small win today?</item>
+        <item>What felt heavy today, and what felt light?</item>
+        <item>What does “enough” mean for you this week?</item>
+        <item>What are you grateful for in your home?</item>
+        <item>What would you like to say no to?</item>
+        <item>Describe today in five words.</item>
+        <item>Which question do you keep asking yourself?</item>
+        <item>What made you feel close to others today?</item>
+        <item>What did you make today, big or small?</item>
+        <item>Which promise to yourself did you keep?</item>
+        <item>If you could live today again, what would you do differently?</item>
+        <item>What is one thing you could make simpler?</item>
+        <item>What gives your days meaning?</item>
+        <item>How are you, really?</item>
+    </string-array>
+</resources>

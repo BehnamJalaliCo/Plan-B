@@ -24,7 +24,10 @@
     <string name="history_restore">بازگرداندن این نسخه</string>
     <string name="history_restore_confirm">یادداشت با این نسخه جایگزین شود؟ متن فعلی پیش از آن به‌صورت یک نسخه نگه داشته می‌شود.</string>
     <string name="history_restored">نسخه بازگردانده شد</string>
-    <string name="history_words">%1$s واژه</string>
+    <plurals name="history_words">
+        <item quantity="one">%1$s واژه</item>
+        <item quantity="other">%1$s واژه</item>
+    </plurals>
     <string name="history_changes">%1$s خط افزوده، %2$s خط حذف‌شده</string>
     <string name="history_no_changes">با متن فعلی یکی است</string>
     <string name="history_just_now">همین حالا</string>
@@ -40,7 +43,10 @@
     <string name="graph_all_notebooks">همهٔ دفترچه‌ها</string>
     <string name="graph_all_tags">همهٔ برچسب‌ها</string>
     <string name="graph_open">باز کردن</string>
-    <string name="graph_links">%1$s پیوند</string>
+    <plurals name="graph_links">
+        <item quantity="one">%1$s پیوند</item>
+        <item quantity="other">%1$s پیوند</item>
+    </plurals>
     <string name="graph_summary">گراف %1$s یادداشت و %2$s پیوند</string>
     <string name="graph_capped">%1$s یادداشتِ پرپیوندتر نمایش داده می‌شود</string>
     <string name="graph_empty_title">یادداشتی برای نمایش نیست</string>
@@ -54,8 +60,14 @@
     <!-- Writing mode -->
     <string name="writing_mode">حالت نوشتن</string>
     <string name="writing_exit">خروج از حالت نوشتن</string>
-    <string name="writing_words">%1$s واژه</string>
-    <string name="writing_characters">%1$s نویسه</string>
+    <plurals name="writing_words">
+        <item quantity="one">%1$s واژه</item>
+        <item quantity="other">%1$s واژه</item>
+    </plurals>
+    <plurals name="writing_characters">
+        <item quantity="one">%1$s نویسه</item>
+        <item quantity="other">%1$s نویسه</item>
+    </plurals>
     <string name="writing_goal_progress">امروز %1$s از %2$s واژه</string>
     <string name="writing_goal_done">هدف امروز انجام شد</string>
     <string name="writing_streak">%1$s روز پیاپی</string>
@@ -82,5 +94,8 @@
     <string name="clipper_preview">پیش‌نمایش</string>
     <string name="clipper_failed">یادداشت ذخیره نشد. دوباره امتحان کنید.</string>
     <string name="clipper_default_title">ذخیره‌شده از وب</string>
-    <string name="clipper_more_blocks">و %1$s بند دیگر</string>
+    <plurals name="clipper_more_blocks">
+        <item quantity="one">و %1$s بند دیگر</item>
+        <item quantity="other">و %1$s بند دیگر</item>
+    </plurals>
 </resources>

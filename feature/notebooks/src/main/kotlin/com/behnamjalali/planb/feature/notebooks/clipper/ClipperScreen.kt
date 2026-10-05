@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -28,10 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.repository.NoteRepository
@@ -146,10 +147,7 @@ fun ClipperSheetContent(
     Column(
         Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = Spacing.screen)
-            .padding(bottom = Spacing.xl)
-            .navigationBarsPadding(),
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
@@ -232,7 +230,7 @@ private fun ClipForm(
             }
             if (preview.size > PREVIEW_BLOCKS) {
                 Text(
-                    stringResource(R.string.clipper_more_blocks, com.behnamjalali.planb.core.ui.PlannerLocals.numbers.format(preview.size - PREVIEW_BLOCKS)),
+                    pluralStringResource(R.plurals.clipper_more_blocks, preview.size - PREVIEW_BLOCKS, com.behnamjalali.planb.core.ui.PlannerLocals.numbers.format(preview.size - PREVIEW_BLOCKS)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -251,3 +249,30 @@ private fun ClipForm(
 }
 
 private const val PREVIEW_BLOCKS = 4
+
+/** The clipper as a bottom sheet over the sharing app; [onFinish] closes it. */
+@Composable
+fun ClipperSheet(
+    input: ClipInput?,
+    onOpenNote: (EntityId) -> Unit,
+    onFinish: () -> Unit,
+    viewModel: ClipperViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel(),
+) {
+    val defaultTitle = stringResource(R.string.clipper_default_title)
+    val defaultNotebook = stringResource(com.behnamjalali.planb.core.data.R.string.data_default_notebook)
+    androidx.compose.runtime.LaunchedEffect(viewModel) { viewModel.start(input ?: ClipInput(), defaultTitle) }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val notebooks by viewModel.notebooks.collectAsStateWithLifecycle()
+    com.behnamjalali.planb.core.designsystem.component.PlannerBottomSheet(onDismiss = onFinish) {
+        ClipperSheetContent(
+            state = state,
+            notebooks = notebooks,
+            onTitle = viewModel::setTitle,
+            onTags = viewModel::setTags,
+            onNotebook = viewModel::setNotebook,
+            onSave = { viewModel.save(defaultNotebook) },
+            onOpen = onOpenNote,
+            onClose = onFinish,
+        )
+    }
+}
