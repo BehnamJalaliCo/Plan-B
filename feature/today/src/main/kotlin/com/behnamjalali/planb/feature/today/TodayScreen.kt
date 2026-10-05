@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AutoMode
+import androidx.compose.material.icons.rounded.Update
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.Event
@@ -26,6 +28,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.material.icons.rounded.WbTwilight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -61,6 +64,7 @@ import com.behnamjalali.planb.core.ui.PlannerLocals
 import com.behnamjalali.planb.core.ui.PlannerNoteCard
 import com.behnamjalali.planb.core.ui.PlannerProjectCard
 import com.behnamjalali.planb.core.ui.PlannerTaskCard
+import com.behnamjalali.planb.feature.today.plan.PlanMode
 
 /** Navigation callbacks out of Today. */
 data class TodayActions(
@@ -78,6 +82,11 @@ data class TodayActions(
     val onOpenSearch: () -> Unit = {},
     val onNewNote: () -> Unit = {},
     val onCustomize: () -> Unit = {},
+    /** Plan-B Pro smart day: rituals (#8), "Plan my day"/"Replan" (#5) and their settings. */
+    val onOpenRitual: (RitualKind) -> Unit = {},
+    val onOpenDayPlanSettings: () -> Unit = {},
+    val onRituals: () -> Unit = {},
+    val onPlanDay: (PlanMode) -> Unit = {},
 )
 
 @Composable
@@ -116,6 +125,7 @@ private fun TodayContent(
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
         item(key = "header", contentType = "header") { TodayHeader(data, actions) }
+        item(key = "smart_day", contentType = "smartDay") { SmartDayCard(data, actions) }
         data.dashboard.visibleSections.forEach { section ->
             when (section) {
                 DashboardSection.SUMMARY -> item(key = "summary", contentType = "summary") { SummaryRow(data) }
@@ -157,6 +167,7 @@ private fun TodayHeader(data: TodayData, actions: TodayActions) {
                     modifier = Modifier.semantics { heading() },
                 )
             }
+            PlannerIconButton(Icons.Rounded.WbTwilight, stringResource(R.string.today_rituals), actions.onRituals)
             PlannerIconButton(Icons.Rounded.Search, stringResource(R.string.today_search), actions.onOpenSearch)
             PlannerIconButton(Icons.Rounded.Dashboard, stringResource(R.string.today_customize), actions.onCustomize)
         }
@@ -423,6 +434,61 @@ private fun LazyListScope.notesSection(data: TodayData, actions: TodayActions) {
             style = com.behnamjalali.planb.core.designsystem.component.PlannerButtonStyle.Tonal,
             icon = Icons.Rounded.Add,
         )
+    }
+}
+
+/**
+ * Plan-B Pro smart day: "Plan my day", "Replan" when time blocks were missed, and the top 3
+ * picked in the morning ritual. Free users see the same calm entry with a Pro badge.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun SmartDayCard(data: TodayData, actions: TodayActions) {
+    val isPro = com.behnamjalali.planb.core.ui.LocalProAccess.current.isPro
+    val numbers = PlannerLocals.numbers
+    val focus = if (isPro) data.focusTasks else emptyList()
+    PlannerCard(Modifier.fillMaxWidth()) {
+        if (focus.isNotEmpty()) {
+            Text(stringResource(R.string.today_top3), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+            focus.forEachIndexed { index, task ->
+                Text(
+                    "${numbers.format(index + 1)}. ${task.title}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(vertical = Spacing.xxs),
+                )
+            }
+            Spacer(Modifier.height(Spacing.sm))
+        } else {
+            Text(
+                stringResource(R.string.today_smart_day_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(Spacing.sm))
+        }
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            com.behnamjalali.planb.core.designsystem.component.PlannerButton(
+                text = stringResource(R.string.today_plan_day),
+                onClick = { actions.onPlanDay(PlanMode.PLAN) },
+                style = com.behnamjalali.planb.core.designsystem.component.PlannerButtonStyle.Tonal,
+                icon = Icons.Rounded.AutoMode,
+            )
+            if (isPro && data.missedBlocks > 0) {
+                com.behnamjalali.planb.core.designsystem.component.PlannerButton(
+                    text = stringResource(R.string.today_replan, numbers.format(data.missedBlocks)),
+                    onClick = { actions.onPlanDay(PlanMode.REPLAN) },
+                    style = com.behnamjalali.planb.core.designsystem.component.PlannerButtonStyle.Outlined,
+                    icon = Icons.Rounded.Update,
+                )
+            }
+            if (!isPro) com.behnamjalali.planb.core.ui.ProBadge()
+        }
     }
 }
 
