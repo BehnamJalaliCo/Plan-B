@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Plan-B Pro planning in the task editor (#11, #12, #14) -->
+    <string name="task_editor_deadline">Deadline</string>
+    <string name="task_editor_more_reminders">More reminders</string>
+    <string name="task_editor_add_reminder">Add reminder</string>
+    <!-- %1$s: the maximum number of reminders, formatted -->
+    <string name="task_editor_reminders_full">Up to %1$s reminders per task</string>
+    <string name="task_editor_remove_reminder">Remove reminder: %1$s</string>
+    <string name="task_editor_reminder_needs_due">Set a planned date first.</string>
+    <string name="task_editor_reminder_needs_deadline">Set a deadline first.</string>
+    <string name="task_editor_reminder_date">Date</string>
+    <string name="task_editor_reminder_time">Time</string>
+    <string name="task_editor_nag">Nag until done</string>
+    <string name="task_editor_nag_hint">Repeats the reminder until you mark the task done.</string>
+    <string name="task_editor_nag_every">Every %1$s min</string>
+    <string name="task_editor_blocked_by">Waits for</string>
+    <string name="task_editor_add_blocker">Add a task to wait for</string>
+    <string name="task_editor_remove_blocker">Remove %1$s</string>
+    <string name="task_editor_blocker_done">Done</string>
+    <string name="task_editor_pick_blocker">Wait for which task?</string>
+    <string name="task_editor_blocker_search">Search tasks</string>
+    <string name="task_editor_no_candidates">No other open tasks</string>
+    <string name="task_editor_cycle">That task already waits for this one, so it can’t block it.</string>
+
+    <!-- Tasks screen -->
+    <string name="tasks_sort_deadline">Deadline</string>
+    <string name="tasks_eisenhower">Eisenhower matrix</string>
+    <string name="tasks_new_smart_list">Smart list</string>
+    <string name="tasks_edit_smart_list">Edit list</string>
+    <string name="tasks_manage_smart_lists">Manage lists</string>
+    <string name="tasks_empty_smart_list">No tasks match this list right now.</string>
+
+    <!-- Smart lists (#10) -->
+    <string name="smart_list_new">New smart list</string>
+    <string name="smart_list_edit">Edit smart list</string>
+    <string name="smart_list_name">Name</string>
+    <string name="smart_list_name_required">Give the list a name</string>
+    <string name="smart_list_icon">Icon</string>
+    <string name="smart_list_color">Color</string>
+    <string name="smart_list_projects">Projects</string>
+    <string name="smart_list_no_project">No project</string>
+    <string name="smart_list_tags">Tags</string>
+    <string name="smart_list_priority">Priority</string>
+    <string name="smart_list_status">Status</string>
+    <string name="smart_list_date">Planned date</string>
+    <string name="smart_list_date_any">Any</string>
+    <string name="smart_list_date_overdue">Overdue</string>
+    <string name="smart_list_date_today">Today</string>
+    <string name="smart_list_date_next_7">Next %1$s days</string>
+    <string name="smart_list_date_none">No date</string>
+    <string name="smart_list_date_custom">Range</string>
+    <string name="smart_list_from">From</string>
+    <string name="smart_list_to">To</string>
+    <string name="smart_list_deadline">Deadline</string>
+    <string name="smart_list_deadline_any">Either</string>
+    <string name="smart_list_deadline_yes">Has a deadline</string>
+    <string name="smart_list_deadline_no">No deadline</string>
+    <string name="smart_list_text">Contains text</string>
+    <string name="smart_list_sort">Sort by</string>
+    <string name="smart_list_any_hint">Nothing chosen means any.</string>
+    <plurals name="smart_list_matches">
+        <item quantity="one">%1$s task matches now</item>
+        <item quantity="other">%1$s tasks match now</item>
+    </plurals>
+    <string name="smart_list_save">Save list</string>
+    <string name="smart_list_delete">Delete list</string>
+    <string name="smart_list_delete_confirm">The list is removed; its tasks stay as they are.</string>
+    <string name="smart_lists_title">Smart lists</string>
+    <string name="smart_lists_empty_title">No smart lists yet</string>
+    <string name="smart_lists_empty">Save a filter, like “high priority this week”, and open it from Tasks.</string>
+    <string name="smart_lists_move_up">Move %1$s up</string>
+    <string name="smart_lists_move_down">Move %1$s down</string>
+    <string name="smart_lists_edit">Edit %1$s</string>
+    <string name="smart_lists_delete">Delete %1$s</string>
+
+    <!-- Eisenhower matrix (#13) -->
+    <string name="eisenhower_title">Eisenhower matrix</string>
+    <string name="eisenhower_do">Do now</string>
+    <string name="eisenhower_do_sub">Urgent and important</string>
+    <string name="eisenhower_schedule">Plan</string>
+    <string name="eisenhower_schedule_sub">Important, not urgent</string>
+    <string name="eisenhower_delegate">Delegate</string>
+    <string name="eisenhower_delegate_sub">Urgent, not important</string>
+    <string name="eisenhower_eliminate">Drop</string>
+    <string name="eisenhower_eliminate_sub">Neither</string>
+    <!-- %1$s: number of days -->
+    <string name="eisenhower_threshold">Urgent within %1$s days</string>
+    <string name="eisenhower_hint">Important means high or medium priority. Hold a task and drag it to another box.</string>
+    <string name="eisenhower_move_to">Move to %1$s</string>
+    <string name="eisenhower_empty">Nothing here</string>
+    <string name="eisenhower_kept_urgent">Its deadline is near, so it stays urgent.</string>
+</resources>

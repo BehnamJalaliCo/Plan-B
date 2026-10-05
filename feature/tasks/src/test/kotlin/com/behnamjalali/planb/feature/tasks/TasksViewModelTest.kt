@@ -53,7 +53,7 @@ class TasksViewModelTest {
     /** A handle with a saved view skips the async default-view lookup from settings. */
     private fun viewModel(view: TaskView? = TaskView.TODAY): TasksViewModel {
         val handle = if (view == null) SavedStateHandle() else SavedStateHandle(mapOf("tasks_view" to view.name))
-        return main.track(TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope)).also {
+        return main.track(TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope, graph.smartLists)).also {
             main.keepCollecting(it.uiState)
         }
     }
@@ -262,11 +262,11 @@ class TasksViewModelTest {
     @Test
     fun searchText_survivesProcessDeath() = runBlocking<Unit> {
         val handle = SavedStateHandle(mapOf("tasks_view" to TaskView.ALL.name))
-        val vm = main.track(TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope))
+        val vm = main.track(TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope, graph.smartLists))
         vm.setQuery("next")
         assertThat(handle.get<String>("tasks_query")).isEqualTo("next")
 
-        val restored = main.track(TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope))
+        val restored = main.track(TasksViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, main.scope, graph.smartLists))
         main.keepCollecting(restored.uiState)
         val state = restored.awaitTitles(TaskView.ALL, "Next week")
         assertThat(state.filter.query).isEqualTo("next")

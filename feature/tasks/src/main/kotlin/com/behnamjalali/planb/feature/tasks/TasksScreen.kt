@@ -23,6 +23,8 @@ import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Inbox
 import androidx.compose.material.icons.rounded.SelectAll
@@ -64,8 +66,13 @@ import com.behnamjalali.planb.core.designsystem.theme.Spacing
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.TaskSort
 import com.behnamjalali.planb.core.model.TaskView
+import com.behnamjalali.planb.core.ui.CompleteBlockedDialog
 import com.behnamjalali.planb.core.ui.PlannerLocals
 import com.behnamjalali.planb.core.ui.PlannerTaskCard
+import com.behnamjalali.planb.core.ui.ProBadge
+import com.behnamjalali.planb.core.ui.ProFeature
+import com.behnamjalali.planb.core.ui.rememberProGuard
+import com.behnamjalali.planb.core.ui.vector
 import kotlinx.coroutines.launch
 
 @Composable
@@ -89,6 +96,7 @@ private fun sortLabel(sort: TaskSort): String = stringResource(
         TaskSort.PRIORITY -> R.string.tasks_sort_priority
         TaskSort.CREATED -> R.string.tasks_sort_created
         TaskSort.TITLE -> R.string.tasks_sort_title
+        TaskSort.DEADLINE -> R.string.tasks_sort_deadline
     },
 )
 
@@ -111,6 +119,12 @@ data class TasksCallbacks(
     val onDelete: (Collection<EntityId>) -> Unit = {},
     val onDuplicate: (EntityId) -> Unit = {},
     val onMove: (EntityId, Int) -> Unit = { _, _ -> },
+    /** Plan-B Pro #10 smart lists and #13 Eisenhower matrix. */
+    val onSmartList: (EntityId) -> Unit = {},
+    val onNewSmartList: () -> Unit = {},
+    val onEditSmartList: (EntityId) -> Unit = {},
+    val onManageSmartLists: () -> Unit = {},
+    val onOpenEisenhower: () -> Unit = {},
 )
 
 @Composable
@@ -125,13 +139,17 @@ fun TasksScreen(
             SelectionBar(state, callbacks)
         } else {
             var sortMenu by remember { mutableStateOf(false) }
+            val guard = rememberProGuard()
             PlannerTopBar(
                 title = stringResource(R.string.tasks_title),
                 actions = {
+                    PlannerIconButton(Icons.Rounded.GridView, stringResource(R.string.tasks_eisenhower), callbacks.onOpenEisenhower)
                     Box {
                         PlannerIconButton(Icons.AutoMirrored.Rounded.Sort, stringResource(R.string.tasks_sort), { sortMenu = true })
                         DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
                             TaskSort.entries.forEach { sort ->
+                                // Sorting by deadline is part of Plan-B Pro deadlines (#11).
+                                val pro = sort == TaskSort.DEADLINE
                                 DropdownMenuItem(
                                     text = { Text(sortLabel(sort)) },
                                     leadingIcon = if (sort == state.filter.sort) {
@@ -139,9 +157,14 @@ fun TasksScreen(
                                     } else {
                                         null
                                     },
+                                    trailingIcon = if (pro && !guard.isPro) {
+                                        { ProBadge() }
+                                    } else {
+                                        null
+                                    },
                                     onClick = {
-                                        callbacks.onSortChange(sort)
                                         sortMenu = false
+                                        if (pro) guard.run(ProFeature.DEADLINES) { callbacks.onSortChange(sort) } else callbacks.onSortChange(sort)
                                     },
                                 )
                             }
@@ -164,7 +187,7 @@ fun TasksScreen(
             items(VIEW_ORDER) { view ->
                 PlannerChip(
                     label = taskViewLabel(view),
-                    selected = view == state.filter.view,
+                    selected = view == state.filter.view && state.activeSmartList == null,
                     onClick = { callbacks.onViewChange(view) },
                     icon = when (view) {
                         TaskView.INBOX -> Icons.Rounded.Inbox
@@ -175,11 +198,36 @@ fun TasksScreen(
                     },
                 )
             }
+            // Custom smart lists (Plan-B Pro #10), in the user's order; stay readable if Pro ends.
+            items(state.smartLists, key = { "smart-${it.id}" }) { list ->
+                PlannerChip(
+                    label = list.name,
+                    selected = list.id == state.filter.smartListId,
+                    onClick = { callbacks.onSmartList(list.id) },
+                    icon = list.icon.vector,
+                    accent = PlanBTheme.colors.accent(list.color),
+                )
+            }
+            item(key = "smart-new") {
+                val guard = rememberProGuard()
+                PlannerChip(
+                    label = stringResource(R.string.tasks_new_smart_list),
+                    selected = false,
+                    onClick = { guard.run(ProFeature.SMART_LISTS, callbacks.onNewSmartList) },
+                    icon = Icons.Rounded.Add,
+                )
+            }
         }
-        FilterRow(state, callbacks)
+        val smartList = state.activeSmartList
+        if (smartList != null) SmartListRow(smartList.id, callbacks) else FilterRow(state, callbacks)
         when {
             state.loading -> PlannerLoadingState()
             state.error -> PlannerErrorState(stringResource(R.string.tasks_error))
+            state.tasks.isEmpty() && smartList != null -> PlannerEmptyState(
+                icon = smartList.icon.vector,
+                title = smartList.name,
+                message = stringResource(R.string.tasks_empty_smart_list),
+            )
             state.tasks.isEmpty() -> EmptyTasks(state, callbacks)
             else -> TaskList(state, callbacks, contentPadding)
         }
@@ -241,6 +289,19 @@ private fun FilterRow(state: TasksUiState, callbacks: TasksCallbacks) {
     }
 }
 
+/** Actions of the open smart list: edit it, or manage (reorder, delete) all of them. */
+@Composable
+private fun SmartListRow(id: EntityId, callbacks: TasksCallbacks) {
+    val guard = rememberProGuard()
+    Row(
+        Modifier.padding(horizontal = Spacing.screen).padding(bottom = Spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+    ) {
+        PlannerChip(stringResource(R.string.tasks_edit_smart_list), false, { guard.run(ProFeature.SMART_LISTS) { callbacks.onEditSmartList(id) } }, icon = Icons.Rounded.Edit)
+        PlannerChip(stringResource(R.string.tasks_manage_smart_lists), false, { guard.run(ProFeature.SMART_LISTS, callbacks.onManageSmartLists) }, icon = Icons.AutoMirrored.Rounded.Sort)
+    }
+}
+
 @Composable
 private fun EmptyTasks(state: TasksUiState, callbacks: TasksCallbacks) {
     val filtered = state.filter.query.isNotBlank() || state.filter.projectId != null || state.filter.tagId != null
@@ -266,6 +327,15 @@ private fun TaskList(state: TasksUiState, callbacks: TasksCallbacks, contentPadd
     val moveDown = stringResource(R.string.tasks_action_move_down)
     val deleteLabel = stringResource(R.string.tasks_action_delete)
     val duplicateLabel = stringResource(R.string.tasks_action_duplicate)
+    // A swipe that would complete a task still waiting for others asks first (Plan-B Pro #14).
+    var confirmBlocked by rememberSaveable { mutableStateOf<Long?>(null) }
+    confirmBlocked?.let { id ->
+        val count = state.tasks.firstOrNull { it.id == id }?.openBlockerCount ?: 0
+        CompleteBlockedDialog(count, onDismiss = { confirmBlocked = null }) {
+            confirmBlocked = null
+            callbacks.onToggleComplete(id, true)
+        }
+    }
     LazyColumn(
         contentPadding = PaddingValues(
             start = Spacing.screen,
@@ -286,7 +356,9 @@ private fun TaskList(state: TasksUiState, callbacks: TasksCallbacks, contentPadd
             }
             SwipeableTask(
                 enabled = !state.selecting,
-                onComplete = { callbacks.onToggleComplete(task.id, !task.isCompleted) },
+                onComplete = {
+                    if (!task.isCompleted && task.isBlocked) confirmBlocked = task.id else callbacks.onToggleComplete(task.id, !task.isCompleted)
+                },
                 onDelete = { callbacks.onDelete(listOf(task.id)) },
                 modifier = Modifier
                     .animateItem()

@@ -79,6 +79,7 @@ import com.behnamjalali.planb.core.model.Project
 import com.behnamjalali.planb.core.model.RecurrenceRule
 import com.behnamjalali.planb.core.model.Task
 import com.behnamjalali.planb.core.model.TaskStatus
+import com.behnamjalali.planb.core.ui.CompleteBlockedDialog
 import com.behnamjalali.planb.core.ui.CustomRecurrenceDialog
 import com.behnamjalali.planb.core.ui.EditorRow
 import com.behnamjalali.planb.core.ui.LocalProAccess
@@ -107,6 +108,8 @@ fun TaskEditorDestination(
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val subtasks by viewModel.subtasks.collectAsStateWithLifecycle()
     val calendarSystem by viewModel.calendarSystem.collectAsStateWithLifecycle()
+    val blockers by viewModel.blockers.collectAsStateWithLifecycle()
+    val candidates by viewModel.dependencyCandidates.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -117,6 +120,7 @@ fun TaskEditorDestination(
             when (event) {
                 is EditorEvent.Saved, EditorEvent.Deleted -> onClose()
                 EditorEvent.Failed -> snackbar.showSnackbar(resources.getString(R.string.tasks_error))
+                EditorEvent.DependencyCycle -> snackbar.showSnackbar(resources.getString(R.string.task_editor_cycle))
                 EditorEvent.NotFound -> {
                     snackbar.showSnackbar(resources.getString(R.string.task_editor_not_found))
                     onClose()
@@ -149,6 +153,17 @@ fun TaskEditorDestination(
         onSave = { pendingTag -> viewModel.save(pendingTag) },
         onDelete = viewModel::delete,
         onActivity = onOpenActivity?.let { open -> { open(viewModel.taskId) } },
+        blockers = blockers,
+        dependencyCandidates = candidates,
+        planning = TaskPlanningCallbacks(
+            onDeadline = { /* The screen opens its date picker. */ },
+            onAddReminder = viewModel::addReminder,
+            onRemoveReminder = viewModel::removeReminder,
+            onNag = { on, interval -> viewModel.setNag(on, interval) },
+            onAddBlocker = viewModel::addBlocker,
+            onRemoveBlocker = viewModel::removeBlocker,
+        ),
+        onDeadline = viewModel::setDeadline,
     )
 
     if (confirmDiscard) {
@@ -191,6 +206,10 @@ fun TaskEditorScreen(
     onSave: (pendingTag: String) -> Unit,
     onDelete: () -> Unit,
     onActivity: (() -> Unit)? = null,
+    blockers: List<Task> = emptyList(),
+    dependencyCandidates: List<Task> = emptyList(),
+    planning: TaskPlanningCallbacks = TaskPlanningCallbacks(),
+    onDeadline: (LocalDate?) -> Unit = {},
 ) {
     val formatter = PlannerLocals.formatter
     val today = PlannerLocals.today
@@ -202,6 +221,8 @@ fun TaskEditorScreen(
     var projectMenu by remember { mutableStateOf(false) }
     var customRepeat by rememberSaveable { mutableStateOf(false) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    var confirmBlockedDone by rememberSaveable { mutableStateOf(false) }
+    val openBlockers = blockers.count { !it.isCompleted }
     var tagInput by rememberSaveable { mutableStateOf("") }
     var subtaskInput by rememberSaveable { mutableStateOf("") }
     val notSet = stringResource(R.string.task_editor_not_set)
@@ -291,7 +312,14 @@ fun TaskEditorScreen(
                             },
                         ),
                         form.status == status,
-                        { onUpdate { it.copy(status = status) } },
+                        {
+                            // Waiting for unfinished tasks (Plan-B Pro #14): ask before marking done.
+                            if (status == TaskStatus.DONE && form.status != TaskStatus.DONE && openBlockers > 0) {
+                                confirmBlockedDone = true
+                            } else {
+                                onUpdate { it.copy(status = status) }
+                            }
+                        },
                     )
                 }
             }
@@ -334,6 +362,12 @@ fun TaskEditorScreen(
                     if (preset == RecurrencePreset.CUSTOM) customRepeat = true else onRecurrence(presetRule(preset, calendarSystem))
                 }
             }
+            TaskPlanningSection(
+                form = form,
+                blockers = blockers,
+                candidates = dependencyCandidates,
+                callbacks = planning.copy(onDeadline = { picker = "deadline" }),
+            )
             Box {
                 EditorRow(
                     Icons.Rounded.Folder,
@@ -460,6 +494,14 @@ fun TaskEditorScreen(
     }
 
     when (picker) {
+        "deadline" -> PlannerDatePickerDialog(
+            initial = form.deadlineDate ?: form.due,
+            onDismiss = { picker = null },
+            onConfirm = { date ->
+                onDeadline(date)
+                picker = null
+            },
+        )
         "due", "start" -> PlannerDatePickerDialog(
             initial = if (picker == "due") form.due else form.start,
             onDismiss = { picker = null },
@@ -493,7 +535,14 @@ fun TaskEditorScreen(
                 onRecurrence(it)
                 customRepeat = false
             },
+            allowAfterCompletion = true,
         )
+    }
+    if (confirmBlockedDone) {
+        CompleteBlockedDialog(openBlockers, onDismiss = { confirmBlockedDone = false }) {
+            confirmBlockedDone = false
+            onUpdate { it.copy(status = TaskStatus.DONE) }
+        }
     }
     if (confirmDelete) {
         PlannerDialog(

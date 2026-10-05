@@ -13,3 +13,15 @@ data class TaskEditorRoute(
     val projectId: Long? = null,
     val dueEpochDay: Long? = null,
 )
+
+/** Creates ([filterId] 0) or edits a custom smart list (Plan-B Pro #10). */
+@Serializable
+data class SmartListEditorRoute(val filterId: Long = 0)
+
+/** Reorders and deletes the custom smart lists. */
+@Serializable
+data object SmartListsRoute
+
+/** The Eisenhower matrix of open tasks (Plan-B Pro #13). */
+@Serializable
+data object EisenhowerRoute

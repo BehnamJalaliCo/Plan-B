@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="repeat_invalid">مشخص کنید هر چند وقت تکرار شود</string>
+    <string name="repeat_after_completion">شمارش از زمان انجام</string>
+    <string name="repeat_after_completion_hint">تکرار بعدی این مدت پس از انجام تکرار فعلی می‌آید.</string>
+    <plurals name="repeat_summary_after_days">
+        <item quantity="one">%1$s روز پس از انجام</item>
+        <item quantity="other">%1$s روز پس از انجام</item>
+    </plurals>
+    <plurals name="repeat_summary_after_weeks">
+        <item quantity="one">%1$s هفته پس از انجام</item>
+        <item quantity="other">%1$s هفته پس از انجام</item>
+    </plurals>
+    <plurals name="repeat_summary_after_months">
+        <item quantity="one">%1$s ماه پس از انجام</item>
+        <item quantity="other">%1$s ماه پس از انجام</item>
+    </plurals>
+    <plurals name="repeat_summary_after_years">
+        <item quantity="one">%1$s سال پس از انجام</item>
+        <item quantity="other">%1$s سال پس از انجام</item>
+    </plurals>
+    <string name="repeat_summary_position">%1$s، %2$s %3$s</string>
+    <string-array name="repeat_positions">
+        <item>اولین</item>
+        <item>دومین</item>
+        <item>سومین</item>
+        <item>چهارمین</item>
+        <item>پنجمین</item>
+        <item>آخرین</item>
+    </string-array>
+    <string name="repeat_position_from_end">%1$s از آخر</string>
+    <string name="repeat_monthly_on_day">روز %1$s هر ماه</string>
+    <string name="repeat_monthly_on_weekday">یک روز هفته، مثل دومین دوشنبه</string>
+    <string name="repeat_fifth_hint">ماه‌هایی که پنجمین %1$s ندارند رد می‌شوند.</string>
+    <string name="repeat_week_starts">هفته‌ها از %1$s، اولین روز هفتهٔ شما، شمرده می‌شوند.</string>
+
+    <plurals name="reminder_days_before">
+        <item quantity="one">%1$s روز قبل</item>
+        <item quantity="other">%1$s روز قبل</item>
+    </plurals>
+    <string name="reminder_deadline_day">روز مهلت</string>
+    <string name="reminder_before_deadline">%1$s از مهلت</string>
+    <string name="reminder_kind_due">پیش از زمان برنامه‌ریزی‌شده</string>
+    <string name="reminder_kind_deadline">پیش از مهلت</string>
+    <string name="reminder_kind_absolute">در تاریخ و ساعت مشخص</string>
+
+    <string name="ui_deadline_today">مهلت امروز</string>
+    <string name="ui_deadline_passed">مهلت گذشته</string>
+    <plurals name="ui_deadline_in_days">
+        <item quantity="one">%1$s روز تا مهلت</item>
+        <item quantity="other">%1$s روز تا مهلت</item>
+    </plurals>
+    <string name="ui_deadline_on">مهلت: %1$s</string>
+
+    <plurals name="ui_blocked_by">
+        <item quantity="one">منتظر %1$s کار</item>
+        <item quantity="other">منتظر %1$s کار</item>
+    </plurals>
+    <string name="ui_blocked_title">با این حال انجام شود؟</string>
+    <plurals name="ui_blocked_message">
+        <item quantity="one">این کار منتظر %1$s کار ناتمام است. با این حال انجام‌شده علامت بخورد؟</item>
+        <item quantity="other">این کار منتظر %1$s کار ناتمام است. با این حال انجام‌شده علامت بخورد؟</item>
+    </plurals>
+    <string name="ui_blocked_confirm">انجام شد</string>
+</resources>

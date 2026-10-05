@@ -10,10 +10,12 @@ import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.common.todayFlow
 import com.behnamjalali.planb.core.data.repository.ProjectRepository
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
+import com.behnamjalali.planb.core.data.repository.SmartListRepository
 import com.behnamjalali.planb.core.data.repository.TaskFilter
 import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.Project
+import com.behnamjalali.planb.core.model.SavedFilter
 import com.behnamjalali.planb.core.model.Tag
 import com.behnamjalali.planb.core.model.Task
 import com.behnamjalali.planb.core.model.TaskSort
@@ -35,6 +37,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -49,6 +52,8 @@ data class TasksFilterState(
     val tagId: EntityId? = null,
     val sort: TaskSort = TaskSort.MANUAL,
     val query: String = "",
+    /** A custom smart list (Plan-B Pro #10) shown instead of [view]; null for the built-in views. */
+    val smartListId: EntityId? = null,
 )
 
 data class TasksUiState(
@@ -59,10 +64,12 @@ data class TasksUiState(
     val tags: List<Tag> = emptyList(),
     val selection: Set<EntityId> = emptySet(),
     val error: Boolean = false,
+    val smartLists: List<SavedFilter> = emptyList(),
 ) {
+    val activeSmartList: SavedFilter? get() = filter.smartListId?.let { id -> smartLists.firstOrNull { it.id == id } }
     val selecting: Boolean get() = selection.isNotEmpty()
     val projectNames: Map<EntityId, Project> get() = projects.associateBy { it.id }
-    val canReorder: Boolean get() = filter.sort == TaskSort.MANUAL && filter.query.isBlank() &&
+    val canReorder: Boolean get() = filter.smartListId == null && filter.sort == TaskSort.MANUAL && filter.query.isBlank() &&
         filter.view in setOf(TaskView.INBOX, TaskView.ALL)
 }
 
@@ -82,6 +89,7 @@ class TasksViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val time: TimeProvider,
     @ApplicationScope private val appScope: CoroutineScope,
+    private val smartListRepository: SmartListRepository,
 ) : ViewModel() {
 
     private val filter = MutableStateFlow(
@@ -91,8 +99,11 @@ class TasksViewModel @Inject constructor(
             tagId = savedState.get<Long>(KEY_TAG),
             sort = savedState.get<String>(KEY_SORT)?.let { runCatching { TaskSort.valueOf(it) }.getOrNull() } ?: TaskSort.MANUAL,
             query = savedState.get<String>(KEY_QUERY).orEmpty(),
+            smartListId = savedState.get<Long>(KEY_SMART_LIST),
         ),
     )
+
+    private val smartLists = smartListRepository.observeLists()
     private val selection = MutableStateFlow<Set<EntityId>>(emptySet())
 
     /**
@@ -120,15 +131,21 @@ class TasksViewModel @Inject constructor(
         }
     }
 
-    private val taskList = combine(filter.map { it.copy(query = "") }, time.todayFlow()) { f, today -> f to today }
-        .flatMapLatest { (f, today) ->
-            tasks.observeTasks(TaskFilter(view = f.view, today = today, projectId = f.projectId, tagId = f.tagId, sort = f.sort))
+    private val taskList = combine(filter.map { it.copy(query = "") }, time.todayFlow(), smartLists) { f, today, lists ->
+        Triple(f, today, lists.firstOrNull { it.id == f.smartListId })
+    }.distinctUntilChanged()
+        .flatMapLatest { (f, today, list) ->
+            if (list != null) {
+                smartListRepository.observeTasks(list.filter, today)
+            } else {
+                tasks.observeTasks(TaskFilter(view = f.view, today = today, projectId = f.projectId, tagId = f.tagId, sort = f.sort))
+            }
         }
 
     private val query = filter.map { it.query }.debounce(150).onStart { emit(filter.value.query) }
 
     val uiState: StateFlow<TasksUiState> = combine(
-        taskList, query, filter, projects.observeActiveProjects(), tasks.observeTags(), selection, pendingDeletes,
+        taskList, query, filter, projects.observeActiveProjects(), tasks.observeTags(), selection, pendingDeletes, smartLists,
     ) { values ->
         @Suppress("UNCHECKED_CAST")
         val list = values[0] as List<Task>
@@ -150,6 +167,7 @@ class TasksViewModel @Inject constructor(
             tags = values[4] as List<Tag>,
             // A filter, search or delete can hide selected tasks; bulk actions must never reach them.
             selection = (values[5] as Set<EntityId>).filterTo(LinkedHashSet()) { it in visibleIds },
+            smartLists = values[7] as List<SavedFilter>,
         )
     }.onEach { state ->
         // Drop hidden ids from the selection itself too, so they don't come back selected later.
@@ -163,8 +181,16 @@ class TasksViewModel @Inject constructor(
 
     fun setView(view: TaskView) {
         savedState[KEY_VIEW] = view.name
+        savedState[KEY_SMART_LIST] = null
         selection.value = emptySet()
-        filter.update { it.copy(view = view) }
+        filter.update { it.copy(view = view, smartListId = null) }
+    }
+
+    /** Shows a custom smart list (Plan-B Pro #10) instead of a built-in view. */
+    fun setSmartList(id: EntityId) {
+        savedState[KEY_SMART_LIST] = id
+        selection.value = emptySet()
+        filter.update { it.copy(smartListId = id) }
     }
 
     fun setProject(id: EntityId?) {
@@ -306,6 +332,7 @@ class TasksViewModel @Inject constructor(
         const val KEY_TAG = "tasks_tag"
         const val KEY_SORT = "tasks_sort"
         const val KEY_QUERY = "tasks_query"
+        const val KEY_SMART_LIST = "tasks_smart_list"
 
         /** [androidx.compose.material3.SnackbarDuration.Short]. */
         const val UNDO_WINDOW_MILLIS = 4_000L
