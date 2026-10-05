@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **242**.
+Total screenshots: **296**.
 
 
 ## Today
@@ -76,11 +76,41 @@ Total screenshots: **242**.
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/calendar/calendar_day_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_day_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_day_en_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_day_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_day_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_day_en_light_font150.png" width="220"/> |
 
+### `calendar_holiday_day`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/calendar/calendar_holiday_day_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holiday_day_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holiday_day_en_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holiday_day_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holiday_day_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holiday_day_en_light_font150.png" width="220"/> |
+
+### `calendar_holidays_month`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/calendar/calendar_holidays_month_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holidays_month_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holidays_month_en_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holidays_month_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holidays_month_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_holidays_month_en_light_font150.png" width="220"/> |
+
 ### `calendar_month`
 
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/calendar/calendar_month_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_month_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_month_en_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_month_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_month_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_month_en_light_font150.png" width="220"/> |
+
+### `calendar_sync_settings`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/calendar/calendar_sync_settings_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_sync_settings_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_sync_settings_en_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_sync_settings_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_sync_settings_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_sync_settings_en_light_font150.png" width="220"/> |
+
+### `calendar_time_blocking`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/calendar/calendar_time_blocking_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_time_blocking_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_time_blocking_en_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_time_blocking_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_time_blocking_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_time_blocking_en_light_font150.png" width="220"/> |
+
+### `calendar_timeline`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/calendar/calendar_timeline_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_timeline_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_timeline_en_light.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_timeline_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_timeline_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/calendar/calendar_timeline_en_light_font150.png" width="220"/> |
 
 ### `calendar_week`
 
