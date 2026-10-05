@@ -51,6 +51,7 @@ class UserPreferencesDataSource @Inject constructor(
         val focusMinutes = intPreferencesKey("focus_minutes")
         val breakMinutes = intPreferencesKey("short_break_minutes")
         val onboarding = booleanPreferencesKey("onboarding_completed")
+        val languageChosen = booleanPreferencesKey("language_chosen")
         val colorTheme = stringPreferencesKey("color_theme")
 
         /** Normalizer version the search index was built with (device state, never exported). */
@@ -97,13 +98,13 @@ class UserPreferencesDataSource @Inject constructor(
     }
 
     suspend fun import(values: Map<String, String>) {
-        val defaults = UserSettings()
         dataStore.edit { prefs ->
             // Keys missing from the backup keep their current values; malformed ones fall back
             // to the current value too.
-            val imported = toSettings(prefs, values, fallback = toSettings(prefs))
+            val current = toSettings(prefs)
+            val imported = toSettings(prefs, values, fallback = current)
             // Device-specific onboarding state is not overwritten by a restore.
-            write(prefs, imported.copy(onboardingCompleted = prefs[Keys.onboarding] ?: defaults.onboardingCompleted))
+            write(prefs, imported.copy(onboardingCompleted = current.onboardingCompleted, languageChosen = current.languageChosen))
         }
     }
 
@@ -147,12 +148,14 @@ class UserPreferencesDataSource @Inject constructor(
             shortBreakMinutes = int(Keys.breakMinutes)?.coerceIn(1, 60) ?: d.shortBreakMinutes,
             onboardingCompleted = bool(Keys.onboarding) ?: d.onboardingCompleted,
             colorTheme = str(Keys.colorTheme)?.let { key -> ColorTheme.entries.firstOrNull { it.key == key } } ?: d.colorTheme,
+            // Installs from before the first-run language screen: finishing onboarding implies a choice.
+            languageChosen = prefs[Keys.languageChosen] ?: prefs[Keys.onboarding] ?: d.languageChosen,
         )
     }
 
     private companion object {
         const val AUTO = "AUTO"
-        val DEVICE_KEYS = setOf(Keys.onboarding.name, Keys.searchIndexVersion.name)
+        val DEVICE_KEYS = setOf(Keys.onboarding.name, Keys.languageChosen.name, Keys.searchIndexVersion.name)
     }
 
     /** Known sections in saved order; sections added in newer versions are appended. */
@@ -178,6 +181,7 @@ class UserPreferencesDataSource @Inject constructor(
         prefs[Keys.breakMinutes] = s.shortBreakMinutes
         prefs[Keys.onboarding] = s.onboardingCompleted
         prefs[Keys.colorTheme] = s.colorTheme.key
+        prefs[Keys.languageChosen] = s.languageChosen
     }
 }
 

@@ -1,6 +1,7 @@
 package com.behnamjalali.planb.core.datastore
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.behnamjalali.planb.core.model.AppLanguage
@@ -78,6 +79,32 @@ class UserPreferencesDataSourceTest {
         assertThat(s.language).isEqualTo(AppLanguage.ENGLISH)
         assertThat(s.focusMinutes).isEqualTo(50)
         assertThat(s.onboardingCompleted).isFalse()
+    }
+
+    @Test
+    fun languageChosen_isDeviceState_andSurvivesARestore() = runTest {
+        val source = UserPreferencesDataSource(newStore(Files.createTempDirectory("lc").toFile(), backgroundScope))
+        assertThat(source.current().languageChosen).isFalse()
+        source.update { it.copy(language = AppLanguage.ENGLISH, languageChosen = true) }
+        assertThat(source.current().languageChosen).isTrue()
+        assertThat(source.export()).doesNotContainKey("language_chosen")
+        // A backup that would say otherwise never resets the device's first-run state.
+        source.import(mapOf("language" to "fa", "language_chosen" to "false"))
+        assertThat(source.current().languageChosen).isTrue()
+        assertThat(source.current().language).isEqualTo(AppLanguage.PERSIAN)
+    }
+
+    @Test
+    fun languageChosen_upgradeFromFinishedOnboarding_countsAsChosen() = runTest {
+        val store = newStore(Files.createTempDirectory("upgrade").toFile(), backgroundScope)
+        // Written by a version without the first-run language screen.
+        store.edit {
+            it[stringPreferencesKey("language")] = "en"
+            it[booleanPreferencesKey("onboarding_completed")] = true
+        }
+        assertThat(UserPreferencesDataSource(store).current().languageChosen).isTrue()
+        store.edit { it[booleanPreferencesKey("onboarding_completed")] = false }
+        assertThat(UserPreferencesDataSource(store).current().languageChosen).isFalse()
     }
 
     @Test

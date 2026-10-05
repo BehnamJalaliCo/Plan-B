@@ -98,6 +98,12 @@ data class UserSettings(
     val onboardingCompleted: Boolean = false,
     /** Chosen palette; only applied while the user has Plan-B Pro (see [effectiveColorTheme]). */
     val colorTheme: ColorTheme = ColorTheme.CLASSIC,
+    /**
+     * The user picked [language] on the first-run language screen (device state, like
+     * [onboardingCompleted]). Installs that finished onboarding before the screen existed
+     * count as having chosen.
+     */
+    val languageChosen: Boolean = false,
 ) {
     /** The palette to draw with: premium themes fall back to the classic one without Pro. */
     fun effectiveColorTheme(isPro: Boolean): ColorTheme = if (isPro || !colorTheme.isPremium) colorTheme else ColorTheme.CLASSIC
