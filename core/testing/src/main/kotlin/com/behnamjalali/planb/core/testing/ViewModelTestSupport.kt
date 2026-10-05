@@ -5,6 +5,7 @@ import java.util.concurrent.Executors
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,6 +14,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.job
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
@@ -34,6 +39,7 @@ class RealMainDispatcherRule : TestWatcher() {
 
     private val viewModels = ViewModelStore()
     private var viewModelCount = 0
+    private val viewModelJobs = mutableListOf<Job>()
 
     /**
      * Registers [viewModel] so it is cleared (viewModelScope cancelled, onCleared run) by
@@ -45,6 +51,7 @@ class RealMainDispatcherRule : TestWatcher() {
             @Suppress("UNCHECKED_CAST")
             override fun <V : ViewModel> create(modelClass: Class<V>): V = viewModel as V
         }
+        viewModelJobs += viewModel.viewModelScope.coroutineContext.job
         return ViewModelProvider(viewModels, factory)["vm${viewModelCount++}", viewModel.javaClass]
     }
 
@@ -64,7 +71,12 @@ class RealMainDispatcherRule : TestWatcher() {
 
     override fun finished(description: Description) {
         clearViewModels()
-        scope.coroutineContext[Job]?.cancel()
+        val scopeJob = scope.coroutineContext.job
+        scopeJob.cancel()
+        // Cancelled coroutines still resume on Dispatchers.Main to finish; resetting it
+        // while one does fails with "Dispatchers.Main is used concurrently with setting it".
+        runBlocking { withTimeoutOrNull(10_000) { (viewModelJobs + scopeJob).joinAll() } }
+        viewModelJobs.clear()
         Dispatchers.resetMain()
         executor.shutdownNow()
     }

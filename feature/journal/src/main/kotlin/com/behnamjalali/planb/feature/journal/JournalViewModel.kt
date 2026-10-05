@@ -19,8 +19,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -110,8 +111,9 @@ class JournalViewModel @Inject constructor(
     private fun isKnownPrompt(key: String, s: JournalSettings): Boolean =
         JournalPrompts.builtInNumber(key) != null || JournalPrompts.customText(key, s.customPrompts) != null
 
-    private val _events = MutableSharedFlow<JournalEvent>(extraBufferCapacity = 4)
-    val events: SharedFlow<JournalEvent> = _events
+    // A channel keeps an event sent while the screen is not collecting (e.g. mid-rotation).
+    private val _events = Channel<JournalEvent>(Channel.BUFFERED)
+    val events: Flow<JournalEvent> = _events.receiveAsFlow()
 
     fun anotherPrompt() {
         savedState[KEY_SHIFT] = shift.value + 1
@@ -124,7 +126,7 @@ class JournalViewModel @Inject constructor(
     }
 
     /** Opens today's page in the editor, creating it (with the prompt) first. */
-    fun write(texts: JournalTexts) = launch { _events.tryEmit(JournalEvent.OpenNote(ensurePage(texts))) }
+    fun write(texts: JournalTexts) = launch { _events.trySend(JournalEvent.OpenNote(ensurePage(texts))) }
 
     fun setMood(texts: JournalTexts, mood: Int?) = launch {
         val id = ensurePage(texts)
@@ -161,7 +163,7 @@ class JournalViewModel @Inject constructor(
     }
 
     private fun launch(block: suspend () -> Unit) = viewModelScope.launch {
-        runCatchingSafely { block() }.onFailure { _events.tryEmit(JournalEvent.Failed) }
+        runCatchingSafely { block() }.onFailure { _events.trySend(JournalEvent.Failed) }
     }
 
     private companion object {
