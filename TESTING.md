@@ -23,7 +23,7 @@ needs no emulator. CI also runs the device suite on an Android emulator.
 | `core:common` | 16 | Persian/Latin digits, search normalization (Arabic ي/ك, ZWNJ, diacritics, digits) |
 | `core:datetime` | 31 | Jalali conversion and month lengths (incl. leap years), month grids, recurrence (intervals, weekdays, month-end clamping, Jalali months, counts/until, DST), Jalali/Gregorian statistics periods |
 | `core:database` | 16 | DAOs, cascades and constraints, FTS queries, migrations 1→2, 2→3 and 1→3 against the exported schemas (existing data survives), soft-delete filters of every list query, the v3 DAOs |
-| `core:datastore` | 8 | Defaults, round-trips, tolerance of malformed values |
+| `core:datastore` | 11 | Defaults, round-trips, tolerance of malformed values, device-only first-run state |
 | `core:data` | 65 | Locked-note crypto (round trip, wrong passphrase, tamper detection), note vault and restore on a new device, App lock timeout policy and controller, trash (Pro only, subtasks, restore re-indexes and reschedules, 30-day purge), activity history (merging, cap, no note bodies), Pro schema fields round-trip, trash excluded from lists and search, locked notes indexed by title only; task filtering/sorting/views, recurrence spawning, reminders scheduling, notes hierarchy, drafts, habits, goals, events validation, focus timing, search indexing, templates, **large-dataset performance** |
 | `core:notifications` | 11 | Reminder planning for tasks, recurring events and habits |
 | `core:backup` | 36 | Automatic backups (file names, pruning to 21 without touching other files, scheduling config, runner success/failure/skip), format 2 with v3 tables and attachment files (round trip, missing files, zip-slip names, size limits, rollback of files), backup round trip, validation of corrupt/foreign/newer archives, limits, transactional restore, CSV/JSON/Markdown export and non-overwriting import |
@@ -31,10 +31,10 @@ needs no emulator. CI also runs the device suite on an Android emulator.
 | `core:ai` | 11 | Both wire formats against MockWebServer, error mapping, timeouts, HTTPS-only URLs, provider catalog, encrypted key storage and consent |
 | `feature:pro` | 9 | Paywall states, purchase, cancel, restore, store unavailable, price formatting, `ProGate` and `rememberProGuard` |
 | `feature:*` (others) | 91 | ViewModels of Today, Tasks, Habits, Focus and Search on real repositories (30), Trash and Activity, automatic backup settings, locking notes in the editor, block editing, task form validation |
-| `app` | 193 | Persian default locale, smoke test, 9 end-to-end flows, 162 screenshot tests (including the Plan-B Pro screen, Trash, Activity, Security, the lock screen, Statistics, My year and Appearance), launcher/store icon rendering, Glance widget content and the launcher icon switcher |
+| `app` | 222 | Persian default locale, smoke test, first-run flow (state machine, ViewModel, welcome timing and reduced motion, language screen), 12 end-to-end flows, 174 screenshot tests (including the Plan-B Pro screen, Trash, Activity, Security, the lock screen, Statistics, My year and Appearance), launcher/store icon rendering, Glance widget content and the launcher icon switcher |
 | `wear` | 2 | Watch state updates (optimistic task completion and habit check-in) |
 
-Total: **699 JVM tests**, all passing locally and in CI.
+Total: **730 JVM tests**, all passing locally and in CI.
 
 ### End-to-end flows (`app/src/test/.../e2e`)
 
@@ -43,12 +43,14 @@ frozen clock (`TestClockModule`): quick capture → task list → complete; task
 persist; a new note autosaves while typing (mixed Persian/English); projects open detail and
 board; habit check-in from Today; focus start/finish with goals intact; search finds Persian
 text typed with Arabic keyboard letters; theme and language changes persist; backup snapshot
-and restore round trip.
+and restore round trip; the first run (choosing English on the language screen stores and
+applies it, the recreated activity continues in English through welcome and slides to Today;
+an upgrade that already chose starts at the welcome; existing users never see onboarding).
 
 ### Screenshot tests (`app/src/test/.../screenshots`)
 
-`AppScreenshotTest` launches the real app with seeded data and captures 35 screens in six
-variants (Persian/English × light/dark, plus 150% font in both languages): 210 images in
+`AppScreenshotTest` launches the real app with seeded data and captures 39 screens in six
+variants (Persian/English × light/dark, plus 150% font in both languages): 234 images in
 `artifacts/screenshots/<feature>/`, shown in [docs/UI_GALLERY.md](docs/UI_GALLERY.md). Clicks
 are dispatched through semantics actions (no touch ripples) and animations settle on the test
 clock, so images are pixel-stable. `AppIconTest` renders the adaptive icon, the themed icon and
@@ -56,7 +58,8 @@ the 512×512 store icon.
 
 ### Instrumentation tests (`app/src/androidTest`)
 
-`AppFlowsTest` runs with `HiltTestRunner` and an in-memory database: onboarding skip, all
+`AppFlowsTest` runs with `HiltTestRunner` and an in-memory database: the first run (language
+screen, welcome, skipping the slides), all
 top-level tabs, quick capture creating a task.
 
 ### Benchmarks

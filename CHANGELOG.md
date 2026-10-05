@@ -8,6 +8,9 @@ All notable changes to Plan-B are documented here. The project follows
 Foundation for **Plan-B Pro**. Every existing feature stays free.
 
 ### Added
+- A new first run: the language (Persian or English) is asked first, on a bilingual screen,
+  and applied at once; then an animated welcome and three intro slides, all in the chosen
+  language. Reduced motion turns the animations into simple fades.
 - Plan-B Pro: a monthly subscription (`planb_pro_monthly`) or a lifetime purchase
   (`planb_pro_lifetime`) through Cafe Bazaar, verified on the device. Pro also works offline
   (lifetime always, monthly for 7 days after the last check). A Plan-B Pro screen with plans,

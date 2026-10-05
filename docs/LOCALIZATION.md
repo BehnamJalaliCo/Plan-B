@@ -72,7 +72,27 @@ onLanguage = { language ->
 `PERSIAN`. The two language names (`settings_language_fa` = "فارسی", `settings_language_en` =
 "English") are `translatable="false"` and are always shown in their own language.
 
-### 1.4 Locale config and bundles: `app/build.gradle.kts`
+### 1.4 First run: the language comes first
+
+`app/.../ui/onboarding/` (`OnboardingFlow`, `OnboardingViewModel`, `OnboardingHost`). On the
+first launch the very first screen asks for the language, before the welcome and the intro
+slides, so they are never seen in the other language.
+
+- The screen is **bilingual**: its texts are `translatable="false"` strings in both languages
+  (`onboarding_language_*`), and each card is laid out in its own direction. The card matching
+  the device language is suggested (`OnboardingFlow.suggestedLanguage`: Persian on Persian
+  devices, English otherwise, Persian when the device does not say).
+- Tapping a card fades the screen to the bare window background, then stores
+  `language` and `language_chosen` in DataStore. Calendar system, first day of week and digits
+  follow through their "auto" defaults. `MainActivity` applies the stored language to the
+  platform as usual (§1.3), which recreates the activity behind that empty frame (the window
+  background equals the theme background). The welcome is shown only once the activity's
+  resources are in the chosen language.
+- `language_chosen` is device state like `onboarding_completed`: never exported, kept on
+  restore. Installs that finished onboarding before the screen existed count as having chosen.
+  Onboarding is marked completed only after the last slide (or Skip).
+
+### 1.5 Locale config and bundles: `app/build.gradle.kts`
 
 ```kotlin
 androidResources {

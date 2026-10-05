@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **212**.
+Total screenshots: **236**.
 
 
 ## Today
@@ -208,11 +208,35 @@ Total screenshots: **212**.
 
 ## Onboarding
 
-### `onboarding`
+### `onboarding_grow`
 
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
-| <img src="../artifacts/screenshots/onboarding/onboarding_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_en_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_en_light_font150.png" width="220"/> |
+| <img src="../artifacts/screenshots/onboarding/onboarding_grow_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_grow_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_grow_en_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_grow_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_grow_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_grow_en_light_font150.png" width="220"/> |
+
+### `onboarding_language`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/onboarding/onboarding_language_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_language_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_language_en_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_language_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_language_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_language_en_light_font150.png" width="220"/> |
+
+### `onboarding_plan`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/onboarding/onboarding_plan_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_plan_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_plan_en_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_plan_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_plan_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_plan_en_light_font150.png" width="220"/> |
+
+### `onboarding_private`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/onboarding/onboarding_private_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_private_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_private_en_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_private_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_private_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_private_en_light_font150.png" width="220"/> |
+
+### `onboarding_welcome`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/onboarding/onboarding_welcome_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_welcome_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_welcome_en_light.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_welcome_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_welcome_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/onboarding/onboarding_welcome_en_light_font150.png" width="220"/> |
 
 ## States
 
