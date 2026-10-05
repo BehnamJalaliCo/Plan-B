@@ -92,7 +92,7 @@ internal fun TaskEntity.toModel(
 )
 
 internal fun TaskWithDetails.toModel() =
-    task.toModel(tags.map { it.toModel() }, subtaskCount, completedSubtaskCount)
+    task.toModel(tags.map { it.toModel() }, subtaskCount, completedSubtaskCount).copy(openBlockerCount = openBlockerCount)
 
 internal fun Task.toEntity() = TaskEntity(
     id = id,

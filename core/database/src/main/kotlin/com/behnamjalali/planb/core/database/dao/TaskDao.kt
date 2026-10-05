@@ -10,6 +10,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.behnamjalali.planb.core.database.entity.TagEntity
+import com.behnamjalali.planb.core.database.entity.TaskDependencyEntity
 import com.behnamjalali.planb.core.database.entity.TaskEntity
 import com.behnamjalali.planb.core.database.entity.TaskTagCrossRef
 import com.behnamjalali.planb.core.database.model.TaskWithDetails
@@ -39,7 +40,7 @@ interface TaskDao {
      * subtask count columns.
      */
     @Transaction
-    @RawQuery(observedEntities = [TaskEntity::class, TaskTagCrossRef::class, TagEntity::class])
+    @RawQuery(observedEntities = [TaskEntity::class, TaskTagCrossRef::class, TagEntity::class, TaskDependencyEntity::class])
     fun observeTasks(query: SupportSQLiteQuery): Flow<List<TaskWithDetails>>
 
     @Transaction
@@ -136,23 +137,28 @@ interface TaskDao {
     @Query("SELECT tag_id FROM task_tags WHERE task_id = :taskId")
     suspend fun tagIds(taskId: Long): List<Long>
 
-    /** Tasks with a reminder that are still open (for rescheduling after boot). */
+    /**
+     * Open tasks with a reminder (for rescheduling after boot): the primary one, or extra
+     * reminders in task_reminders (Plan-B Pro #12; `NAG` rows are settings, not reminders).
+     */
     @Query(
-        "SELECT * FROM tasks WHERE reminder_offset_minutes IS NOT NULL AND completed = 0 " +
-            "AND archived = 0 AND deleted_at IS NULL AND due_date IS NOT NULL",
+        "SELECT * FROM tasks WHERE completed = 0 AND archived = 0 AND deleted_at IS NULL AND " +
+            "((reminder_offset_minutes IS NOT NULL AND due_date IS NOT NULL) OR " +
+            "EXISTS (SELECT 1 FROM task_reminders r WHERE r.task_id = tasks.id AND r.kind != 'NAG'))",
     )
     suspend fun tasksWithReminders(): List<TaskEntity>
 
     /**
      * Completed part of the Today list: top-level, non-archived tasks due on or before [dueBy]
-     * that were completed in [from, to). Matches the open TODAY view, so done + open is the
-     * day's total.
+     * (or with a deadline on or before [deadlineBy]) that were completed in [from, to). Matches
+     * the open TODAY view, so done + open is the day's total.
      */
     @Query(
         "SELECT COUNT(*) FROM tasks WHERE completed = 1 AND archived = 0 AND deleted_at IS NULL AND parent_task_id IS NULL " +
-            "AND due_date IS NOT NULL AND due_date <= :dueBy AND completed_at >= :from AND completed_at < :to",
+            "AND ((due_date IS NOT NULL AND due_date <= :dueBy) OR (deadline IS NOT NULL AND deadline <= :deadlineBy)) " +
+            "AND completed_at >= :from AND completed_at < :to",
     )
-    fun observeCompletedForToday(from: Long, to: Long, dueBy: LocalDate): Flow<Int>
+    fun observeCompletedForToday(from: Long, to: Long, dueBy: LocalDate, deadlineBy: LocalDate): Flow<Int>
 
     @Query(
         "SELECT * FROM tasks WHERE completed = 1 AND deleted_at IS NULL AND completed_at >= :from AND completed_at < :to " +
@@ -201,7 +207,9 @@ interface TaskDao {
             "SELECT t.*, " +
                 "(SELECT COUNT(*) FROM tasks s WHERE s.parent_task_id = t.id AND s.deleted_at IS NULL) AS subtask_count, " +
                 "(SELECT COUNT(*) FROM tasks s WHERE s.parent_task_id = t.id AND s.deleted_at IS NULL AND s.completed = 1) " +
-                "AS completed_subtask_count " +
+                "AS completed_subtask_count, " +
+                "(SELECT COUNT(*) FROM task_dependencies d JOIN tasks b ON b.id = d.depends_on_task_id " +
+                "WHERE d.task_id = t.id AND b.completed = 0 AND b.deleted_at IS NULL) AS open_blocker_count " +
                 "FROM tasks t"
     }
 }

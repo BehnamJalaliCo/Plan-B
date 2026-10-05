@@ -97,6 +97,8 @@ class TestDataGraph(
         db.searchDao(), db.taskDao(), db.projectDao(), db.noteDao(), db.habitDao(), db.goalDao(), db.eventDao(),
     )
     val settings = DataStoreSettingsRepository(preferences)
+    val planning = com.behnamjalali.planb.core.data.repository.OfflineTaskPlanningRepository(db, reminders)
+    val smartLists = com.behnamjalali.planb.core.data.repository.OfflineSmartListRepository(db, db.taskDao(), time)
 
     fun close() {
         db.close()

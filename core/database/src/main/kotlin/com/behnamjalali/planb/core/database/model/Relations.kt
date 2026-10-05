@@ -25,6 +25,8 @@ data class TaskWithDetails(
     val tags: List<TagEntity>,
     @ColumnInfo(name = "subtask_count") val subtaskCount: Int,
     @ColumnInfo(name = "completed_subtask_count") val completedSubtaskCount: Int,
+    /** Open, live tasks this one waits for (task_dependencies, Plan-B Pro #14). */
+    @ColumnInfo(name = "open_blocker_count") val openBlockerCount: Int = 0,
 )
 
 data class ProjectWithCounts(
