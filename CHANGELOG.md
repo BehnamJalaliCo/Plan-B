@@ -60,8 +60,23 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
   - **Eisenhower matrix** with long-press drag between quadrants.
   - **Dependencies**: tasks can wait for other tasks (cycles are refused), show a lock and ask
     before being completed early.
+- Plan-B Pro **smart day** (#1, #5, #8):
+  - **Natural-language Quick Capture** in Persian and English, on the device: «فردا ساعت ۵ عصر
+    جلسه #کار فوری ۴۵ دقیقه» or "tomorrow 5pm #work !! for 45 min" fills in the date, time,
+    repeat, priority, tags, project, deadline, estimate and reminder. Recognized words are
+    highlighted and shown as chips; tap a chip to keep its words as text.
+  - **Plan my day**: fits today's unscheduled tasks into the free time of your working hours
+    (priority, deadlines, estimates, 10-minute buffers, optional lunch break; tasks waiting for
+    others are left out) and shows the proposed blocks to accept all or some. **Replan** moves
+    missed or clashing blocks forward, only when you tap it.
+  - **Morning planning and evening shutdown** rituals: review leftovers, pick the top 3, see
+    today's calendar and free time, plan the day and set an intention; in the evening see what
+    you finished, move leftovers, write one line into your journal notebook and pick
+    tomorrow's top 3. Optional daily reminders at times you choose.
+  - Settings › Day planning and rituals: working hours, lunch break, buffers, ritual reminders.
 
 ### Changed
+- Today's timeline also shows tasks at the start of their time block.
 - Overdue tasks: a task with a deadline is late only after its deadline.
 - The custom repeat dialog uses −/+ buttons for "repeat every" and the number of occurrences.
 - A restore also clears alarms of tasks that only had extra reminders.
