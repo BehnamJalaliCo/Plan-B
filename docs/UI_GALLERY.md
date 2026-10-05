@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **212**.
+Total screenshots: **242**.
 
 
 ## Today
@@ -26,11 +26,35 @@ Total screenshots: **212**.
 
 ## Tasks
 
+### `advanced_recurrence`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/tasks/advanced_recurrence_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/advanced_recurrence_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/advanced_recurrence_en_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/advanced_recurrence_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/advanced_recurrence_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/tasks/advanced_recurrence_en_light_font150.png" width="220"/> |
+
+### `eisenhower`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/tasks/eisenhower_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/eisenhower_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/eisenhower_en_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/eisenhower_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/eisenhower_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/tasks/eisenhower_en_light_font150.png" width="220"/> |
+
+### `smart_list_builder`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/tasks/smart_list_builder_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/smart_list_builder_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/smart_list_builder_en_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/smart_list_builder_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/smart_list_builder_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/tasks/smart_list_builder_en_light_font150.png" width="220"/> |
+
 ### `task_editor`
 
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/tasks/task_editor_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_en_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_en_light_font150.png" width="220"/> |
+
+### `task_editor_planning`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/tasks/task_editor_planning_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_planning_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_planning_en_light.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_planning_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_planning_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/tasks/task_editor_planning_en_light_font150.png" width="220"/> |
 
 ### `tasks_today`
 
@@ -105,6 +129,12 @@ Total screenshots: **212**.
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/projects/project_overview_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_overview_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_overview_en_light.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_overview_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_overview_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_overview_en_light_font150.png" width="220"/> |
+
+### `project_timeline`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/projects/project_timeline_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_timeline_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_timeline_en_light.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_timeline_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_timeline_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/projects/project_timeline_en_light_font150.png" width="220"/> |
 
 ### `projects`
 

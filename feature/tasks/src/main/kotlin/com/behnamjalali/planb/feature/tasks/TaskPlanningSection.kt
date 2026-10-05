@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -215,7 +216,7 @@ private fun SectionTitle(title: String, showBadge: Boolean) {
 @Composable
 private fun AddReminderDialog(form: TaskForm, onDismiss: () -> Unit, onAdd: (ReminderForm) -> Unit) {
     var kind by rememberSaveable { mutableStateOf(if (form.due != null) TaskReminderKind.OFFSET else if (form.deadline != null) TaskReminderKind.DEADLINE else TaskReminderKind.ABSOLUTE) }
-    var offset by rememberSaveable { mutableStateOf(60) }
+    var offset by rememberSaveable { mutableIntStateOf(60) }
     var date by rememberSaveable { mutableStateOf<Long?>(null) }
     var time by rememberSaveable { mutableStateOf<Int?>(null) }
     var picker by rememberSaveable { mutableStateOf<String?>(null) }
