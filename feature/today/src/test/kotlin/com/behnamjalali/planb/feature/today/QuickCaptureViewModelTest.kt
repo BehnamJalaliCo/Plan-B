@@ -65,6 +65,85 @@ class QuickCaptureViewModelTest {
         assertThat(vm.dateEpoch.value).isEqualTo(picked.toEpochDay())
     }
 
+    /** Waits until the settings and projects the parser needs have been read. */
+    private suspend fun smartViewModel(): QuickCaptureViewModel {
+        val vm = viewModel()
+        vm.setSmartInput(true)
+        withTimeout(10_000) {
+            while (true) {
+                vm.setTitle("فردا")
+                if (vm.parsed.value != null) break
+                delay(20)
+            }
+        }
+        vm.setTitle("")
+        return vm
+    }
+
+    @Test
+    fun freeUsers_textIsNotRead() {
+        val vm = viewModel()
+        vm.setTitle("فردا ساعت ۵ عصر نان بخرم")
+        assertThat(vm.parsed.value).isNull()
+    }
+
+    @Test
+    fun smartInput_savesEverythingReadFromTheText() = runBlocking<Unit> {
+        val project = graph.projects.save(com.behnamjalali.planb.core.model.Project(title = "خانه"))
+        val vm = smartViewModel()
+        withTimeout(10_000) {
+            while (true) {
+                vm.setTitle("@خانه")
+                if (vm.parsed.value?.project != null) break
+                delay(20)
+            }
+        }
+        vm.setTitle("فردا ساعت ۵ عصر خرید کاشی #خرید @خانه فوری ۴۵ دقیقه تا جمعه")
+        val parsed = vm.parsed.value!!
+        assertThat(parsed.title).isEqualTo("خرید کاشی")
+        val saved = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(20_000) { vm.events.first() } }
+        vm.save("Notes")
+        val id = (saved.await() as CaptureEvent.Saved).id
+        val task = graph.tasks.getTask(id)!!
+        val today = graph.time.today()
+        assertThat(task.title).isEqualTo("خرید کاشی")
+        assertThat(task.dueDate).isEqualTo(today.plusDays(1))
+        assertThat(task.dueTime).isEqualTo(java.time.LocalTime.of(17, 0))
+        assertThat(task.priority).isEqualTo(com.behnamjalali.planb.core.model.Priority.HIGH)
+        assertThat(task.estimatedMinutes).isEqualTo(45)
+        assertThat(task.projectId).isEqualTo(project)
+        assertThat(task.tags.map { it.name }).containsExactly("خرید")
+        assertThat(task.deadline).isEqualTo(parsed.deadline)
+        assertThat(task.reminderOffsetMinutes).isEqualTo(15)
+    }
+
+    @Test
+    fun dismissingAPart_keepsItsWordsInTheTitle_andAPickedDateReplacesTheReadOne() = runBlocking<Unit> {
+        val vm = smartViewModel()
+        vm.setTitle("فردا نان بخرم")
+        val part = vm.parsed.value!!.parts.single()
+        vm.dismissPart(part.key)
+        assertThat(vm.parsed.value).isNull()
+        vm.setTitle("پنجشنبه نان بخرم")
+        assertThat(vm.parsed.value!!.date).isNotNull()
+        val picked = graph.time.today().plusDays(10)
+        vm.setDate(picked)
+        // The picked date wins; «پنجشنبه» stays as text.
+        assertThat(vm.parsed.value).isNull()
+        assertThat(vm.dateEpoch.value).isEqualTo(picked.toEpochDay())
+    }
+
+    @Test
+    fun events_ignoreTagsAndPriority() = runBlocking<Unit> {
+        val vm = smartViewModel()
+        vm.setType(com.behnamjalali.planb.feature.today.capture.CaptureType.EVENT)
+        vm.setTitle("جلسه فردا ساعت ۱۰ صبح #کار فوری ۲ ساعت")
+        val parsed = vm.parsed.value!!
+        assertThat(parsed.title).isEqualTo("جلسه #کار فوری")
+        assertThat(parsed.durationMinutes).isEqualTo(120)
+        assertThat(parsed.tags).isEmpty()
+    }
+
     @Test
     fun doubleTapOnSave_capturesOnce() = runBlocking<Unit> {
         val vm = viewModel()

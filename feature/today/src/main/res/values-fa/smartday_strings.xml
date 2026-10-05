@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan-B Pro smart day: quick-add parsing (#1), day planning (#5) and rituals (#8). -->
+<resources>
+    <string name="capture_smart_teaser">بنویسید «فردا ساعت ۵ عصر #کار» تا جزئیات خودشان پر شوند</string>
+    <string name="capture_part_remove">%2$s، برداشت از «%1$s». برای نگه داشتن به‌صورت متن ضربه بزنید</string>
+    <string name="capture_part_deadline">مهلت %1$s</string>
+    <string name="capture_part_duration">مدت %1$s</string>
+
+    <string name="today_rituals">آیین‌های روزانه</string>
+    <string name="today_plan_day">چیدن برنامهٔ امروز</string>
+    <string name="today_replan">چیدن دوباره (%1$s)</string>
+    <string name="today_top3">سه کار اصلی امروز</string>
+    <string name="today_smart_day_hint">کارهای امروز را در وقت‌های آزادتان بچینید</string>
+    <string name="today_plan_applied">به برنامهٔ امروز اضافه شد</string>
+
+    <string name="ritual_morning">برنامه‌ریزی صبحگاهی</string>
+    <string name="ritual_morning_sub">مرور، انتخاب سه کار اصلی، چیدن روز</string>
+    <string name="ritual_evening">جمع‌بندی پایان روز</string>
+    <string name="ritual_evening_sub">دیدن کارهای انجام‌شده، تکلیف باقی‌مانده‌ها، برنامهٔ فردا</string>
+    <string name="ritual_done_today">امروز انجام شد</string>
+    <string name="ritual_step_of">گام %1$s از %2$s</string>
+    <string name="ritual_next">بعدی</string>
+    <string name="ritual_back">قبلی</string>
+    <string name="ritual_finish">پایان</string>
+    <string name="ritual_close">بستن</string>
+    <string name="ritual_review_title">کارهای ناتمام قبلی</string>
+    <string name="ritual_review_hint">برای هر کدام تصمیم بگیرید. کارهای کنارگذاشته بایگانی می‌شوند، نه حذف.</string>
+    <string name="ritual_review_empty">چیزی باقی نمانده؛ شروعی تازه.</string>
+    <string name="ritual_move_today">امروز</string>
+    <string name="ritual_move_tomorrow">فردا</string>
+    <string name="ritual_move_next_week">هفتهٔ بعد</string>
+    <string name="ritual_drop">کنار بگذار</string>
+    <string name="ritual_top3_title">سه کار اصلی امروز را انتخاب کنید</string>
+    <string name="ritual_top3_hint">انجام کدام کارها امروز را روز خوبی می‌کند؟</string>
+    <string name="ritual_top3_selected">%1$s از %2$s انتخاب شده</string>
+    <string name="ritual_top3_empty">هنوز کاری برای امروز ندارید. با ثبت سریع اضافه کنید.</string>
+    <string name="ritual_calendar_title">تقویم امروز</string>
+    <string name="ritual_calendar_free">%1$s وقت آزاد در ساعت‌های کاری</string>
+    <string name="ritual_calendar_empty">امروز رویدادی ندارید.</string>
+    <string name="ritual_plan_title">روزتان را بچینید</string>
+    <string name="ritual_plan_hint">Plan-B می‌تواند کارها را در وقت‌های آزاد بچیند. پیش از هر تغییری همهٔ بلوک‌ها را می‌بینید.</string>
+    <string name="ritual_intention_title">نیت امروز</string>
+    <string name="ritual_intention_hint">یک جمله برای اینکه می‌خواهید امروز چطور بگذرد.</string>
+    <string name="ritual_intention_label">امروز می‌خواهم…</string>
+    <string name="ritual_intention_heading">نیت روز</string>
+    <string name="ritual_done_title">کارهایی که امروز تمام کردید</string>
+    <plurals name="ritual_done_count">
+        <item quantity="one">%1$s کار انجام شد. آفرین.</item>
+        <item quantity="other">%1$s کار انجام شد. آفرین.</item>
+    </plurals>
+    <string name="ritual_done_empty">روز آرام هم روز است. خوب استراحت کنید.</string>
+    <string name="ritual_leftovers_title">کارهای باقی‌مانده</string>
+    <string name="ritual_leftovers_hint">برای هر کدام جای تازه‌ای پیدا کنید. کارهای کنارگذاشته بایگانی می‌شوند، نه حذف.</string>
+    <string name="ritual_leftovers_empty">امروز کاری باقی نمانده.</string>
+    <string name="ritual_journal_title">یک خط دربارهٔ امروز</string>
+    <string name="ritual_journal_hint">چه چیزی خوب پیش رفت، چه یاد گرفتید. در دفتر روزانه ذخیره می‌شود.</string>
+    <string name="ritual_journal_label">امروز…</string>
+    <string name="ritual_journal_heading">جمع‌بندی شب</string>
+    <string name="ritual_journal_notebook">دفتر روزانه</string>
+    <string name="ritual_tomorrow_title">سه کار اصلی فردا</string>
+    <string name="ritual_tomorrow_empty">هنوز برای فردا کاری برنامه‌ریزی نشده.</string>
+    <string name="ritual_failed">ذخیره نشد. دوباره تلاش کنید.</string>
+
+    <string name="plan_title">چیدن برنامهٔ امروز</string>
+    <string name="plan_replan_title">چیدن دوبارهٔ باقی روز</string>
+    <string name="plan_hours">ساعت کاری %1$s، فاصله %2$s</string>
+    <string name="plan_change_hours">تغییر</string>
+    <string name="plan_preview_hint">زمان‌های پیشنهادی را ببینید. تا تأیید نکنید چیزی تغییر نمی‌کند.</string>
+    <string name="plan_accept">تأیید (%1$s)</string>
+    <string name="plan_cancel">فعلاً نه</string>
+    <string name="plan_moved">جابه‌جا شد</string>
+    <string name="plan_not_fit_title">امروز جا نشد</string>
+    <string name="plan_blocked_title">منتظر کارهای دیگر</string>
+    <string name="plan_empty">همهٔ کارهای امروز زمان دارند.</string>
+    <string name="plan_replan_empty">همهٔ بلوک‌های زمانی هنوز پیش رو هستند؛ چیزی برای جابه‌جایی نیست.</string>
+    <string name="plan_no_room">امروز در ساعت‌های کاری وقت آزادی نمانده.</string>
+    <string name="plan_no_buffer">بدون فاصله</string>
+
+    <string name="dayplan_settings_title">برنامه‌ریزی روز و آیین‌ها</string>
+    <string name="dayplan_hours_section">ساعت‌های کاری</string>
+    <string name="dayplan_start">شروع روز</string>
+    <string name="dayplan_end">پایان روز</string>
+    <string name="dayplan_hours_invalid">پایان باید بعد از شروع باشد؛ وگرنه چیزی برنامه‌ریزی نمی‌شود.</string>
+    <string name="dayplan_lunch">استراحت ناهار</string>
+    <string name="dayplan_lunch_start">شروع استراحت</string>
+    <string name="dayplan_lunch_end">پایان استراحت</string>
+    <string name="dayplan_buffer">فاصله بین بلوک‌ها</string>
+    <string name="dayplan_rituals_section">یادآور آیین‌ها</string>
+    <string name="dayplan_morning_reminder">یادآور برنامه‌ریزی صبحگاهی</string>
+    <string name="dayplan_evening_reminder">یادآور جمع‌بندی پایان روز</string>
+    <string name="dayplan_reminder_time">ساعت یادآوری</string>
+    <string name="dayplan_off">خاموش</string>
+    <string name="dayplan_reminder_note">یادآورها فقط یادتان می‌اندازند. چیزی در برنامه‌تان خودبه‌خود تغییر نمی‌کند.</string>
+</resources>

@@ -24,8 +24,13 @@ import java.time.temporal.ChronoUnit
  * [QuickAddPart.key] is in `dismissed` are skipped, which keeps their words as text.
  */
 object QuickAddParser {
-    fun parse(text: String, context: QuickAddContext, dismissed: Set<String> = emptySet()): QuickAddResult =
-        Parse(text, context, dismissed).run()
+    /** Only parts of [kinds] are read (events have no tags or priority, for example). */
+    fun parse(
+        text: String,
+        context: QuickAddContext,
+        dismissed: Set<String> = emptySet(),
+        kinds: Set<QuickAddKind> = QuickAddKind.entries.toSet(),
+    ): QuickAddResult = Parse(text, context, dismissed, kinds).run()
 }
 
 private class Hit(
@@ -53,7 +58,12 @@ private class DateHit(val date: LocalDate, val count: Int, val night: Boolean = 
 
 private class ClockHit(val time: LocalTime, val ambiguous: Boolean, val count: Int)
 
-private class Parse(private val text: String, private val ctx: QuickAddContext, private val dismissed: Set<String>) {
+private class Parse(
+    private val text: String,
+    private val ctx: QuickAddContext,
+    private val dismissed: Set<String>,
+    private val kinds: Set<QuickAddKind>,
+) {
     private val v = Vocabulary
     private val tokens = QuickAddText.tokenize(text)
     private val today: LocalDate = ctx.now.toLocalDate()
@@ -91,6 +101,7 @@ private class Parse(private val text: String, private val ctx: QuickAddContext, 
     private fun hitAt(i: Int): Hit? {
         for (rule in rules) {
             val hit = rule(i) ?: continue
+            if (hit.kind !in kinds) continue
             if (hit.kind != QuickAddKind.TAG && hit.fills.any { it in filled }) continue
             if (key(hit, i) in dismissed) continue
             return hit

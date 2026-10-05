@@ -73,6 +73,15 @@ class QuickAddParserTest {
     }
 
     @Test
+    fun onlyTheRequestedKindsAreRead() {
+        val result = QuickAddParser.parse("فردا جلسه #کار فوری", fa, kinds = setOf(QuickAddKind.DATE, QuickAddKind.TIME))
+        assertThat(result.date).isEqualTo(LocalDate.of(2026, 10, 5))
+        assertThat(result.title).isEqualTo("جلسه #کار فوری")
+        assertThat(result.tags).isEmpty()
+        assertThat(result.priority).isNull()
+    }
+
+    @Test
     fun emptyAndBlankText() {
         assertThat(QuickAddParser.parse("", fa)).isEqualTo(QuickAddResult(title = ""))
         assertThat(QuickAddParser.parse("   ‌ ", fa).title).isEmpty()
