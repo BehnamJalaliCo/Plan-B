@@ -46,12 +46,14 @@ jobs:
         # Screenshots are compared with artifacts/screenshots (rendered with the licensed font);
         # any difference fails the build. Without the fonts secret every test still runs and the
         # "Screenshots were verified" step below fails the job (except for fork pull requests).
+        # Three workers: each test JVM takes up to 2 GB next to the Gradle (4 GB) and Kotlin
+        # (3 GB) daemons; four of them exhausted the 16 GB runner, which then shut down.
         run: |
           if [ "$HAS_FONTS" = "true" ]; then
-            ./gradlew testDebugUnitTest -Proborazzi.test.verify=true -Pplanb.requirePrivateFonts=true --continue
+            ./gradlew testDebugUnitTest --max-workers=3 -Proborazzi.test.verify=true -Pplanb.requirePrivateFonts=true --continue
           else
             echo "::warning::Licensed fonts unavailable: running every test, but screenshots are not compared."
-            ./gradlew testDebugUnitTest --continue
+            ./gradlew testDebugUnitTest --max-workers=3 --continue
           fi
 
       - name: Android Lint
