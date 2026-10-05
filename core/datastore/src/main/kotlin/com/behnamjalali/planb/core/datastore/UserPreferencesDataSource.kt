@@ -6,8 +6,11 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.behnamjalali.planb.core.model.AppLanguage
+import com.behnamjalali.planb.core.model.CalendarDecorations
+import com.behnamjalali.planb.core.model.CalendarSyncSettings
 import com.behnamjalali.planb.core.model.CalendarSystem
 import com.behnamjalali.planb.core.model.CalendarView
 import com.behnamjalali.planb.core.model.ColorTheme
@@ -53,6 +56,16 @@ class UserPreferencesDataSource @Inject constructor(
         val onboarding = booleanPreferencesKey("onboarding_completed")
         val languageChosen = booleanPreferencesKey("language_chosen")
         val colorTheme = stringPreferencesKey("color_theme")
+        val calendarHolidays = booleanPreferencesKey("calendar_holidays")
+        val calendarOccasions = booleanPreferencesKey("calendar_occasions")
+        val calendarHijri = booleanPreferencesKey("calendar_hijri_date")
+
+        /** Device calendar sync (Plan-B Pro #3): device state, never exported. */
+        val calendarSyncEnabled = booleanPreferencesKey("calendar_sync_enabled")
+        val calendarSyncVisible = stringPreferencesKey("calendar_sync_visible_ids")
+        val calendarSyncTarget = longPreferencesKey("calendar_sync_target_id")
+        val calendarSyncLast = longPreferencesKey("calendar_sync_last_at")
+        val calendarSyncFailed = booleanPreferencesKey("calendar_sync_failed")
 
         /** Normalizer version the search index was built with (device state, never exported). */
         val searchIndexVersion = intPreferencesKey("search_index_version")
@@ -82,6 +95,28 @@ class UserPreferencesDataSource @Inject constructor(
     suspend fun setSearchIndexVersion(version: Int) {
         dataStore.edit { it[Keys.searchIndexVersion] = version }
     }
+
+    /** Device calendar sync settings (Plan-B Pro #3); device-only, never in a backup. */
+    val calendarSync: Flow<CalendarSyncSettings> = data.map(::calendarSyncOf)
+
+    suspend fun updateCalendarSync(transform: (CalendarSyncSettings) -> CalendarSyncSettings) {
+        dataStore.edit { prefs ->
+            val s = transform(calendarSyncOf(prefs))
+            prefs[Keys.calendarSyncEnabled] = s.enabled
+            prefs[Keys.calendarSyncVisible] = s.visibleCalendarIds.sorted().joinToString(",")
+            s.targetCalendarId?.let { prefs[Keys.calendarSyncTarget] = it } ?: prefs.remove(Keys.calendarSyncTarget)
+            prefs[Keys.calendarSyncLast] = s.lastSyncAt
+            prefs[Keys.calendarSyncFailed] = s.lastSyncFailed
+        }
+    }
+
+    private fun calendarSyncOf(prefs: Preferences) = CalendarSyncSettings(
+        enabled = prefs[Keys.calendarSyncEnabled] ?: false,
+        visibleCalendarIds = prefs[Keys.calendarSyncVisible].orEmpty().split(',').mapNotNull { it.trim().toLongOrNull() }.toSet(),
+        targetCalendarId = prefs[Keys.calendarSyncTarget]?.takeIf { it > 0 },
+        lastSyncAt = prefs[Keys.calendarSyncLast] ?: 0,
+        lastSyncFailed = prefs[Keys.calendarSyncFailed] ?: false,
+    )
 
     /** Raw key/value snapshot for backups; device-specific state (onboarding, index version) is left out. */
     suspend fun export(): Map<String, String> {
@@ -150,12 +185,21 @@ class UserPreferencesDataSource @Inject constructor(
             colorTheme = str(Keys.colorTheme)?.let { key -> ColorTheme.entries.firstOrNull { it.key == key } } ?: d.colorTheme,
             // Installs from before the first-run language screen: finishing onboarding implies a choice.
             languageChosen = prefs[Keys.languageChosen] ?: prefs[Keys.onboarding] ?: d.languageChosen,
+            calendarDecorations = CalendarDecorations(
+                holidays = bool(Keys.calendarHolidays) ?: d.calendarDecorations.holidays,
+                occasions = bool(Keys.calendarOccasions) ?: d.calendarDecorations.occasions,
+                hijriDate = bool(Keys.calendarHijri) ?: d.calendarDecorations.hijriDate,
+            ),
         )
     }
 
     private companion object {
         const val AUTO = "AUTO"
-        val DEVICE_KEYS = setOf(Keys.onboarding.name, Keys.languageChosen.name, Keys.searchIndexVersion.name)
+        val DEVICE_KEYS = setOf(
+            Keys.onboarding.name, Keys.languageChosen.name, Keys.searchIndexVersion.name,
+            Keys.calendarSyncEnabled.name, Keys.calendarSyncVisible.name, Keys.calendarSyncTarget.name,
+            Keys.calendarSyncLast.name, Keys.calendarSyncFailed.name,
+        )
     }
 
     /** Known sections in saved order; sections added in newer versions are appended. */
@@ -182,6 +226,9 @@ class UserPreferencesDataSource @Inject constructor(
         prefs[Keys.onboarding] = s.onboardingCompleted
         prefs[Keys.colorTheme] = s.colorTheme.key
         prefs[Keys.languageChosen] = s.languageChosen
+        prefs[Keys.calendarHolidays] = s.calendarDecorations.holidays
+        prefs[Keys.calendarOccasions] = s.calendarDecorations.occasions
+        prefs[Keys.calendarHijri] = s.calendarDecorations.hijriDate
     }
 }
 

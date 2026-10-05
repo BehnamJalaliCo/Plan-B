@@ -78,6 +78,32 @@ data class DashboardConfig(
 }
 
 /**
+ * Iran's official calendar in the calendar views (Plan-B Pro #2): official holidays (and Friday
+ * as the weekend in the Jalali calendar), other occasions, and the Hijri (lunar) date.
+ */
+data class CalendarDecorations(
+    val holidays: Boolean = true,
+    val occasions: Boolean = true,
+    val hijriDate: Boolean = true,
+)
+
+/**
+ * Device calendar sync (Plan-B Pro #3). Device-specific: calendar ids only mean something on
+ * this device, so these values are never part of a backup.
+ */
+data class CalendarSyncSettings(
+    val enabled: Boolean = false,
+    /** Device calendars whose events are shown (read only) in Plan-B's calendar. */
+    val visibleCalendarIds: Set<Long> = emptySet(),
+    /** The device calendar Plan-B's own events are written to; null = none chosen yet. */
+    val targetCalendarId: Long? = null,
+    /** Epoch ms of the last successful sync, 0 = never. */
+    val lastSyncAt: Long = 0,
+    /** True when the last attempt failed (for example the permission was taken back). */
+    val lastSyncFailed: Boolean = false,
+)
+
+/**
  * All user preferences. [calendarSystem] and [firstDayOfWeek] are nullable:
  * null means "follow the language default" (Jalali + Saturday for Persian).
  */
@@ -104,6 +130,8 @@ data class UserSettings(
      * count as having chosen.
      */
     val languageChosen: Boolean = false,
+    /** Plan-B Pro #2: what the calendar shows of Iran's official calendar (shown only with Pro). */
+    val calendarDecorations: CalendarDecorations = CalendarDecorations(),
 ) {
     /** The palette to draw with: premium themes fall back to the classic one without Pro. */
     fun effectiveColorTheme(isPro: Boolean): ColorTheme = if (isPro || !colorTheme.isPremium) colorTheme else ColorTheme.CLASSIC

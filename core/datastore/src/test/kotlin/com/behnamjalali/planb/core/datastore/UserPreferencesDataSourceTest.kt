@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.behnamjalali.planb.core.model.AppLanguage
+import com.behnamjalali.planb.core.model.CalendarDecorations
+import com.behnamjalali.planb.core.model.CalendarSyncSettings
 import com.behnamjalali.planb.core.model.CalendarSystem
 import com.behnamjalali.planb.core.model.ColorTheme
 import com.behnamjalali.planb.core.model.DashboardSection
@@ -15,6 +17,7 @@ import java.io.File
 import java.nio.file.Files
 import java.time.DayOfWeek
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -166,5 +169,27 @@ class UserPreferencesDataSourceTest {
         val ocean = UserSettings(colorTheme = ColorTheme.OCEAN)
         assertThat(ocean.effectiveColorTheme(isPro = false)).isEqualTo(ColorTheme.CLASSIC)
         assertThat(ocean.effectiveColorTheme(isPro = true)).isEqualTo(ColorTheme.OCEAN)
+    }
+
+    @Test
+    fun calendarDecorations_areBackedUp_butDeviceCalendarSyncIsNot() = runTest {
+        val source = UserPreferencesDataSource(newStore(Files.createTempDirectory("f").toFile(), backgroundScope))
+        source.update { it.copy(calendarDecorations = CalendarDecorations(holidays = true, occasions = false, hijriDate = false)) }
+        source.updateCalendarSync { it.copy(enabled = true, visibleCalendarIds = setOf(3, 1), targetCalendarId = 3, lastSyncAt = 42) }
+        assertThat(source.calendarSync.first()).isEqualTo(
+            CalendarSyncSettings(enabled = true, visibleCalendarIds = setOf(1, 3), targetCalendarId = 3, lastSyncAt = 42),
+        )
+        val exported = source.export()
+        assertThat(exported["calendar_occasions"]).isEqualTo("false")
+        assertThat(exported.keys.filter { it.startsWith("calendar_sync") }).isEmpty()
+
+        val other = UserPreferencesDataSource(newStore(Files.createTempDirectory("g").toFile(), backgroundScope))
+        other.updateCalendarSync { it.copy(enabled = true, targetCalendarId = 8) }
+        other.import(exported)
+        assertThat(other.current().calendarDecorations).isEqualTo(CalendarDecorations(holidays = true, occasions = false, hijriDate = false))
+        // This device's calendars stay as they were.
+        assertThat(other.calendarSync.first().targetCalendarId).isEqualTo(8)
+        // Defaults: everything shown (only drawn with Plan-B Pro).
+        assertThat(UserSettings().calendarDecorations).isEqualTo(CalendarDecorations(true, true, true))
     }
 }
