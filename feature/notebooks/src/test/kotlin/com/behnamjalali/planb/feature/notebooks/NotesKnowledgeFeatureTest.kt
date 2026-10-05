@@ -83,8 +83,8 @@ class NotesKnowledgeFeatureTest {
         NoteEditorViewModel(
             SavedStateHandle(mapOf("noteId" to noteId)), graph.notes, NoTemplates,
             DocumentFiles(ApplicationProvider.getApplicationContext(), Dispatchers.IO), main.scope, null, null,
-            OfflineNoteHistoryRepository(graph.db, graph.notes, graph.time) { graph.pro },
-            OfflineNoteLinkRepository(graph.db),
+            history = OfflineNoteHistoryRepository(graph.db, graph.notes, graph.time) { graph.pro },
+            links = OfflineNoteLinkRepository(graph.db),
         ),
     )
 
