@@ -433,16 +433,12 @@ private fun CorrelationLine(c: MoodCorrelation) {
         CorrelationStrength.MODERATE -> stringResource(R.string.mood_strength_moderate)
         CorrelationStrength.STRONG -> stringResource(R.string.mood_strength_strong)
     }
-    val text = stringResource(
-        when {
-            c.strength == CorrelationStrength.NONE -> R.string.mood_pattern_none
-            c.positive -> R.string.mood_pattern_positive
-            else -> R.string.mood_pattern_negative
-        },
-        factor,
-        strength,
-        numbers.format(c.days),
-    )
+    val days = numbers.format(c.days)
+    val text = when {
+        c.strength == CorrelationStrength.NONE -> stringResource(R.string.mood_pattern_none, factor, days)
+        c.positive -> stringResource(R.string.mood_pattern_positive, factor, strength, days)
+        else -> stringResource(R.string.mood_pattern_negative, factor, strength, days)
+    }
     Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = Spacing.xxs))
 }
 

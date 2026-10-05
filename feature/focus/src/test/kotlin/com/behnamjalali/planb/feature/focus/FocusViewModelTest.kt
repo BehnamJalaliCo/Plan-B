@@ -258,7 +258,7 @@ class FocusViewModelTest {
             time.advance(Duration.ofMinutes(25))
             graph.focus.finish()
         }
-        val state = viewModel.uiState.awaitItem { it.completedToday == 2 && it.focusPro.longBreakEvery == 2 }
+        val state = viewModel.uiState.awaitItem { it.completedToday == 2 && it.focusPro.longBreakEvery == 2 && it.focusedTodayMinutes == 50 }
         assertThat(state.cycle.longBreak).isTrue()
         assertThat(state.cycle.breakMinutes).isEqualTo(20)
         assertThat(state.focusedTodayMinutes).isEqualTo(50)

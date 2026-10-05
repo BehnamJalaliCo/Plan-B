@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -183,7 +184,7 @@ fun ChallengesScreen(
 @Composable
 private fun StartChallengeSheet(habits: List<Habit>, onDismiss: () -> Unit, onStart: (EntityId, Int) -> Unit) {
     var habitId by rememberSaveable { mutableStateOf(habits.firstOrNull()?.id) }
-    var days by rememberSaveable { mutableStateOf(ChallengeRules.LENGTHS[1]) }
+    var days by rememberSaveable { mutableIntStateOf(ChallengeRules.LENGTHS[1]) }
     val numbers = PlannerLocals.numbers
     PlannerBottomSheet(onDismiss = onDismiss) {
         Text(stringResource(R.string.challenges_new_title), style = MaterialTheme.typography.titleLarge)

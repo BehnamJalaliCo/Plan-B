@@ -114,7 +114,7 @@
     <string name="mood_factor_sleep">ساعت‌های خواب</string>
     <string name="mood_pattern_positive">با %1$s بیشتر، حالتان معمولاً بهتر است (%2$s، %3$s روز).</string>
     <string name="mood_pattern_negative">با %1$s بیشتر، حالتان معمولاً کمتر خوب است (%2$s، %3$s روز).</string>
-    <string name="mood_pattern_none">رابطهٔ روشنی با %1$s دیده نمی‌شود (%3$s روز).</string>
+    <string name="mood_pattern_none">رابطهٔ روشنی با %1$s دیده نمی‌شود (%2$s روز).</string>
     <string name="mood_strength_weak">ضعیف</string>
     <string name="mood_strength_moderate">متوسط</string>
     <string name="mood_strength_strong">قوی</string>

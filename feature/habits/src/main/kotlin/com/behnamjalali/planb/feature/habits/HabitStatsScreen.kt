@@ -186,17 +186,11 @@ private fun TrendCard(state: HabitStatsUi) {
                 },
             )
             Text(
-                stringResource(
-                    when (trend.direction) {
-                        TrendDirection.UP -> R.string.habit_stats_trend_up
-                        TrendDirection.DOWN -> R.string.habit_stats_trend_down
-                        TrendDirection.STEADY -> R.string.habit_stats_trend_steady
-                    },
-                    points,
-                    numbers.percent(trend.recent),
-                    numbers.percent(trend.previous),
-                    days,
-                ),
+                when (trend.direction) {
+                    TrendDirection.UP -> stringResource(R.string.habit_stats_trend_up, points, numbers.percent(trend.recent), numbers.percent(trend.previous), days)
+                    TrendDirection.DOWN -> stringResource(R.string.habit_stats_trend_down, points, numbers.percent(trend.recent), numbers.percent(trend.previous), days)
+                    TrendDirection.STEADY -> stringResource(R.string.habit_stats_trend_steady, numbers.percent(trend.recent), numbers.percent(trend.previous), days)
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f),
             )

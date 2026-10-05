@@ -296,12 +296,12 @@ class HabitEditorViewModel @Inject constructor(
     val health: StateFlow<HealthEditorState> = _health
 
     /** The Health Connect permissions the chosen metric needs (for the permission request). */
-    fun healthPermissions(): Set<String> = form.value.metric?.let(healthSync::permissionsFor).orEmpty()
+    fun healthPermissions(): Set<String> = currentForm().metric?.let(healthSync::permissionsFor).orEmpty()
 
     /** Re-reads availability and access (after the permission screen, or coming back from Health Connect). */
     fun refreshHealth() {
         viewModelScope.launch {
-            val metric = form.value.metric
+            val metric = currentForm().metric
             _health.value = HealthEditorState(
                 availability = healthSync.availability(),
                 granted = metric != null && runCatchingSafely { healthSync.hasPermission(metric) }.getOrDefault(false),
@@ -341,9 +341,13 @@ class HabitEditorViewModel @Inject constructor(
         }
     }
 
+    /** Applies [transform] to the latest form (the saved state, not the [form] flow, which may lag a quick second edit). */
     fun update(transform: (HabitForm) -> HabitForm) {
-        savedState[KEY_FORM] = json.encodeToString(HabitForm.serializer(), transform(form.value))
+        savedState[KEY_FORM] = json.encodeToString(HabitForm.serializer(), transform(currentForm()))
     }
+
+    private fun currentForm(): HabitForm =
+        savedState.get<String>(KEY_FORM)?.takeIf { it.isNotBlank() }?.let { json.decodeFromString(HabitForm.serializer(), it) } ?: form.value
 
     fun save() {
         if (!form.value.valid) return

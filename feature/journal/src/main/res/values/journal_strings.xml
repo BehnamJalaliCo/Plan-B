@@ -118,7 +118,7 @@
     <!-- %1$s: a factor such as "habits you complete", %2$s: strength, %3$s: days. -->
     <string name="mood_pattern_positive">Your mood tends to be higher with more %1$s (%2$s, %3$s days).</string>
     <string name="mood_pattern_negative">Your mood tends to be lower with more %1$s (%2$s, %3$s days).</string>
-    <string name="mood_pattern_none">No clear link with %1$s (%3$s days).</string>
+    <string name="mood_pattern_none">No clear link with %1$s (%2$s days).</string>
     <string name="mood_strength_weak">weak</string>
     <string name="mood_strength_moderate">moderate</string>
     <string name="mood_strength_strong">strong</string>

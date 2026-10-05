@@ -140,6 +140,7 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
     Do Not Disturb access (strict mode, only after you allow it) and Health Connect read
     permissions for steps, sleep, water, exercise and distance (asked one at a time when you
     link a habit). See PRIVACY.md.
+  - The release APK grows by about 460 KB (Health Connect client and the new screens).
 
 ### Changed
 - Today's timeline also shows tasks at the start of their time block.

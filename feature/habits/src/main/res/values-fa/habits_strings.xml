@@ -84,7 +84,7 @@
     <string name="habit_stats_trend">روند</string>
     <string name="habit_stats_trend_up">%1$s واحد بهتر: %2$s در %4$s روز اخیر، %3$s در %4$s روز قبل از آن.</string>
     <string name="habit_stats_trend_down">%1$s واحد کمتر: %2$s در %4$s روز اخیر، %3$s در %4$s روز قبل از آن.</string>
-    <string name="habit_stats_trend_steady">ثابت: %2$s در %4$s روز اخیر، %3$s در %4$s روز قبل از آن.</string>
+    <string name="habit_stats_trend_steady">ثابت: %1$s در %3$s روز اخیر، %2$s در %3$s روز قبل از آن.</string>
     <string name="habit_stats_trend_none">روند وقتی نمایش داده می‌شود که عادت %1$s روزه شود.</string>
     <string name="habit_stats_weeks">%1$s هفتهٔ اخیر</string>
     <string name="habit_stats_months">%1$s ماه اخیر</string>

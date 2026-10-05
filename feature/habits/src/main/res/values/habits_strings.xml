@@ -85,7 +85,7 @@
     <!-- %1$s: percentage points, %2$s: rate of the recent days, %3$s: rate of the days before, %4$s: number of days (30). -->
     <string name="habit_stats_trend_up">Up %1$s points: %2$s in the last %4$s days, %3$s in the %4$s before.</string>
     <string name="habit_stats_trend_down">Down %1$s points: %2$s in the last %4$s days, %3$s in the %4$s before.</string>
-    <string name="habit_stats_trend_steady">Steady: %2$s in the last %4$s days, %3$s in the %4$s before.</string>
+    <string name="habit_stats_trend_steady">Steady: %1$s in the last %3$s days, %2$s in the %3$s before.</string>
     <string name="habit_stats_trend_none">The trend appears once the habit is %1$s days old.</string>
     <string name="habit_stats_weeks">Last %1$s weeks</string>
     <string name="habit_stats_months">Last %1$s months</string>

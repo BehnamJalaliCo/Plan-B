@@ -423,8 +423,8 @@ it (`TestWellbeingStoreModule`).
 of backup format 2 (see [BACKUP_FORMAT.md](BACKUP_FORMAT.md)); the Focus Pro preferences are
 exported keys. Health Connect data itself is never backed up.
 
-**APK size.** Release APK (unsigned, R8): 17,228,170 → see the CHANGELOG entry for the measured
-size of this package. No audio assets: the sounds are generated. The Health Connect client is
+**APK size.** Release APK (unsigned, R8): 17,228,170 → 17,688,429 bytes (+460 KB, +2.7 %).
+No audio assets: the sounds are generated. The Health Connect client is
 pure Kotlin/Java (its Guava dependency is mostly removed by R8).
 
 ## Calendar (#2, #3, #6, #7)
