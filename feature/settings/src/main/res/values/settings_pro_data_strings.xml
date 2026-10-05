@@ -25,4 +25,6 @@
     <string name="auto_backup_keeps">The newest %1$s automatic backups are kept; older ones are deleted. Other files in the folder are never touched.</string>
     <string name="auto_backup_error_folder">the folder is no longer available. Choose it again.</string>
     <string name="auto_backup_error_write">the file could not be written. Check the free space or the connection of the folder.</string>
+    <string name="settings_day_planning">Day planning and rituals</string>
+    <string name="settings_day_planning_summary">Working hours, breaks and ritual reminders</string>
 </resources>

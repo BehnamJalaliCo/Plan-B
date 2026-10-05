@@ -25,4 +25,6 @@
     <string name="auto_backup_keeps">%1$s پشتیبان خودکار تازه‌تر نگه داشته و قدیمی‌ترها حذف می‌شوند. به فایل‌های دیگر پوشه هرگز دست زده نمی‌شود.</string>
     <string name="auto_backup_error_folder">پوشه دیگر در دسترس نیست. دوباره انتخابش کنید.</string>
     <string name="auto_backup_error_write">فایل نوشته نشد. فضای خالی یا اتصال پوشه را بررسی کنید.</string>
+    <string name="settings_day_planning">برنامه‌ریزی روز و آیین‌ها</string>
+    <string name="settings_day_planning_summary">ساعت کاری، استراحت و یادآور آیین‌ها</string>
 </resources>

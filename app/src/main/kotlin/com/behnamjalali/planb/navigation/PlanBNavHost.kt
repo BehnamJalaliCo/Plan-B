@@ -93,6 +93,12 @@ import com.behnamjalali.planb.feature.today.TodayActions
 import com.behnamjalali.planb.feature.today.TodayDestination
 import com.behnamjalali.planb.feature.today.TodayRoute
 import com.behnamjalali.planb.feature.today.capture.CaptureType
+import com.behnamjalali.planb.feature.today.DayPlanSettingsRoute
+import com.behnamjalali.planb.feature.today.RitualRoute
+import com.behnamjalali.planb.feature.today.plan.DayPlanSettingsDestination
+import com.behnamjalali.planb.feature.today.ritual.RitualDestination
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import com.behnamjalali.planb.ui.MoreScreen
 
 @Composable
@@ -130,6 +136,8 @@ fun PlanBNavHost(
                     onOpenNotebooks = { nav.go { navigateTopLevel(TopLevelDestination.NOTEBOOKS) } },
                     onOpenSearch = { nav.navigate(SearchRoute) },
                     onNewNote = { nav.navigate(NoteEditorRoute()) },
+                    onOpenRitual = { nav.navigate(RitualRoute(it.key)) },
+                    onOpenDayPlanSettings = { nav.navigate(DayPlanSettingsRoute) },
                 ),
                 snackbarHostState = snackbarHostState,
                 contentPadding = contentPadding,
@@ -285,6 +293,7 @@ fun PlanBNavHost(
                 onOpenPro = { nav.navigate(PaywallRoute()) },
                 onCustomizeToday = onCustomizeToday,
                 onOpenSecurity = { nav.navigate(SecurityRoute) },
+                onOpenDayPlanning = { nav.navigate(DayPlanSettingsRoute) },
             )
         }
         composable<PaywallRoute> { entry -> PaywallDestination(onBack = rememberScreenNavigator(navController, entry).back) }
@@ -317,6 +326,17 @@ fun PlanBNavHost(
             val nav = rememberScreenNavigator(navController, entry)
             SmartListsDestination(onBack = nav.back, onEdit = { nav.navigate(SmartListEditorRoute(it ?: 0)) })
         }
+        // Plan-B Pro smart day (WP2b): rituals (#8) and working hours for day planning (#5).
+        composable<RitualRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            val scope = rememberCoroutineScope()
+            RitualDestination(
+                onClose = nav.back,
+                onOpenWorkingHours = { nav.navigate(DayPlanSettingsRoute) },
+                onMessage = { scope.launch { snackbarHostState.showSnackbar(it) } },
+            )
+        }
+        composable<DayPlanSettingsRoute> { entry -> DayPlanSettingsDestination(onBack = rememberScreenNavigator(navController, entry).back) }
         composable<EisenhowerRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
             EisenhowerDestination(onBack = nav.back, onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) }, snackbarHostState = snackbarHostState)
@@ -415,6 +435,8 @@ fun NavHostController.handleDeepLink(uri: Uri) {
         "event" -> id?.let { navigate(EventEditorRoute(eventId = it)) }
         "habit" -> id?.let { navigate(HabitDetailRoute(it)) }
         "focus" -> navigate(FocusRoute)
+        // Ritual reminders (Plan-B Pro #8): planb://open/ritual/morning|evening.
+        "ritual" -> segments.getOrNull(1)?.takeIf { it == "morning" || it == "evening" }?.let { navigate(RitualRoute(it)) }
         // Widgets, quick-settings tiles and launcher shortcuts (Plan-B Pro #32, #34).
         "new-task" -> navigate(TaskEditorRoute())
         "new-note" -> navigate(NoteEditorRoute())
