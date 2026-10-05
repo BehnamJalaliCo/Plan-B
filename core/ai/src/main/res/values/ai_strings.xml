@@ -5,5 +5,6 @@
     <string name="ai_error_invalid_key">The key was not accepted. Check the key and the selected provider.</string>
     <string name="ai_error_network">The connection could not be established. Check the key and your internet connection, then try again.</string>
     <string name="ai_error_rate_limited">The provider is receiving too many requests right now. Please try again in a moment.</string>
-    <string name="ai_error_provider">The provider could not answer this request. Check the model name and try again.</string>
+    <string name="ai_error_provider">The provider could not answer this request. Check the key and the model name, then try again.</string>
+    <string name="ai_error_not_configured">The assistant is not set up yet. Choose a provider, add your key and turn it on in the assistant settings.</string>
 </resources>

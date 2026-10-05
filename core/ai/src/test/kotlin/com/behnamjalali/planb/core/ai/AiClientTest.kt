@@ -141,7 +141,7 @@ class AiClientTest {
 }
 
 /** AES-GCM with an in-memory key, standing in for the Android Keystore on the JVM. */
-private class TestCipher : SecretCipher {
+internal class TestCipher : SecretCipher {
     private val key = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
     override fun encrypt(plain: ByteArray): ByteArray {
         val c = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.ENCRYPT_MODE, key) }

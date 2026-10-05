@@ -54,6 +54,12 @@ data class AiSettings(
 
     /** The base URL to call: the user's entry, or the provider's default. */
     val effectiveBaseUrl: String get() = baseUrl.ifBlank { provider?.defaultBaseUrl.orEmpty() }
+
+    /** Provider, address, model and key are all set (whether or not the assistant is on). */
+    val isComplete: Boolean get() = provider != null && effectiveBaseUrl.isNotBlank() && model.isNotBlank() && hasKey
+
+    /** On and complete: requests can be made. */
+    val isReady: Boolean get() = enabled && isComplete
 }
 
 /** Encrypts small secrets with a key that never leaves this device. */
@@ -194,10 +200,16 @@ class AiSettingsRepository @Inject constructor(
      * The endpoint for a request, or null when the assistant is off or incomplete. A key that
      * cannot be decrypted (for example after the device's keys were reset) counts as missing.
      */
-    suspend fun endpoint(): AiEndpoint? {
+    suspend fun endpoint(): AiEndpoint? = endpoint(requireEnabled = true)
+
+    /**
+     * Like [endpoint]; with [requireEnabled] false it also works before the assistant is turned
+     * on, so the settings screen can test the key and load the model list.
+     */
+    suspend fun endpoint(requireEnabled: Boolean): AiEndpoint? {
         val prefs = data.first()
         val settings = current()
-        if (!settings.enabled) return null
+        if (requireEnabled && !settings.enabled) return null
         val provider = settings.provider ?: return null
         val baseUrl = settings.effectiveBaseUrl.takeIf { it.isNotBlank() } ?: return null
         val model = settings.model.takeIf { it.isNotBlank() } ?: return null
@@ -211,6 +223,13 @@ class AiSettingsRepository @Inject constructor(
 @InstallIn(SingletonComponent::class)
 abstract class AiModule {
     @Binds abstract fun bindCipher(impl: AndroidKeystoreCipher): SecretCipher
+}
+
+/** The provider client; JVM app tests replace this module with a scripted fake. */
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class AiApiModule {
+    @Binds abstract fun bindApi(impl: AiClient): AiApi
 }
 
 @Module
