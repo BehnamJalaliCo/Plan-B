@@ -19,21 +19,21 @@ amounts above (`FallbackPrices` in `feature/pro`), formatted with the user's dig
 
 The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable; never rename).
 
-**Planning & calendar**
+**Planning & calendar** (#4 and #9–#14 implemented, see [Planning](#planning-4-914))
 1. `persian_quick_add` — Persian natural-language quick add
 2. `iran_holidays` — official Iranian holidays, occasions and Hijri (lunar) dates
 3. `calendar_sync` — two-way sync with the device calendar (Google Calendar through Android's calendar provider)
-4. `advanced_recurrence` — advanced recurrence ("second Monday of every month", "3 days after completion")
+4. `advanced_recurrence` — advanced recurrence ("second Monday of every month", "3 days after completion") ✅
 5. `auto_planning` — automatic day planning (auto-schedule tasks into free time)
 6. `time_blocking` — time blocking (drag tasks onto calendar hours)
 7. `day_timeline` — vertical day timeline
 8. `daily_rituals` — morning planning and evening shutdown ritual
-9. `project_timeline` — project Gantt/timeline view
-10. `smart_lists` — custom smart lists and filters
-11. `deadlines` — separate deadline and planned date
-12. `multiple_reminders` — up to 5 reminders per task, nagging reminder until done
-13. `eisenhower` — Eisenhower matrix
-14. `dependencies` — task dependencies
+9. `project_timeline` — project Gantt/timeline view ✅
+10. `smart_lists` — custom smart lists and filters ✅
+11. `deadlines` — separate deadline and planned date ✅
+12. `multiple_reminders` — up to 5 reminders per task, nagging reminder until done ✅
+13. `eisenhower` — Eisenhower matrix ✅
+14. `dependencies` — task dependencies ✅
 
 **Notes**
 15. `rich_notes` — images, attachments, tables and pen drawing in notes
@@ -215,7 +215,25 @@ only) inside the repositories' transactions for tasks, notes, notebooks, project
 habits and goals, merges edits within 10 minutes and caps the table at 5,000 rows. The data
 layer learns about Pro through `ProStatusSource` (bound to the entitlement in `app`).
 
-## AI assistant (#39) infrastructure
+## Planning (#4, #9–#14)
+
+Data lives in the v3 schema (no schema change): `tasks.recurrence`, `tasks.deadline`,
+`tasks.nag`, `task_reminders`, `task_dependencies`, `saved_filters`. Free users see each entry
+point with a Pro badge or a `ProTeaser`; a tap opens the Pro screen for that feature. Data made
+while Pro was active stays visible and working if Pro ends (lists stay selectable, reminders keep
+firing, deadlines and locks keep showing).
+
+| # | Where | How it works |
+|---|---|---|
+| 4 | Task editor › Repeat › Custom (`CustomRecurrenceDialog`, `allowAfterCompletion`) | `RecurrenceRule` gains `setPosition` (`BYSETPOS`, 1–5 or −1 = last), `basis` (`BASIS=COMPLETION`) and `weekStart` (`WKST`), written only when used, so older rules keep their text. `RecurrenceEngine` takes, in each month of the rule's calendar (Jalali or Gregorian), the days with the chosen weekday and picks the n-th; **a month without a fifth weekday is skipped** (never moved to the fourth/last). "Count from completion": completing a task plans the next one *interval* after today (`RecurrenceEngine.nextAfterCompletion`); its count is carried as "occurrences left" by each new occurrence (reopening gives it back). "Every N weeks" counts weeks from the user's first day of week (Pro; free rules keep the calendar's week). The dialog shows the rule in words (`recurrenceSummary`, fa/en, user's digits). |
+| 9 | Project › Timeline tab (`ProjectTimeline`, `TimelineLayout`) | One Canvas scrolling both ways, drawing only the visible days and rows (smooth with hundreds of tasks). A bar runs from start date (or planned date, or deadline) to deadline (or planned date); milestones are diamonds; overdue bars use the error color, done ones are muted; a today line; dependency connectors from a blocker's end to the waiting task's start. Time flows from the reading start (right-to-left in Persian). Days/weeks zoom, sticky date header in the user's calendar, tap a bar to open the task, a spoken summary and "Open …" accessibility actions. Undated tasks are counted, not drawn. |
+| 10 | Tasks › chips after the built-in views; "+ Smart list"; Smart lists screen | `SmartListRepository` over `saved_filters`; `query` is the versioned JSON document of `SmartFilterCodec` (version 1: `projects`, `noProject`, `tags`, `priorities`, `statuses`, `date` = `OVERDUE`/`TODAY`/`NEXT_7_DAYS`/`NO_DATE`/`CUSTOM` with `from`/`to`, `hasDeadline`, `text`, `sort`; readers ignore unknown keys and values). `SmartFilterEvaluator` filters live, top-level, non-archived tasks (open ones unless a status says otherwise; text matching uses `SearchNormalizer`). Lists have a name, icon and color, a live match count while editing, and can be reordered and deleted. |
+| 11 | Task editor › Deadline; task rows; Today; sort menu | `tasks.deadline` is the hard deadline, `due_date` stays the planned date. Rows show "Deadline in 2 days" (error color when passed or today, warning within 2 days). **Overdue follows the deadline when there is one** (`Task.isOverdue`), otherwise the planned date as before. Today (and the Tasks Today view) also lists tasks whose deadline is at most 3 days away. Sort by deadline. Recurring tasks shift the deadline with the occurrence. |
+| 12 | Task editor › More reminders / Nag until done; notifications | Up to four extra reminders in `task_reminders`: `OFFSET` (before the planned time), `DEADLINE` (before 09:00 of the deadline day) or `ABSOLUTE`; a `NAG` row stores a non-default nag interval (5/10/15/30 min, default 10). `ReminderPlanner.forTask` computes the next moment of all of them plus a snooze and the nag repetitions (at most 12 after each reminder), so **one alarm per task** (same request code, same intended-time stale check) covers everything. Reminders with Pro data get **Done**/«انجام شد» and **Snooze** buttons (explicit broadcasts with `FLAG_IMMUTABLE` to the non-exported `ReminderActionReceiver`, handled with `goAsync`; button request codes use free slots of the `id × 8 + code` scheme). Swiping a nagging reminder away stops the nag for the reminders that fired. Snooze/dismiss state is device-only (`planb_nag_state` DataStore). Relative rows follow a recurring task to its next occurrence. |
+| 13 | Tasks › matrix icon (`EisenhowerRoute`) | **Important = priority High or Medium; urgent = overdue, or deadline or planned date within the chosen 1, 2, 3 or 7 days** (default 2). Hold a task and drag it to another quadrant (or use its accessibility actions): becoming important sets High, losing it sets Low; becoming urgent plans it for today, losing it plans it for the first day after the window. A deadline is never moved: if it alone keeps the task urgent, a message says so. Urgent quadrants sit on the reading-start side. |
+| 14 | Task editor › Waits for; task rows; timeline | `task_dependencies` (task waits for blocker). The editor picks tasks with search; a choice that would close a circle (DFS over all dependencies, tolerant of cycles already in restored data) is refused with a message, and the repository rejects it too (`DependencyCycleException`). Task lists carry the number of open blockers: a lock badge, and checking off a blocked task (checkbox, swipe, editor status) asks "Complete anyway?". Completing or deleting a blocker unblocks at once. |
+
+
 
 `core:ai` holds the provider catalog (`AiProviders`: generic Iranian OpenAI-compatible gateway,
 AvalAI, DeepSeek, Qwen/DashScope, OpenRouter, Groq, OpenAI, Anthropic, Gemini, custom), the

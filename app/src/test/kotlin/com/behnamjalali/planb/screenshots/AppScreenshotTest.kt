@@ -47,6 +47,20 @@ import com.behnamjalali.planb.core.data.repository.ProjectRepository
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
 import com.behnamjalali.planb.core.data.repository.EventRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
+import com.behnamjalali.planb.core.data.repository.SmartListRepository
+import com.behnamjalali.planb.core.data.repository.TaskPlanningRepository
+import com.behnamjalali.planb.core.model.CalendarSystem
+import com.behnamjalali.planb.core.model.Priority
+import com.behnamjalali.planb.core.model.RecurrenceFrequency
+import com.behnamjalali.planb.core.model.RecurrenceRule
+import com.behnamjalali.planb.core.model.SavedFilter
+import com.behnamjalali.planb.core.model.SmartDateRange
+import com.behnamjalali.planb.core.model.SmartFilter
+import com.behnamjalali.planb.core.model.TaskReminder
+import com.behnamjalali.planb.core.model.TaskReminderKind
+import com.behnamjalali.planb.core.model.TaskSort
+import com.behnamjalali.planb.feature.tasks.R as TasksR
+import com.behnamjalali.planb.core.ui.R as UiR
 import com.behnamjalali.planb.core.model.AppLanguage
 import com.behnamjalali.planb.core.model.Notebook
 import com.behnamjalali.planb.core.model.ProjectMilestone
@@ -114,6 +128,8 @@ class AppScreenshotTest(private val variant: Variant) {
     @Inject lateinit var developerBilling: DeveloperBilling
     @Inject lateinit var entitlements: EntitlementRepository
     @Inject lateinit var security: SecurityPreferences
+    @Inject lateinit var smartLists: SmartListRepository
+    @Inject lateinit var planning: TaskPlanningRepository
 
     private var scenario: ActivityScenario<MainActivity>? = null
     private val context: Context get() = ApplicationProvider.getApplicationContext()
@@ -318,6 +334,8 @@ class AppScreenshotTest(private val variant: Variant) {
         click(s(AppR.string.nav_tasks))
         click(fixtures.tasks.first().title)
         waitFor(hasText("Rehearse"))
+        // The form loads asynchronously (task, then its planning data).
+        waitFor(hasSetTextAction() and hasText(fixtures.tasks.first().title))
         capture("tasks", "task_editor")
     }
 
@@ -542,6 +560,121 @@ class AppScreenshotTest(private val variant: Variant) {
         waitFor(hasText(s(SettingsR.string.appearance_app_icon)))
         capture("settings", "appearance")
     }
+
+    // region Plan-B Pro planning (#4, #9–#14), captured as a Pro user.
+
+    private suspend fun seededTask(index: Int): Task =
+        tasks.observeTasks(com.behnamjalali.planb.core.data.repository.TaskFilter(today = fixtures.today)).first().first { it.title == fixtures.tasks[index].title }
+
+    @Test
+    fun smartListBuilder() {
+        launch(pro = true) {
+            smartLists.save(
+                SavedFilter(
+                    name = if (variant.language == AppLanguage.PERSIAN) "مهم این هفته" else "Important this week",
+                    icon = PlannerIcon.ROCKET,
+                    color = AccentColor.ROSE,
+                    filter = SmartFilter(
+                        priorities = setOf(Priority.HIGH, Priority.MEDIUM),
+                        dateRange = SmartDateRange.NEXT_7_DAYS,
+                        sort = TaskSort.DEADLINE,
+                    ),
+                ),
+            )
+        }
+        click(s(AppR.string.nav_tasks))
+        click(if (variant.language == AppLanguage.PERSIAN) "مهم این هفته" else "Important this week")
+        click(s(TasksR.string.tasks_edit_smart_list))
+        waitFor(hasText(s(TasksR.string.smart_list_priority)))
+        // The live match count arrives after a short debounce: high/medium priority within 7 days.
+        val three = if (variant.language == AppLanguage.PERSIAN) "۳" else "3"
+        waitFor(hasText(context.resources.getQuantityString(TasksR.plurals.smart_list_matches, 3, three)))
+        capture("tasks", "smart_list_builder")
+    }
+
+    @Test
+    fun eisenhowerMatrix() {
+        launch(pro = true) {
+            val report = seededTask(3)
+            tasks.save(report.copy(deadline = fixtures.today.plusDays(1)))
+        }
+        click(s(AppR.string.nav_tasks))
+        clickDescription(s(TasksR.string.tasks_eisenhower))
+        waitFor(hasText(s(TasksR.string.eisenhower_schedule_sub)))
+        waitFor(hasText(fixtures.tasks[6].title, substring = true))
+        capture("tasks", "eisenhower")
+    }
+
+    @Test
+    fun projectTimeline() {
+        launch(pro = true) {
+            val presentation = seededTask(0)
+            val call = seededTask(1)
+            tasks.save(presentation.copy(startDate = fixtures.today.minusDays(3)))
+            tasks.save(call.copy(startDate = fixtures.today.plusDays(1), dueDate = fixtures.today.plusDays(4), deadline = fixtures.today.plusDays(6)))
+            val projectId = presentation.projectId!!
+            val beta = tasks.save(Task(title = if (variant.language == AppLanguage.PERSIAN) "آزمون نسخهٔ بتا" else "Beta testing", projectId = projectId, startDate = fixtures.today.plusDays(5), dueDate = fixtures.today.plusDays(12)))
+            planning.setDependencies(call.id, listOf(presentation.id))
+            planning.setDependencies(beta, listOf(call.id))
+        }
+        openMore(AppR.string.more_projects)
+        click(fixtures.projects.first().title)
+        waitFor(hasText(s(ProjectsR.string.project_tab_overview)))
+        selectTab(s(ProjectsR.string.project_tab_timeline))
+        waitFor(hasText(s(ProjectsR.string.project_timeline_days)))
+        capture("projects", "project_timeline")
+    }
+
+    @Test
+    fun taskEditorPlanning() {
+        launch(pro = true) {
+            val presentation = seededTask(0)
+            val call = seededTask(1)
+            tasks.save(presentation.copy(deadline = fixtures.today.plusDays(2), nag = true))
+            planning.setReminders(
+                presentation.id,
+                listOf(
+                    TaskReminder(kind = TaskReminderKind.OFFSET, offsetMinutes = 60),
+                    TaskReminder(kind = TaskReminderKind.DEADLINE, offsetMinutes = 1440),
+                ),
+                nagIntervalMinutes = 15,
+            )
+            planning.setDependencies(presentation.id, listOf(call.id))
+        }
+        click(s(AppR.string.nav_tasks))
+        click(fixtures.tasks.first().title)
+        waitFor(hasSetTextAction() and hasText(fixtures.tasks.first().title))
+        waitFor(hasText(s(TasksR.string.task_editor_more_reminders))).performScrollTo()
+        waitFor(hasText(fixtures.tasks[1].title, substring = true)).performScrollTo()
+        capture("tasks", "task_editor_planning")
+    }
+
+    @Test
+    fun advancedRecurrence() {
+        launch(pro = true) {
+            val bill = seededTask(5)
+            tasks.save(
+                bill.copy(
+                    recurrence = RecurrenceRule(
+                        RecurrenceFrequency.MONTHLY,
+                        weekdays = setOf(java.time.DayOfWeek.MONDAY),
+                        setPosition = 2,
+                        calendarSystem = if (variant.language == AppLanguage.PERSIAN) CalendarSystem.JALALI else CalendarSystem.GREGORIAN,
+                    ),
+                ),
+            )
+        }
+        click(s(AppR.string.nav_tasks))
+        selectTab(s(TasksR.string.tasks_view_all))
+        click(fixtures.tasks[5].title)
+        waitFor(hasText(s(TasksR.string.task_editor_repeat)))
+        click(s(TasksR.string.task_editor_repeat))
+        click(s(UiR.string.repeat_custom))
+        waitFor(hasText(s(UiR.string.repeat_monthly_on_weekday)))
+        capture("tasks", "advanced_recurrence")
+    }
+
+    // endregion
 
     // region First run: the language screen, the welcome (end of its animation), the three slides (settled)
 

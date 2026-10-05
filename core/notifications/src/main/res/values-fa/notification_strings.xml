@@ -12,4 +12,6 @@
     <string name="notif_habit_text">وقت %1$s است</string>
     <string name="notif_focus_title">جلسهٔ تمرکز تمام شد</string>
     <string name="notif_focus_text">آفرین! کمی استراحت کنید.</string>
+    <string name="notif_action_done">انجام شد</string>
+    <string name="notif_action_snooze">%1$s دقیقهٔ دیگر</string>
 </resources>

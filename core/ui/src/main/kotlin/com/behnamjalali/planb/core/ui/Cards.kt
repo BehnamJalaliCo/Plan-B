@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.Repeat
@@ -35,6 +36,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -127,7 +131,9 @@ private fun MetaItem(icon: ImageVector, text: String?, tint: Color, description:
 }
 
 /**
- * Task row card. [projectName]/[projectColor] are optional context.
+ * Task row card. [projectName]/[projectColor] are optional context. A task that still waits for
+ * other tasks (Plan-B Pro #14) shows a lock and asks before it is checked off; a deadline
+ * (#11) shows as a colored badge.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -147,6 +153,14 @@ fun PlannerTaskCard(
     val scheme = MaterialTheme.colorScheme
     val completed = task.isCompleted
     val overdue = task.isOverdue(today)
+    var confirmBlocked by rememberSaveable { mutableStateOf(false) }
+    val toggle: (Boolean) -> Unit = { checked -> if (checked && task.isBlocked) confirmBlocked = true else onToggleComplete(checked) }
+    if (confirmBlocked) {
+        CompleteBlockedDialog(task.openBlockerCount, onDismiss = { confirmBlocked = false }) {
+            confirmBlocked = false
+            onToggleComplete(true)
+        }
+    }
     val container by animateColorAsState(
         if (selected) scheme.primaryContainer else scheme.surfaceContainerLowest,
         PlanBTheme.motion.standard(),
@@ -162,7 +176,7 @@ fun PlannerTaskCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             AnimatedTaskCheckbox(
                 checked = completed,
-                onCheckedChange = onToggleComplete,
+                onCheckedChange = toggle,
                 color = if (task.priority == Priority.NONE) scheme.primary else priorityColor(task.priority),
                 contentDescription = task.title,
             )
@@ -211,6 +225,18 @@ fun PlannerTaskCard(
                                 numbers.format(task.completedSubtaskCount),
                                 numbers.format(task.subtaskCount),
                             ),
+                        )
+                    }
+                    if (!completed && task.deadline != null) {
+                        DeadlinePill(task.deadline!!, today)
+                    }
+                    if (task.isBlocked) {
+                        val blockers = task.openBlockerCount
+                        MetaItem(
+                            Icons.Rounded.Lock,
+                            formatter.numbers.format(blockers),
+                            scheme.onSurfaceVariant,
+                            pluralStringResource(R.plurals.ui_blocked_by, blockers, formatter.numbers.format(blockers)),
                         )
                     }
                     if (task.isRecurring) {

@@ -40,7 +40,7 @@ class TaskEditorViewModelTest {
     /** A handle that already holds a form skips the async initial load. */
     private fun viewModel(form: TaskForm = TaskForm()): TaskEditorViewModel {
         val handle = SavedStateHandle(mapOf("task_form" to Json.encodeToString(TaskForm.serializer(), form)))
-        return main.track(TaskEditorViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time))
+        return main.track(TaskEditorViewModel(handle, graph.tasks, graph.projects, graph.settings, graph.time, graph.planning))
     }
 
     private suspend fun allTasks() =

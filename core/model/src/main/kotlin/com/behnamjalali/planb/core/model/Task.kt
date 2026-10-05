@@ -49,14 +49,27 @@ data class Task(
     val nag: Boolean = false,
     /** Set while the task is in the trash. */
     val deletedAt: Instant? = null,
+    /** Open tasks this one still waits for (Pro #14 dependencies); read-only, computed by the query. */
+    val openBlockerCount: Int = 0,
 ) {
     val isCompleted: Boolean get() = status == TaskStatus.DONE
     val isRecurring: Boolean get() = recurrence != null
+    val isBlocked: Boolean get() = openBlockerCount > 0 && !isCompleted
 
-    fun isOverdue(today: LocalDate): Boolean = !isCompleted && dueDate != null && dueDate < today
+    /**
+     * Overdue uses the hard [deadline] when there is one: a task planned for yesterday whose
+     * deadline is next week is only carried over, not late. Without a deadline the planned
+     * [dueDate] decides, as before.
+     */
+    fun isOverdue(today: LocalDate): Boolean {
+        if (isCompleted) return false
+        val limit = deadline ?: dueDate ?: return false
+        return limit < today
+    }
 }
 
 /** Smart lists and filters supported by the task screen. */
 enum class TaskView { INBOX, TODAY, UPCOMING, SCHEDULED, COMPLETED, ARCHIVED, ALL }
 
-enum class TaskSort { MANUAL, DUE_DATE, PRIORITY, CREATED, TITLE }
+/** List orders. [DEADLINE] (Plan-B Pro #11) puts the nearest hard deadline first. */
+enum class TaskSort { MANUAL, DUE_DATE, PRIORITY, CREATED, TITLE, DEADLINE }

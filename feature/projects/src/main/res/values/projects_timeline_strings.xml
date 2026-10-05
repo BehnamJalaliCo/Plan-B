@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Plan-B Pro project timeline (#9) -->
+    <string name="project_tab_timeline">Timeline</string>
+    <string name="project_timeline_days">Days</string>
+    <string name="project_timeline_weeks">Weeks</string>
+    <string name="project_timeline_today">Today</string>
+    <string name="project_timeline_empty">Give tasks a start date, a planned date or a deadline to see them here.</string>
+    <plurals name="project_timeline_undated">
+        <item quantity="one">%1$s task without a date is not shown.</item>
+        <item quantity="other">%1$s tasks without a date are not shown.</item>
+    </plurals>
+    <!-- Spoken summary of the chart: %1$s items, from %2$s to %3$s -->
+    <string name="project_timeline_cd">Timeline with %1$s items, from %2$s to %3$s</string>
+    <string name="project_timeline_open">Open %1$s</string>
+</resources>

@@ -240,7 +240,8 @@ class BackupManager @Inject constructor(
     private class Reminders(val tasks: List<Long>, val events: List<Long>, val habits: List<Long>)
 
     private suspend fun currentReminders() = Reminders(
-        dao.tasks().filter { it.reminderOffsetMinutes != null }.map { it.id },
+        // The primary reminder, or extra reminders and nagging (Plan-B Pro #12).
+        (dao.tasks().filter { it.reminderOffsetMinutes != null || it.nag }.map { it.id } + dao.taskReminders().map { it.taskId }).distinct(),
         dao.events().filter { it.reminderOffsetMinutes != null }.map { it.id },
         dao.habits().filter { it.reminderTime != null }.map { it.id },
     )

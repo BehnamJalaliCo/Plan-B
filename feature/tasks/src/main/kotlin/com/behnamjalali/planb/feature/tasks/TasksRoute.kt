@@ -22,6 +22,10 @@ fun TasksDestination(
     snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues,
     viewModel: TasksViewModel = hiltViewModel(),
+    /** Plan-B Pro planning screens; the app wires navigation. */
+    onEditSmartList: (EntityId?) -> Unit = {},
+    onManageSmartLists: () -> Unit = {},
+    onOpenEisenhower: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val resources = LocalResources.current
@@ -82,6 +86,11 @@ fun TasksDestination(
             onDelete = { ids -> viewModel.requestDelete(ids) },
             onDuplicate = viewModel::duplicate,
             onMove = viewModel::move,
+            onSmartList = viewModel::setSmartList,
+            onNewSmartList = { onEditSmartList(null) },
+            onEditSmartList = { onEditSmartList(it) },
+            onManageSmartLists = onManageSmartLists,
+            onOpenEisenhower = onOpenEisenhower,
         ),
     )
 }

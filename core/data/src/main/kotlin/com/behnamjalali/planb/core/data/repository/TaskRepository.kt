@@ -18,8 +18,10 @@ import com.behnamjalali.planb.core.database.entity.TaskTagCrossRef
 import com.behnamjalali.planb.core.datetime.RecurrenceEngine
 import com.behnamjalali.planb.core.model.ActivityAction
 import com.behnamjalali.planb.core.model.ActivityEntityType
+import com.behnamjalali.planb.core.model.Deadlines
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.NEW_ID
+import com.behnamjalali.planb.core.model.RecurrenceBasis
 import com.behnamjalali.planb.core.model.RecurrenceRule
 import com.behnamjalali.planb.core.model.SearchEntityType
 import com.behnamjalali.planb.core.model.Tag
@@ -133,7 +135,8 @@ class OfflineTaskRepository @Inject constructor(
     override fun observeCompletedCount(from: java.time.Instant, to: java.time.Instant): Flow<Int> {
         // The TODAY view holds tasks due on or before the day being shown, i.e. the day `to` closes.
         val dueBy = to.minusMillis(1).atZone(time.zone()).toLocalDate()
-        return taskDao.observeCompletedForToday(from.toEpochMilli(), to.toEpochMilli(), dueBy)
+        val deadlineBy = dueBy.plusDays(Deadlines.TODAY_WINDOW_DAYS.toLong())
+        return taskDao.observeCompletedForToday(from.toEpochMilli(), to.toEpochMilli(), dueBy, deadlineBy)
     }
 
     override suspend fun getTask(id: EntityId): Task? = taskDao.getTask(id)?.toModel()
@@ -255,6 +258,10 @@ class OfflineTaskRepository @Inject constructor(
      * Marks [entity] done (inside a transaction). For a recurring task the completed
      * occurrence leaves the series and the next occurrence is created with the same tags and
      * fresh copies of the subtasks, all shifted by the same number of days. Returns its id.
+     *
+     * An "after completion" rule (Plan-B Pro #4) places the next occurrence its interval after
+     * today instead of after the schedule; its count is carried as "occurrences left", so each
+     * new occurrence holds one less and the last one ends the series.
      */
     private suspend fun complete(entity: TaskEntity, now: Instant, changes: ReminderChanges): EntityId? {
         val done = entity.copy(completed = true, status = TaskStatus.DONE.name, completedAt = now, updatedAt = now)
@@ -266,11 +273,18 @@ class OfflineTaskRepository @Inject constructor(
         var nextId: EntityId? = null
         val anchor = entity.recurrenceAnchor ?: entity.dueDate ?: time.today()
         val current = entity.dueDate ?: time.today()
-        val next = RecurrenceEngine.nextOccurrence(rule, anchor, current)
+        val afterCompletion = rule.basis == RecurrenceBasis.COMPLETION
+        val next = when {
+            !afterCompletion -> RecurrenceEngine.nextOccurrence(rule, anchor, current)
+            (rule.count ?: Int.MAX_VALUE) <= 1 -> null
+            else -> RecurrenceEngine.nextAfterCompletion(rule, time.today())
+        }
         if (next != null) {
+            val nextRule = if (afterCompletion) rule.copy(count = rule.count?.minus(1)) else rule
             val shift = ChronoUnit.DAYS.between(current, next)
             val nextEntity = entity.copy(
                 id = 0,
+                recurrence = nextRule.encode(),
                 dueDate = next,
                 startDate = entity.startDate?.plusDays(shift),
                 deadline = entity.deadline?.plusDays(shift),
@@ -308,11 +322,12 @@ class OfflineTaskRepository @Inject constructor(
     }
 
     /**
-     * Extra reminders relative to the due time (`OFFSET`) follow the task to its copy; fixed
-     * `ABSOLUTE` reminders belong to one moment and are not copied.
+     * Extra reminders relative to the due time or the deadline (`OFFSET`, `DEADLINE`) and the
+     * nag interval (`NAG`) follow the task to its copy; fixed `ABSOLUTE` reminders belong to one
+     * moment and are not copied.
      */
     private suspend fun copyRelativeReminders(fromId: EntityId, toId: EntityId) {
-        val reminders = db.taskReminderDao().forTask(fromId).filter { it.kind == "OFFSET" }
+        val reminders = db.taskReminderDao().forTask(fromId).filter { it.kind != "ABSOLUTE" }
         if (reminders.isNotEmpty()) db.taskReminderDao().insertAll(reminders.map { it.copy(id = 0, taskId = toId) })
     }
 
@@ -341,7 +356,15 @@ class OfflineTaskRepository @Inject constructor(
         changes.cancel += removed
         val reopened = taskDao.getEntity(id) ?: return
         if (reopened.recurrence == null) {
-            taskDao.update(reopened.copy(recurrence = spawned.recurrence, recurrenceAnchor = spawned.recurrenceAnchor, updatedAt = now))
+            // An "after completion" occurrence holds one occurrence less; give it back.
+            val rule = RecurrenceRule.decode(spawned.recurrence)
+            val left = rule?.count
+            val recurrence = if (rule?.basis == RecurrenceBasis.COMPLETION && left != null) {
+                rule.copy(count = left + 1).encode()
+            } else {
+                spawned.recurrence
+            }
+            taskDao.update(reopened.copy(recurrence = recurrence, recurrenceAnchor = spawned.recurrenceAnchor, updatedAt = now))
         }
     }
 
@@ -532,8 +555,11 @@ internal object TaskQueryBuilder {
         when (filter.view) {
             TaskView.INBOX -> where += "t.archived = 0 AND t.completed = 0 AND t.project_id IS NULL AND t.due_date IS NULL"
             TaskView.TODAY -> {
-                where += "t.archived = 0 AND t.completed = 0 AND t.due_date IS NOT NULL AND t.due_date <= ?"
+                // Planned for today or earlier, or a hard deadline within a few days (Pro #11).
+                where += "t.archived = 0 AND t.completed = 0 AND ((t.due_date IS NOT NULL AND t.due_date <= ?) OR " +
+                    "(t.deadline IS NOT NULL AND t.deadline <= ?))"
                 args += today
+                args += today + Deadlines.TODAY_WINDOW_DAYS
             }
             TaskView.UPCOMING -> {
                 where += "t.archived = 0 AND t.completed = 0 AND t.due_date > ?"
@@ -563,12 +589,15 @@ internal object TaskQueryBuilder {
         }
         val order = when {
             filter.view == TaskView.COMPLETED -> "t.completed_at DESC"
-            filter.sort == TaskSort.MANUAL && filter.view in setOf(TaskView.TODAY, TaskView.UPCOMING, TaskView.SCHEDULED) ->
+            filter.sort == TaskSort.MANUAL && filter.view == TaskView.TODAY ->
+                "COALESCE(t.due_date, t.deadline), t.due_time IS NULL, t.due_time, t.sort_order"
+            filter.sort == TaskSort.MANUAL && filter.view in setOf(TaskView.UPCOMING, TaskView.SCHEDULED) ->
                 "t.due_date, t.due_time IS NULL, t.due_time, t.sort_order"
             filter.sort == TaskSort.MANUAL -> "t.sort_order, t.id"
             filter.sort == TaskSort.DUE_DATE -> "t.due_date IS NULL, t.due_date, t.due_time IS NULL, t.due_time, t.sort_order"
             filter.sort == TaskSort.PRIORITY -> "t.priority DESC, t.due_date IS NULL, t.due_date, t.sort_order"
             filter.sort == TaskSort.CREATED -> "t.created_at DESC"
+            filter.sort == TaskSort.DEADLINE -> "t.deadline IS NULL, t.deadline, t.due_date IS NULL, t.due_date, t.sort_order"
             else -> "t.title COLLATE NOCASE"
         }
         val sql = buildString {

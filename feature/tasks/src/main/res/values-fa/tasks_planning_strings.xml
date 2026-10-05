@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="task_editor_deadline">مهلت</string>
+    <string name="task_editor_more_reminders">یادآورهای بیشتر</string>
+    <string name="task_editor_add_reminder">افزودن یادآور</string>
+    <string name="task_editor_reminders_full">حداکثر %1$s یادآور برای هر کار</string>
+    <string name="task_editor_remove_reminder">حذف یادآور: %1$s</string>
+    <string name="task_editor_reminder_needs_due">اول تاریخ برنامه را مشخص کنید.</string>
+    <string name="task_editor_reminder_needs_deadline">اول مهلت را مشخص کنید.</string>
+    <string name="task_editor_reminder_date">تاریخ</string>
+    <string name="task_editor_reminder_time">ساعت</string>
+    <string name="task_editor_nag">یادآوری تا انجام</string>
+    <string name="task_editor_nag_hint">یادآور تا وقتی کار را انجام‌شده علامت نزنید تکرار می‌شود.</string>
+    <string name="task_editor_nag_every">هر %1$s دقیقه</string>
+    <string name="task_editor_blocked_by">پیش‌نیازها</string>
+    <string name="task_editor_add_blocker">افزودن کار پیش‌نیاز</string>
+    <string name="task_editor_remove_blocker">حذف %1$s</string>
+    <string name="task_editor_blocker_done">انجام‌شده</string>
+    <string name="task_editor_pick_blocker">این کار منتظر کدام کار است؟</string>
+    <string name="task_editor_blocker_search">جستجوی کارها</string>
+    <string name="task_editor_no_candidates">کار باز دیگری نیست</string>
+    <string name="task_editor_cycle">آن کار خودش منتظر همین کار است؛ نمی‌تواند پیش‌نیازش باشد.</string>
+
+    <string name="tasks_sort_deadline">مهلت</string>
+    <string name="tasks_eisenhower">ماتریس آیزنهاور</string>
+    <string name="tasks_new_smart_list">فهرست هوشمند</string>
+    <string name="tasks_edit_smart_list">ویرایش فهرست</string>
+    <string name="tasks_manage_smart_lists">مدیریت فهرست‌ها</string>
+    <string name="tasks_empty_smart_list">فعلاً هیچ کاری با این فهرست جور نیست.</string>
+
+    <string name="smart_list_new">فهرست هوشمند تازه</string>
+    <string name="smart_list_edit">ویرایش فهرست هوشمند</string>
+    <string name="smart_list_name">نام</string>
+    <string name="smart_list_name_required">برای فهرست نامی بگذارید</string>
+    <string name="smart_list_icon">نماد</string>
+    <string name="smart_list_color">رنگ</string>
+    <string name="smart_list_projects">پروژه‌ها</string>
+    <string name="smart_list_no_project">بدون پروژه</string>
+    <string name="smart_list_tags">برچسب‌ها</string>
+    <string name="smart_list_priority">اولویت</string>
+    <string name="smart_list_status">وضعیت</string>
+    <string name="smart_list_date">تاریخ برنامه</string>
+    <string name="smart_list_date_any">هر زمان</string>
+    <string name="smart_list_date_overdue">عقب‌افتاده</string>
+    <string name="smart_list_date_today">امروز</string>
+    <string name="smart_list_date_next_7">%1$s روز آینده</string>
+    <string name="smart_list_date_none">بدون تاریخ</string>
+    <string name="smart_list_date_custom">بازهٔ دلخواه</string>
+    <string name="smart_list_from">از</string>
+    <string name="smart_list_to">تا</string>
+    <string name="smart_list_deadline">مهلت</string>
+    <string name="smart_list_deadline_any">فرقی نمی‌کند</string>
+    <string name="smart_list_deadline_yes">مهلت دارد</string>
+    <string name="smart_list_deadline_no">بدون مهلت</string>
+    <string name="smart_list_text">شامل متن</string>
+    <string name="smart_list_sort">مرتب‌سازی بر اساس</string>
+    <string name="smart_list_any_hint">انتخاب نکردن یعنی همه.</string>
+    <plurals name="smart_list_matches">
+        <item quantity="one">الان %1$s کار جور است</item>
+        <item quantity="other">الان %1$s کار جور است</item>
+    </plurals>
+    <string name="smart_list_save">ذخیرهٔ فهرست</string>
+    <string name="smart_list_delete">حذف فهرست</string>
+    <string name="smart_list_delete_confirm">فهرست حذف می‌شود؛ کارهایش دست‌نخورده می‌مانند.</string>
+    <string name="smart_lists_title">فهرست‌های هوشمند</string>
+    <string name="smart_lists_empty_title">هنوز فهرست هوشمندی ندارید</string>
+    <string name="smart_lists_empty">یک فیلتر مثل «اولویت بالا در این هفته» را ذخیره کنید و از بخش کارها بازش کنید.</string>
+    <string name="smart_lists_move_up">انتقال %1$s به بالا</string>
+    <string name="smart_lists_move_down">انتقال %1$s به پایین</string>
+    <string name="smart_lists_edit">ویرایش %1$s</string>
+    <string name="smart_lists_delete">حذف %1$s</string>
+
+    <string name="eisenhower_title">ماتریس آیزنهاور</string>
+    <string name="eisenhower_do">همین حالا</string>
+    <string name="eisenhower_do_sub">فوری و مهم</string>
+    <string name="eisenhower_schedule">برنامه‌ریزی</string>
+    <string name="eisenhower_schedule_sub">مهم، غیرفوری</string>
+    <string name="eisenhower_delegate">واگذاری</string>
+    <string name="eisenhower_delegate_sub">فوری، کم‌اهمیت</string>
+    <string name="eisenhower_eliminate">کنار گذاشتن</string>
+    <string name="eisenhower_eliminate_sub">نه فوری، نه مهم</string>
+    <string name="eisenhower_threshold">فوری تا %1$s روز</string>
+    <string name="eisenhower_hint">مهم یعنی اولویت بالا یا متوسط. کار را نگه دارید و به خانهٔ دیگری بکشید.</string>
+    <string name="eisenhower_move_to">انتقال به «%1$s»</string>
+    <string name="eisenhower_empty">خالی است</string>
+    <string name="eisenhower_kept_urgent">مهلتش نزدیک است، پس فوری می‌ماند.</string>
+</resources>

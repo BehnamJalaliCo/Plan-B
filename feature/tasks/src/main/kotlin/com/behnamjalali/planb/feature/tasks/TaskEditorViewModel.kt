@@ -8,7 +8,10 @@ import com.behnamjalali.planb.core.common.Digits
 import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.repository.ProjectRepository
+import com.behnamjalali.planb.core.data.repository.DependencyCycleException
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
+import com.behnamjalali.planb.core.data.repository.TaskFilter
+import com.behnamjalali.planb.core.data.repository.TaskPlanningRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.model.AccentColor
 import com.behnamjalali.planb.core.model.CalendarSystem
@@ -19,7 +22,12 @@ import com.behnamjalali.planb.core.model.Project
 import com.behnamjalali.planb.core.model.RecurrenceRule
 import com.behnamjalali.planb.core.model.Tag
 import com.behnamjalali.planb.core.model.Task
+import com.behnamjalali.planb.core.model.TaskPlanning
+import com.behnamjalali.planb.core.model.TaskReminder
+import com.behnamjalali.planb.core.model.TaskReminderKind
+import com.behnamjalali.planb.core.model.TaskReminderRules
 import com.behnamjalali.planb.core.model.TaskStatus
+import com.behnamjalali.planb.core.model.TaskView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -30,8 +38,10 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -39,6 +49,19 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class TagForm(val id: Long, val name: String, val color: String)
+
+/** An extra reminder in the editor (Plan-B Pro #12): [kind] is a [TaskReminderKind] name, [at] epoch ms. */
+@Serializable
+data class ReminderForm(val kind: String, val offset: Int? = null, val at: Long? = null) {
+    fun toModel(): TaskReminder? {
+        val k = TaskReminderKind.entries.firstOrNull { it.name == kind } ?: return null
+        return TaskReminder(kind = k, offsetMinutes = offset, at = at?.let(Instant::ofEpochMilli))
+    }
+
+    companion object {
+        fun from(r: TaskReminder) = ReminderForm(r.kind.name, r.offsetMinutes, r.at?.toEpochMilli())
+    }
+}
 
 /** Serializable editor state so in-progress edits survive process death. */
 @Serializable
@@ -65,9 +88,22 @@ data class TaskForm(
     val completedAt: Long? = null,
     val archived: Boolean = false,
     val createdAt: Long = 0,
+    /** Hard deadline, epoch day (Plan-B Pro #11). */
+    val deadline: Long? = null,
+    /** Extra reminders and nagging (Plan-B Pro #12). */
+    val extraReminders: List<ReminderForm> = emptyList(),
+    val nag: Boolean = false,
+    val nagInterval: Int = TaskReminderRules.DEFAULT_NAG_INTERVAL,
+    /** Tasks this one waits for (Plan-B Pro #14). */
+    val blockedBy: List<Long> = emptyList(),
+    /** A time block set elsewhere (calendar); kept as it is. */
+    val scheduledStart: Long? = null,
+    val scheduledEnd: Long? = null,
 ) {
     val rule: RecurrenceRule? get() = RecurrenceRule.decode(recurrence)
     val due: LocalDate? get() = dueDate?.let(LocalDate::ofEpochDay)
+    val deadlineDate: LocalDate? get() = deadline?.let(LocalDate::ofEpochDay)
+    val canAddReminder: Boolean get() = extraReminders.size < TaskReminderRules.MAX_EXTRA
     val start: LocalDate? get() = startDate?.let(LocalDate::ofEpochDay)
     val dueAt: LocalTime? get() = dueTime?.let { LocalTime.ofSecondOfDay(it.toLong()) }
     val startAt: LocalTime? get() = startTime?.let { LocalTime.ofSecondOfDay(it.toLong()) }
@@ -99,10 +135,17 @@ data class TaskForm(
         completedAt = completedAt?.let(Instant::ofEpochMilli),
         archived = archived,
         tags = tags.map { Tag(it.id, it.name, AccentColor.fromKey(it.color)) },
+        deadline = deadlineDate,
+        nag = nag,
+        scheduledStart = scheduledStart?.let(Instant::ofEpochMilli),
+        scheduledEnd = scheduledEnd?.let(Instant::ofEpochMilli),
     )
 
+    /** The editor's extra reminders as stored; only the meaningful ones. */
+    fun planningReminders(): List<TaskReminder> = extraReminders.mapNotNull { it.toModel() }
+
     companion object {
-        fun from(task: Task) = TaskForm(
+        fun from(task: Task, planning: TaskPlanning = TaskPlanning()) = TaskForm(
             id = task.id,
             title = task.title,
             description = task.description,
@@ -124,6 +167,13 @@ data class TaskForm(
             completedAt = task.completedAt?.toEpochMilli(),
             archived = task.archived,
             createdAt = task.createdAt.toEpochMilli(),
+            deadline = task.deadline?.toEpochDay(),
+            extraReminders = planning.reminders.map(ReminderForm::from),
+            nag = task.nag,
+            nagInterval = planning.nagIntervalMinutes,
+            blockedBy = planning.blockedBy,
+            scheduledStart = task.scheduledStart?.toEpochMilli(),
+            scheduledEnd = task.scheduledEnd?.toEpochMilli(),
         )
     }
 }
@@ -133,6 +183,9 @@ sealed interface EditorEvent {
     data object Deleted : EditorEvent
     data object Failed : EditorEvent
     data object NotFound : EditorEvent
+
+    /** The chosen task already waits (directly or not) for this one (Plan-B Pro #14). */
+    data object DependencyCycle : EditorEvent
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -143,6 +196,7 @@ class TaskEditorViewModel @Inject constructor(
     projects: ProjectRepository,
     private val settings: SettingsRepository,
     private val time: TimeProvider,
+    private val planning: TaskPlanningRepository,
 ) : ViewModel() {
     private val route = runCatching { savedState.toRoute<TaskEditorRoute>() }.getOrDefault(TaskEditorRoute())
     private val json = Json { ignoreUnknownKeys = true }
@@ -174,6 +228,16 @@ class TaskEditorViewModel @Inject constructor(
     val calendarSystem: StateFlow<CalendarSystem> = settings.settings.map { it.calendarSystem }
         .stateIn(viewModelScope, SharingStarted.Eagerly, CalendarSystem.JALALI)
 
+    /** The tasks this one waits for, as tasks (title, done or not). */
+    val blockers: StateFlow<List<Task>> = form.map { it.blockedBy }.distinctUntilChanged()
+        .mapLatest { ids -> ids.mapNotNull { tasks.getTask(it) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Open tasks this one could wait for (the dependency picker). */
+    val dependencyCandidates: StateFlow<List<Task>> = tasks.observeTasks(TaskFilter(view = TaskView.ALL, today = time.today(), topLevelOnly = false))
+        .map { list -> list.filter { it.id != route.taskId } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     private val _events = MutableSharedFlow<EditorEvent>(extraBufferCapacity = 2)
     val events: SharedFlow<EditorEvent> = _events
 
@@ -190,7 +254,7 @@ class TaskEditorViewModel @Inject constructor(
                         _events.tryEmit(EditorEvent.NotFound)
                         return@launch
                     }
-                    TaskForm.from(task)
+                    TaskForm.from(task, planning.planning(task.id))
                 } else {
                     TaskForm(
                         projectId = route.projectId,
@@ -238,6 +302,33 @@ class TaskEditorViewModel @Inject constructor(
             recurrenceAnchor = if (rule == null) null else it.recurrenceAnchor,
         )
     }
+
+    fun setDeadline(date: LocalDate?) = update { it.copy(deadline = date?.toEpochDay()) }
+
+    fun addReminder(reminder: ReminderForm) = update { f ->
+        if (!f.canAddReminder || reminder in f.extraReminders) f else f.copy(extraReminders = f.extraReminders + reminder)
+    }
+
+    fun removeReminder(index: Int) = update { f -> f.copy(extraReminders = f.extraReminders.filterIndexed { i, _ -> i != index }) }
+
+    fun setNag(nag: Boolean, interval: Int? = null) = update { f ->
+        f.copy(nag = nag, nagInterval = TaskReminderRules.normalizeNagInterval(interval ?: f.nagInterval))
+    }
+
+    /** Adds a task this one waits for, unless that would make tasks wait for each other in a circle. */
+    fun addBlocker(id: EntityId) {
+        if (id in currentForm().blockedBy) return
+        viewModelScope.launch {
+            val cycle = id == route.taskId || (route.taskId != NEW_ID && runCatchingSafely { planning.wouldCreateCycle(route.taskId, id) }.getOrDefault(true))
+            if (cycle) {
+                _events.tryEmit(EditorEvent.DependencyCycle)
+            } else {
+                update { f -> if (id in f.blockedBy) f else f.copy(blockedBy = f.blockedBy + id) }
+            }
+        }
+    }
+
+    fun removeBlocker(id: EntityId) = update { f -> f.copy(blockedBy = f.blockedBy - id) }
 
     fun addTag(name: String) {
         val clean = name.trim().removePrefix("#")
@@ -292,13 +383,19 @@ class TaskEditorViewModel @Inject constructor(
             runCatchingSafely {
                 val id = tasks.save(current.toTask())
                 current.pendingSubtasks.forEach { tasks.save(Task(title = it, parentTaskId = id, projectId = current.projectId)) }
+                // Pro planning data is written only when it changed, so free edits work as before.
+                val before = original ?: TaskForm()
+                if (current.extraReminders != before.extraReminders || current.nagInterval != before.nagInterval) {
+                    planning.setReminders(id, current.planningReminders(), current.nagInterval)
+                }
+                if (current.blockedBy != before.blockedBy) planning.setDependencies(id, current.blockedBy)
                 id
             }.onSuccess { id ->
                 original = current
                 _events.tryEmit(EditorEvent.Saved(id))
-            }.onFailure {
+            }.onFailure { error ->
                 saving = false
-                _events.tryEmit(EditorEvent.Failed)
+                _events.tryEmit(if (error is DependencyCycleException) EditorEvent.DependencyCycle else EditorEvent.Failed)
             }
         }
     }

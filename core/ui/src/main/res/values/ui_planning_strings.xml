@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Plan-B Pro planning: advanced recurrence (#4) -->
+    <string name="repeat_invalid">Choose how often it repeats</string>
+    <string name="repeat_after_completion">Count from completion</string>
+    <string name="repeat_after_completion_hint">The next one comes this long after you finish the current one.</string>
+    <plurals name="repeat_summary_after_days">
+        <item quantity="one">%1$s day after completion</item>
+        <item quantity="other">%1$s days after completion</item>
+    </plurals>
+    <plurals name="repeat_summary_after_weeks">
+        <item quantity="one">%1$s week after completion</item>
+        <item quantity="other">%1$s weeks after completion</item>
+    </plurals>
+    <plurals name="repeat_summary_after_months">
+        <item quantity="one">%1$s month after completion</item>
+        <item quantity="other">%1$s months after completion</item>
+    </plurals>
+    <plurals name="repeat_summary_after_years">
+        <item quantity="one">%1$s year after completion</item>
+        <item quantity="other">%1$s years after completion</item>
+    </plurals>
+    <!-- %1$s: "Every month" / "Every 2 months", %2$s: "second", %3$s: "Monday" -->
+    <string name="repeat_summary_position">%1$s on the %2$s %3$s</string>
+    <string-array name="repeat_positions">
+        <item>first</item>
+        <item>second</item>
+        <item>third</item>
+        <item>fourth</item>
+        <item>fifth</item>
+        <item>last</item>
+    </string-array>
+    <string name="repeat_position_from_end">%1$s from the end</string>
+    <string name="repeat_monthly_on_day">On day %1$s of the month</string>
+    <string name="repeat_monthly_on_weekday">On a weekday, like the second Monday</string>
+    <string name="repeat_fifth_hint">Months without a fifth %1$s are skipped.</string>
+    <string name="repeat_week_starts">Weeks are counted from %1$s, your first day of the week.</string>
+
+    <!-- Extra reminders (#12) -->
+    <plurals name="reminder_days_before">
+        <item quantity="one">%1$s day before</item>
+        <item quantity="other">%1$s days before</item>
+    </plurals>
+    <string name="reminder_deadline_day">On the deadline day</string>
+    <!-- %1$s: "1 hour before" -->
+    <string name="reminder_before_deadline">%1$s the deadline</string>
+    <string name="reminder_kind_due">Before the planned time</string>
+    <string name="reminder_kind_deadline">Before the deadline</string>
+    <string name="reminder_kind_absolute">At a date and time</string>
+
+    <!-- Deadlines (#11) -->
+    <string name="ui_deadline_today">Deadline today</string>
+    <string name="ui_deadline_passed">Deadline passed</string>
+    <plurals name="ui_deadline_in_days">
+        <item quantity="one">Deadline in %1$s day</item>
+        <item quantity="other">Deadline in %1$s days</item>
+    </plurals>
+    <string name="ui_deadline_on">Deadline %1$s</string>
+
+    <!-- Dependencies (#14) -->
+    <plurals name="ui_blocked_by">
+        <item quantity="one">Waiting for %1$s task</item>
+        <item quantity="other">Waiting for %1$s tasks</item>
+    </plurals>
+    <string name="ui_blocked_title">Complete anyway?</string>
+    <plurals name="ui_blocked_message">
+        <item quantity="one">This task is waiting for %1$s unfinished task. Mark it as done anyway?</item>
+        <item quantity="other">This task is waiting for %1$s unfinished tasks. Mark it as done anyway?</item>
+    </plurals>
+    <string name="ui_blocked_confirm">Complete anyway</string>
+    <string name="repeat_interval_less">Fewer: %1$s</string>
+    <string name="repeat_interval_more">More: %1$s</string>
+</resources>

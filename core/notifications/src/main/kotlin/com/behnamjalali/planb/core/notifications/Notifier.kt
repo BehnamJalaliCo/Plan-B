@@ -25,6 +25,9 @@ object DeepLinks {
     fun focus(): Uri = "$SCHEME://open/focus".toUri()
 }
 
+/** Localized labels of a task reminder's "Done" and "Snooze" buttons; [nagging] tasks stop nagging when swiped away. */
+data class TaskReminderButtons(val doneLabel: String, val snoozeLabel: String, val nagging: Boolean)
+
 @Singleton
 class Notifier @Inject constructor(@ApplicationContext private val context: Context) {
     private val manager = NotificationManagerCompat.from(context)
@@ -70,10 +73,37 @@ class Notifier @Inject constructor(@ApplicationContext private val context: Cont
     }
 
     /**
+     * A broadcast for a button of task [taskId]'s reminder (Plan-B Pro #12): explicit, to the
+     * non-exported [ReminderActionReceiver], immutable, with its own request code.
+     */
+    private fun taskActionIntent(action: String, taskId: Long): PendingIntent {
+        val intent = Intent(context, ReminderActionReceiver::class.java)
+            .setAction(action)
+            .setData(ReminderActionReceiver.dataUri(action, taskId))
+            .putExtra(ReminderActionReceiver.EXTRA_TASK_ID, taskId)
+        return PendingIntent.getBroadcast(
+            context,
+            actionRequestCode(taskId, action),
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+    }
+
+    /**
      * Shows a reminder. Lock screens get a generic public version so private
      * planning details are not exposed (NotificationCompat.VISIBILITY_PRIVATE).
+     * [taskButtons] adds "Done" and "Snooze" to a task reminder (Plan-B Pro #12); for a
+     * nagging task, swiping the notification away stops the nag.
      */
-    fun showReminder(kind: ReminderKind, id: Long, title: String, text: String, uri: Uri, localized: Context = context) {
+    fun showReminder(
+        kind: ReminderKind,
+        id: Long,
+        title: String,
+        text: String,
+        uri: Uri,
+        localized: Context = context,
+        taskButtons: TaskReminderButtons? = null,
+    ) {
         if (!manager.areNotificationsEnabled()) return
         val notificationId = notificationId(kind, id)
         val publicVersion = NotificationCompat.Builder(context, CHANNEL_REMINDERS)
@@ -92,6 +122,13 @@ class Notifier @Inject constructor(@ApplicationContext private val context: Cont
             .setPublicVersion(publicVersion)
             .setAutoCancel(true)
             .setContentIntent(openIntent(uri, notificationId))
+            .apply {
+                if (kind == ReminderKind.TASK && taskButtons != null) {
+                    addAction(0, taskButtons.doneLabel, taskActionIntent(ReminderActionReceiver.ACTION_DONE, id))
+                    addAction(0, taskButtons.snoozeLabel, taskActionIntent(ReminderActionReceiver.ACTION_SNOOZE, id))
+                    if (taskButtons.nagging) setDeleteIntent(taskActionIntent(ReminderActionReceiver.ACTION_DISMISS, id))
+                }
+            }
             .build()
         runCatching { manager.notify(notificationId, notification) }
     }
@@ -117,5 +154,19 @@ class Notifier @Inject constructor(@ApplicationContext private val context: Cont
 
         /** Stable per item; ids are unique within a kind so this cannot collide across kinds. */
         fun notificationId(kind: ReminderKind, id: Long): Int = ((id * 8 + kind.code) % Int.MAX_VALUE).toInt()
+
+        /**
+         * Request codes of a task notification's buttons: the free slots 5–7 of the same
+         * `id * 8 + code` scheme ([ReminderKind] uses 1–4), so a button never shares a request
+         * code with an alarm, a notification or another task's button.
+         */
+        fun actionRequestCode(taskId: Long, action: String): Int {
+            val code = when (action) {
+                ReminderActionReceiver.ACTION_DONE -> 5
+                ReminderActionReceiver.ACTION_SNOOZE -> 6
+                else -> 7
+            }
+            return ((taskId * 8 + code) % Int.MAX_VALUE).toInt()
+        }
     }
 }

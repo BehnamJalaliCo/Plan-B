@@ -75,6 +75,17 @@ interface TaskDependencyDao {
     @Query("SELECT * FROM task_dependencies")
     suspend fun all(): List<TaskDependencyEntity>
 
+    /** Every dependency (Gantt connectors, cycle checks in the editor). */
+    @Query("SELECT * FROM task_dependencies")
+    fun observeAll(): Flow<List<TaskDependencyEntity>>
+
+    /** Tasks that [taskId] waits for. */
+    @Query("SELECT depends_on_task_id FROM task_dependencies WHERE task_id = :taskId")
+    suspend fun dependencies(taskId: Long): List<Long>
+
+    @Query("DELETE FROM task_dependencies WHERE task_id = :taskId")
+    suspend fun deleteForTask(taskId: Long)
+
     /** Ids of open, live tasks that [taskId] still waits for. */
     @Query(
         "SELECT d.depends_on_task_id FROM task_dependencies d JOIN tasks t ON t.id = d.depends_on_task_id " +

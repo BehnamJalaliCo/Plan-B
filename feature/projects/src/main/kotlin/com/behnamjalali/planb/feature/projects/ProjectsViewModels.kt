@@ -9,6 +9,7 @@ import com.behnamjalali.planb.core.common.TimeProvider
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.repository.ProjectRepository
 import com.behnamjalali.planb.core.data.repository.TaskFilter
+import com.behnamjalali.planb.core.data.repository.TaskPlanningRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.model.AccentColor
 import com.behnamjalali.planb.core.model.EntityId
@@ -87,7 +88,12 @@ data class ProjectDetailUiState(
     val milestones: List<ProjectMilestone> = emptyList(),
     val openTasks: List<Task> = emptyList(),
     val completedTasks: List<Task> = emptyList(),
-)
+    /** Task id → ids it waits for (Plan-B Pro #14), for the timeline's connectors. */
+    val dependencies: Map<EntityId, List<EntityId>> = emptyMap(),
+) {
+    /** The timeline rows (Plan-B Pro #9). */
+    fun timeline(today: LocalDate): TimelineLayout = TimelineLayout.build(openTasks + completedTasks, milestones, today)
+}
 
 enum class ProjectEvent { Failed, Deleted, NotesSaved }
 
@@ -99,6 +105,7 @@ class ProjectDetailViewModel @Inject constructor(
     private val tasks: TaskRepository,
     private val time: TimeProvider,
     @ApplicationScope private val appScope: CoroutineScope,
+    planning: TaskPlanningRepository,
 ) : ViewModel() {
     private val projectId = savedState.toRoute<ProjectDetailRoute>().projectId
     private val _events = MutableSharedFlow<ProjectEvent>(extraBufferCapacity = 4)
@@ -109,7 +116,8 @@ class ProjectDetailViewModel @Inject constructor(
         projects.observeMilestones(projectId),
         tasks.observeTasks(TaskFilter(view = TaskView.ALL, today = time.today(), projectId = projectId, sort = TaskSort.MANUAL)),
         tasks.observeTasks(TaskFilter(view = TaskView.COMPLETED, today = time.today(), projectId = projectId)),
-    ) { summary, milestones, open, done ->
+        planning.observeDependencies(),
+    ) { summary, milestones, open, done, dependencies ->
         ProjectDetailUiState(
             loading = false,
             missing = summary == null,
@@ -117,6 +125,7 @@ class ProjectDetailViewModel @Inject constructor(
             milestones = milestones,
             openTasks = open,
             completedTasks = done,
+            dependencies = dependencies,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ProjectDetailUiState())
 

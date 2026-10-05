@@ -14,6 +14,7 @@ import com.google.common.truth.Truth.assertThat
 import dagger.Lazy
 import java.time.Duration
 import java.time.LocalTime
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -28,6 +29,10 @@ class ReminderDeliveryTest {
     private lateinit var graph: TestDataGraph
     private lateinit var scheduler: AlarmReminderScheduler
     private lateinit var delivery: ReminderDelivery
+    private lateinit var nagState: NagStateStore
+    private lateinit var actions: ReminderActions
+    private val prefsDir = java.nio.file.Files.createTempDirectory("nag").toFile()
+    private val storeScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
     private val time get() = graph.time
     private val today get() = time.today()
     private val notifications get() = shadowOf(context.getSystemService(NotificationManager::class.java))
@@ -38,16 +43,25 @@ class ReminderDeliveryTest {
         graph = TestDataGraph()
         val notifier = Notifier(context)
         notifier.createChannels()
+        nagState = NagStateStore(
+            androidx.datastore.preferences.core.PreferenceDataStoreFactory.create(scope = storeScope) { java.io.File(prefsDir, "nag.preferences_pb") },
+        )
         scheduler = AlarmReminderScheduler(
             context, Lazy { graph.tasks }, Lazy { graph.events }, Lazy { graph.habits }, Lazy { graph.focus }, notifier, graph.time,
+            Lazy { graph.planning }, nagState,
         )
         delivery = ReminderDelivery(
-            context, graph.tasks, graph.events, graph.habits, graph.focus, notifier, scheduler, graph.time, graph.settings,
+            context, graph.tasks, graph.events, graph.habits, graph.focus, notifier, scheduler, graph.time, graph.settings, graph.planning,
         )
+        actions = ReminderActions(graph.tasks, notifier, scheduler, nagState, graph.time)
     }
 
     @After
-    fun tearDown() = graph.close()
+    fun tearDown() {
+        graph.close()
+        storeScope.cancel()
+        prefsDir.deleteRecursively()
+    }
 
     private fun posted(kind: ReminderKind, id: Long) =
         notifications.activeNotifications.any { it.id == Notifier.notificationId(kind, id) }
@@ -146,4 +160,120 @@ class ReminderDeliveryTest {
         assertThat(triggers).contains(today.plusDays(1).atTime(9, 0).atZone(time.zone()).toInstant().toEpochMilli())
         assertThat(graph.habits.getHabit(habit)).isNotNull()
     }
+
+    // region Plan-B Pro #12: several reminders, nagging, Done and Snooze
+
+    private fun nextAlarm(): java.time.Instant = java.time.Instant.ofEpochMilli(alarms.peekNextScheduledAlarm()!!.triggerAtMs)
+
+    private fun actionTitles() = notifications.activeNotifications.single().notification.actions.orEmpty().map { it.title.toString() }
+
+    @Test
+    fun extraReminders_fireOneAfterAnother_throughOneAlarm() = runBlocking<Unit> {
+        graph.settings.update { it.copy(language = AppLanguage.ENGLISH) }
+        val due = time.localNow().plusHours(3).withSecond(0).withNano(0)
+        val id = graph.tasks.save(Task(title = "Call", dueDate = due.toLocalDate(), dueTime = due.toLocalTime(), reminderOffsetMinutes = 0))
+        graph.planning.setReminders(
+            id,
+            listOf(com.behnamjalali.planb.core.model.TaskReminder(kind = com.behnamjalali.planb.core.model.TaskReminderKind.OFFSET, offsetMinutes = 60)),
+            nagIntervalMinutes = 10,
+        )
+        scheduler.syncTask(id)
+        val first = nextAlarm()
+        assertThat(first).isEqualTo(due.minusHours(1).atZone(time.zone()).toInstant())
+        time.instant = first
+        delivery.deliver(ReminderKind.TASK, id, today, first)
+        assertThat(posted(ReminderKind.TASK, id)).isTrue()
+        // Pro reminders get the Done and Snooze buttons.
+        assertThat(actionTitles()).containsExactly("Done", "Snooze 10 min").inOrder()
+        graph.settings.update { it.copy(language = AppLanguage.PERSIAN) }
+        delivery.deliver(ReminderKind.TASK, id, today, first)
+        assertThat(actionTitles()).containsExactly("انجام شد", "۱۰ دقیقهٔ دیگر").inOrder()
+        // The single alarm moved on to the primary reminder.
+        assertThat(alarms.scheduledAlarms).hasSize(1)
+        assertThat(nextAlarm()).isEqualTo(due.atZone(time.zone()).toInstant())
+    }
+
+    @Test
+    fun nagging_repeatsUntilDone_andDoneCompletesTheTask() = runBlocking<Unit> {
+        val due = time.localNow().plusMinutes(30).withSecond(0).withNano(0)
+        val id = graph.tasks.save(Task(title = "Pills", dueDate = due.toLocalDate(), dueTime = due.toLocalTime(), reminderOffsetMinutes = 0, nag = true))
+        graph.planning.setReminders(id, emptyList(), nagIntervalMinutes = 5)
+        scheduler.syncTask(id)
+        val fired = nextAlarm()
+        time.instant = fired
+        delivery.deliver(ReminderKind.TASK, id, today, fired)
+        assertThat(nextAlarm()).isEqualTo(fired.plus(Duration.ofMinutes(5)))
+        // The repetition passes the stale-alarm check and notifies again.
+        time.instant = fired.plus(Duration.ofMinutes(5))
+        delivery.deliver(ReminderKind.TASK, id, today, time.now())
+        assertThat(posted(ReminderKind.TASK, id)).isTrue()
+        assertThat(nextAlarm()).isEqualTo(fired.plus(Duration.ofMinutes(10)))
+
+        actions.done(id)
+
+        assertThat(graph.tasks.getTask(id)!!.isCompleted).isTrue()
+        assertThat(posted(ReminderKind.TASK, id)).isFalse()
+        assertThat(alarms.scheduledAlarms).isEmpty()
+    }
+
+    @Test
+    fun nagging_stopsAfterTwelveRepeats() = runBlocking<Unit> {
+        val due = time.localNow().plusMinutes(1).withSecond(0).withNano(0)
+        val id = graph.tasks.save(Task(title = "Stretch", dueDate = due.toLocalDate(), dueTime = due.toLocalTime(), reminderOffsetMinutes = 0, nag = true))
+        scheduler.syncTask(id)
+        val fired = nextAlarm()
+        time.instant = fired.plus(Duration.ofMinutes(11 * 10L + 1))
+        scheduler.syncTask(id)
+        assertThat(nextAlarm()).isEqualTo(fired.plus(Duration.ofMinutes(120)))
+        time.instant = fired.plus(Duration.ofMinutes(121))
+        scheduler.syncTask(id)
+        assertThat(alarms.scheduledAlarms).isEmpty()
+    }
+
+    @Test
+    fun snooze_postponesAndStopsEarlierNagging_dismissStopsIt() = runBlocking<Unit> {
+        val due = time.localNow().plusMinutes(20).withSecond(0).withNano(0)
+        val id = graph.tasks.save(Task(title = "Email", dueDate = due.toLocalDate(), dueTime = due.toLocalTime(), reminderOffsetMinutes = 0, nag = true))
+        scheduler.syncTask(id)
+        val fired = nextAlarm()
+        time.instant = fired
+        delivery.deliver(ReminderKind.TASK, id, today, fired)
+
+        time.advance(Duration.ofMinutes(2))
+        actions.snooze(id)
+        assertThat(posted(ReminderKind.TASK, id)).isFalse()
+        val snoozed = time.now().plus(Duration.ofMinutes(10))
+        assertThat(nextAlarm()).isEqualTo(snoozed)
+
+        time.instant = snoozed
+        delivery.deliver(ReminderKind.TASK, id, today, snoozed)
+        assertThat(posted(ReminderKind.TASK, id)).isTrue()
+        // Nagging continues from the snoozed reminder until the notification is swiped away.
+        assertThat(nextAlarm()).isEqualTo(snoozed.plus(Duration.ofMinutes(10)))
+        actions.dismiss(id)
+        assertThat(alarms.scheduledAlarms).isEmpty()
+        assertThat(graph.tasks.getTask(id)!!.isCompleted).isFalse()
+    }
+
+    @Test
+    fun freeReminder_hasNoButtons() = runBlocking<Unit> {
+        val due = time.localNow().plusHours(1).withSecond(0).withNano(0)
+        val id = graph.tasks.save(Task(title = "Plain", dueDate = due.toLocalDate(), dueTime = due.toLocalTime(), reminderOffsetMinutes = 0))
+        scheduler.syncTask(id)
+        val planned = nextAlarm()
+        time.instant = planned
+        delivery.deliver(ReminderKind.TASK, id, today, planned)
+        assertThat(actionTitles()).isEmpty()
+    }
+
+    @Test
+    fun requestCodes_neverCollide() {
+        val actionNames = listOf(ReminderActionReceiver.ACTION_DONE, ReminderActionReceiver.ACTION_SNOOZE, ReminderActionReceiver.ACTION_DISMISS)
+        val codes = (1L..2_000L).flatMap { id ->
+            ReminderKind.entries.map { Notifier.notificationId(it, id) } + actionNames.map { Notifier.actionRequestCode(id, it) }
+        }
+        assertThat(codes.toSet()).hasSize(codes.size)
+    }
+
+    // endregion
 }

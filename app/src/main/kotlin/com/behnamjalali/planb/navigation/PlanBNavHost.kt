@@ -77,6 +77,12 @@ import com.behnamjalali.planb.feature.settings.PrivacyDestination
 import com.behnamjalali.planb.feature.settings.PrivacyRoute
 import com.behnamjalali.planb.feature.settings.SettingsDestination
 import com.behnamjalali.planb.feature.settings.SettingsRoute
+import com.behnamjalali.planb.feature.tasks.EisenhowerDestination
+import com.behnamjalali.planb.feature.tasks.EisenhowerRoute
+import com.behnamjalali.planb.feature.tasks.SmartListEditorDestination
+import com.behnamjalali.planb.feature.tasks.SmartListEditorRoute
+import com.behnamjalali.planb.feature.tasks.SmartListsDestination
+import com.behnamjalali.planb.feature.tasks.SmartListsRoute
 import com.behnamjalali.planb.feature.tasks.TaskEditorDestination
 import com.behnamjalali.planb.feature.tasks.TaskEditorRoute
 import com.behnamjalali.planb.feature.tasks.TasksDestination
@@ -138,6 +144,9 @@ fun PlanBNavHost(
                 onNewTask = { nav.navigate(TaskEditorRoute()) },
                 snackbarHostState = snackbarHostState,
                 contentPadding = contentPadding,
+                onEditSmartList = { nav.navigate(SmartListEditorRoute(it ?: 0)) },
+                onManageSmartLists = { nav.navigate(SmartListsRoute) },
+                onOpenEisenhower = { nav.navigate(EisenhowerRoute) },
             )
         }
         composable<CalendarRoute> { entry ->
@@ -302,6 +311,16 @@ fun PlanBNavHost(
             YearReportDestination(onBack = rememberScreenNavigator(navController, entry).back, snackbarHostState = snackbarHostState)
         }
         composable<AppearanceRoute> { entry -> AppearanceDestination(onBack = rememberScreenNavigator(navController, entry).back) }
+        // Plan-B Pro planning (WP1): smart lists (#10) and the Eisenhower matrix (#13).
+        composable<SmartListEditorRoute> { entry -> SmartListEditorDestination(onClose = rememberScreenNavigator(navController, entry).back) }
+        composable<SmartListsRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            SmartListsDestination(onBack = nav.back, onEdit = { nav.navigate(SmartListEditorRoute(it ?: 0)) })
+        }
+        composable<EisenhowerRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            EisenhowerDestination(onBack = nav.back, onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) }, snackbarHostState = snackbarHostState)
+        }
     }
 }
 
