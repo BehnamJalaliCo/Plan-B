@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_tab_timeline">خط زمانی</string>
+    <string name="project_timeline_days">روزها</string>
+    <string name="project_timeline_weeks">هفته‌ها</string>
+    <string name="project_timeline_today">امروز</string>
+    <string name="project_timeline_empty">برای دیدن کارها اینجا، به آن‌ها تاریخ شروع، تاریخ برنامه یا مهلت بدهید.</string>
+    <plurals name="project_timeline_undated">
+        <item quantity="one">%1$s کار بدون تاریخ نمایش داده نمی‌شود.</item>
+        <item quantity="other">%1$s کار بدون تاریخ نمایش داده نمی‌شوند.</item>
+    </plurals>
+    <string name="project_timeline_cd">خط زمانی با %1$s مورد، از %2$s تا %3$s</string>
+    <string name="project_timeline_open">باز کردن %1$s</string>
+</resources>

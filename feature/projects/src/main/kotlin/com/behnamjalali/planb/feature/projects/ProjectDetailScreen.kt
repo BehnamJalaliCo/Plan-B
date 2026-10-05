@@ -78,6 +78,8 @@ import com.behnamjalali.planb.core.ui.ConfirmDeleteDialog
 import com.behnamjalali.planb.core.ui.PlannerDatePickerDialog
 import com.behnamjalali.planb.core.ui.PlannerLocals
 import com.behnamjalali.planb.core.ui.PlannerTaskCard
+import com.behnamjalali.planb.core.ui.ProFeature
+import com.behnamjalali.planb.core.ui.ProGate
 import com.behnamjalali.planb.core.ui.projectStatusLabel
 import com.behnamjalali.planb.core.ui.rememberOnce
 
@@ -87,6 +89,9 @@ enum class ProjectTab(val label: Int) {
     MILESTONES(R.string.project_tab_milestones),
     NOTES(R.string.project_tab_notes),
     BOARD(R.string.project_tab_board),
+
+    /** Plan-B Pro #9: the Gantt-style timeline. */
+    TIMELINE(R.string.project_tab_timeline),
 }
 
 data class ProjectDetailCallbacks(
@@ -196,6 +201,11 @@ fun ProjectDetailScreen(state: ProjectDetailUiState, callbacks: ProjectDetailCal
             ProjectTab.MILESTONES -> MilestonesTab(state, callbacks)
             ProjectTab.NOTES -> NotesTab(summary.project.description, callbacks.onNotes, callbacks.onFlushNotes)
             ProjectTab.BOARD -> BoardTab(state, callbacks)
+            ProjectTab.TIMELINE -> ProGate(ProFeature.PROJECT_TIMELINE, modifier = Modifier.padding(Spacing.screen)) {
+                val today = PlannerLocals.today
+                val layout = remember(state.openTasks, state.completedTasks, state.milestones, today) { state.timeline(today) }
+                ProjectTimeline(layout, state.dependencies, summary.project.color, callbacks.onOpenTask)
+            }
         }
     }
     if (confirmDelete) {

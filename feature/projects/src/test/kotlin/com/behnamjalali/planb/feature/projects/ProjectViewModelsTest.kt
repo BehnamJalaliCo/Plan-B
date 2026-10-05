@@ -40,7 +40,7 @@ class ProjectViewModelsTest {
     }
 
     private fun detail() = main.track(
-        ProjectDetailViewModel(SavedStateHandle(mapOf("projectId" to projectId)), graph.projects, graph.tasks, graph.time, main.scope),
+        ProjectDetailViewModel(SavedStateHandle(mapOf("projectId" to projectId)), graph.projects, graph.tasks, graph.time, main.scope, graph.planning),
     )
 
     private suspend fun tagNames() = graph.projects.getProject(projectId)!!.tags.map { it.name }
