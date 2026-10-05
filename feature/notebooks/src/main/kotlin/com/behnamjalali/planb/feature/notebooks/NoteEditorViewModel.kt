@@ -642,11 +642,11 @@ class NoteEditorViewModel @Inject constructor(
             runCatchingSafely {
                 val doc = document(s)
                 // A single file has no room for the attachments: rich blocks name their files.
-                val files = { id: Long -> s.attachments[id]?.let { MarkdownAttachment(null, it.displayName.ifBlank { it.fileName }, it.transcript, it.ocrText) } }
+                val attachmentLinks = { id: Long -> s.attachments[id]?.let { MarkdownAttachment(null, it.displayName.ifBlank { it.fileName }, it.transcript, it.ocrText) } }
                 // Links read as the linked notes' current titles; Markdown links point at their .md files.
                 val titles = links?.refs(NoteLinks.targets(doc))?.filterValues { !it.trashed }?.mapValues { it.value.title }.orEmpty()
                 val text = if (markdown) {
-                    Markdown.export(s.title.text, doc, attachments = files) { id, title -> titles[id]?.let { fileName(it, "md", title) } }
+                    Markdown.export(s.title.text, doc, attachments = attachmentLinks) { id, title -> titles[id]?.let { fileName(it, "md", title) } }
                 } else {
                     Markdown.plainText(s.title.text, doc) { titles[it] }
                 }
