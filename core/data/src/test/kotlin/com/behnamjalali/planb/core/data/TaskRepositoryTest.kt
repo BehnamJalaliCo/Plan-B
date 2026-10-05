@@ -373,4 +373,21 @@ class TaskRepositoryTest {
         repo.delete(listOf(id))
         assertThat(search.search("beta")).isEmpty()
     }
+
+    @Test
+    fun dueRange_withScheduledRange_alsoFindsTimeBlockedTasks() = runTest {
+        val zone = time.zone()
+        val blockStart = today.plusDays(1).atTime(9, 0).atZone(zone).toInstant()
+        val dueToday = repo.save(Task(title = "Due today", dueDate = today))
+        val blockedTomorrow = repo.save(Task(title = "Planned last week, blocked tomorrow", dueDate = today.minusDays(7), scheduledStart = blockStart, scheduledEnd = blockStart.plusSeconds(1800)))
+        repo.save(Task(title = "Elsewhere", dueDate = today.plusDays(5)))
+        val base = TaskFilter(view = TaskView.ALL, today = today, dueFrom = today, dueTo = today.plusDays(1), topLevelOnly = false)
+
+        assertThat(repo.observeTasks(base).first().map { it.id }).containsExactly(dueToday)
+        val withBlocks = base.copy(
+            scheduledFrom = today.atStartOfDay(zone).toInstant(),
+            scheduledTo = today.plusDays(2).atStartOfDay(zone).toInstant(),
+        )
+        assertThat(repo.observeTasks(withBlocks).first().map { it.id }).containsExactly(dueToday, blockedTomorrow)
+    }
 }

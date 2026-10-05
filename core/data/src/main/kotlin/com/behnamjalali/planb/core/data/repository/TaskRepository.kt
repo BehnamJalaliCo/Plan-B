@@ -51,6 +51,12 @@ data class TaskFilter(
     /** Optional inclusive due-date range applied on top of [view]. */
     val dueFrom: LocalDate? = null,
     val dueTo: LocalDate? = null,
+    /**
+     * With [dueFrom]/[dueTo]: also include tasks whose time block (Plan-B Pro #6) starts in
+     * `[scheduledFrom, scheduledTo)`, whatever their due date.
+     */
+    val scheduledFrom: java.time.Instant? = null,
+    val scheduledTo: java.time.Instant? = null,
 )
 
 class TaskValidationException(message: String) : IllegalArgumentException(message)
@@ -575,9 +581,17 @@ internal object TaskQueryBuilder {
             TaskView.ALL -> where += "t.archived = 0 AND t.completed = 0"
         }
         if (filter.dueFrom != null && filter.dueTo != null) {
-            where += "t.due_date >= ? AND t.due_date <= ?"
-            args += filter.dueFrom.toEpochDay()
-            args += filter.dueTo.toEpochDay()
+            if (filter.scheduledFrom != null && filter.scheduledTo != null) {
+                where += "((t.due_date >= ? AND t.due_date <= ?) OR (t.scheduled_start >= ? AND t.scheduled_start < ?))"
+                args += filter.dueFrom.toEpochDay()
+                args += filter.dueTo.toEpochDay()
+                args += filter.scheduledFrom.toEpochMilli()
+                args += filter.scheduledTo.toEpochMilli()
+            } else {
+                where += "t.due_date >= ? AND t.due_date <= ?"
+                args += filter.dueFrom.toEpochDay()
+                args += filter.dueTo.toEpochDay()
+            }
         }
         filter.projectId?.let {
             where += "t.project_id = ?"
