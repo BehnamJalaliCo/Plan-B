@@ -452,7 +452,7 @@ photos/scans/drawings → `![caption](attachments/<file>)` and files/recordings 
 text and transcripts quoted; the Markdown ZIP contains the files in each notebook's
 `attachments/` folder. Markdown import reads GFM tables and `$$` blocks back.
 
-**Engines and APK size.** Release APK (unsigned, R8): 4,709,567 → 17,294,258 bytes (+12.6 MB):
+**Engines and APK size.** Release APK (unsigned, R8): 4,709,567 → 17,228,170 bytes (+12.5 MB):
 Tesseract and its libraries ≈ 6.1 MB, ML Kit Digital Ink ≈ 5.3 MB (compressed native code),
 code ≈ 0.9 MB, the Persian OCR model 0.3 MB. Release builds keep only ARM native code
 (`armeabi-v7a`, `arm64-v8a`; benchmark builds keep all ABIs) and store native libraries
