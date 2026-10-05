@@ -171,20 +171,33 @@ class DataTransfer @Inject constructor(
     suspend fun exportNotesMarkdownZip(uri: Uri): Int {
         val notebooks = dao.notebooks().associate { it.id to it.title }
         val notes = dao.notes().filter { it.deletedAt == null }
+        // File names first, so links between notes (Plan-B Pro #16) become relative .md links.
+        val used = mutableSetOf<String>()
+        val paths = notes.associate { n ->
+            val folder = safeName(notebooks[n.notebookId] ?: "Notebook")
+            var base = "$folder/${safeName(n.title.ifBlank { "Note ${n.id}" })}"
+            if (!used.add(base)) base = "$base (${n.id})".also { used += it }
+            n.id to "$base.md"
+        }
         files.output(uri) { out ->
             ZipOutputStream(out).use { zip ->
-                val used = mutableSetOf<String>()
                 notes.forEach { n ->
-                    val folder = safeName(notebooks[n.notebookId] ?: "Notebook")
-                    var base = "$folder/${safeName(n.title.ifBlank { "Note ${n.id}" })}"
-                    if (!used.add(base)) base = "$base (${n.id})".also { used += it }
-                    zip.putNextEntry(ZipEntry("$base.md"))
-                    zip.write(Markdown.export(n.title, NoteDocument.decode(n.content)).toByteArray(Charsets.UTF_8))
+                    val path = paths.getValue(n.id)
+                    zip.putNextEntry(ZipEntry(path))
+                    val markdown = Markdown.export(n.title, NoteDocument.decode(n.content)) { id, _ -> paths[id]?.let { relativePath(path, it) } }
+                    zip.write(markdown.toByteArray(Charsets.UTF_8))
                     zip.closeEntry()
                 }
             }
         }
         return notes.size
+    }
+
+    /** [to] as seen from the folder of [from]; both are "folder/name.md". */
+    private fun relativePath(from: String, to: String): String {
+        val fromFolder = from.substringBeforeLast('/', "")
+        val toFolder = to.substringBeforeLast('/', "")
+        return if (fromFolder == toFolder) to.substringAfterLast('/') else "../$to"
     }
 
     suspend fun exportNotesJson(uri: Uri): Int {
