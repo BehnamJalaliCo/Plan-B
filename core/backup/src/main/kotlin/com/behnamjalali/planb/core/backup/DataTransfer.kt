@@ -2,12 +2,15 @@ package com.behnamjalali.planb.core.backup
 
 import android.net.Uri
 import com.behnamjalali.planb.core.common.Digits
+import com.behnamjalali.planb.core.data.AttachmentFiles
 import com.behnamjalali.planb.core.data.DocumentFiles
 import com.behnamjalali.planb.core.data.repository.ProjectRepository
 import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.database.dao.BackupDao
 import com.behnamjalali.planb.core.model.EntityId
+import com.behnamjalali.planb.core.model.AttachmentOwner
 import com.behnamjalali.planb.core.model.Markdown
+import com.behnamjalali.planb.core.model.MarkdownAttachment
 import com.behnamjalali.planb.core.model.NoteDocument
 import com.behnamjalali.planb.core.model.Priority
 import com.behnamjalali.planb.core.model.Project
@@ -117,6 +120,8 @@ class DataTransfer @Inject constructor(
     private val tasks: TaskRepository,
     private val projects: ProjectRepository,
     private val files: DocumentFiles,
+    /** Attachment files for the Markdown ZIP (Plan-B Pro rich blocks); without it only links are written. */
+    private val attachmentFiles: AttachmentFiles? = null,
 ) {
     private val json = BackupCodec.json
 
@@ -167,19 +172,37 @@ class DataTransfer @Inject constructor(
         return rows.size
     }
 
-    /** One Markdown file per note inside a ZIP, grouped in notebook folders. */
+    /**
+     * One Markdown file per note inside a ZIP, grouped in notebook folders. The files of rich
+     * blocks (photos, scans, drawings, files, recordings) go into the notebook's `attachments/`
+     * folder, linked relatively from the note; a locked note's blocks (and so its files) stay out.
+     */
     suspend fun exportNotesMarkdownZip(uri: Uri): Int {
         val notebooks = dao.notebooks().associate { it.id to it.title }
         val notes = dao.notes().filter { it.deletedAt == null }
+        val rows = dao.attachments().filter { it.ownerType == AttachmentOwner.NOTE.name }.associateBy { it.id }
         files.output(uri) { out ->
             ZipOutputStream(out).use { zip ->
                 val used = mutableSetOf<String>()
+                val written = mutableSetOf<String>()
                 notes.forEach { n ->
                     val folder = safeName(notebooks[n.notebookId] ?: "Notebook")
                     var base = "$folder/${safeName(n.title.ifBlank { "Note ${n.id}" })}"
                     if (!used.add(base)) base = "$base (${n.id})".also { used += it }
+                    val document = NoteDocument.decode(n.content)
+                    val links = document.blocks.mapNotNull { it.attachmentId }.mapNotNull { id ->
+                        val row = rows[id]?.takeIf { it.ownerId == n.id } ?: return@mapNotNull null
+                        val file = attachmentFiles?.let { f -> runCatching { f.file(row.fileName) }.getOrNull() }?.takeIf { it.isFile }
+                        val path = file?.let { "$ATTACHMENTS_FOLDER/${row.fileName}" }
+                        if (file != null && written.add("$folder/$path")) {
+                            zip.putNextEntry(ZipEntry("$folder/$path"))
+                            file.inputStream().use { it.copyTo(zip) }
+                            zip.closeEntry()
+                        }
+                        id to MarkdownAttachment(path, row.displayName.ifBlank { row.fileName }, row.transcript, row.ocrText)
+                    }.toMap()
                     zip.putNextEntry(ZipEntry("$base.md"))
-                    zip.write(Markdown.export(n.title, NoteDocument.decode(n.content)).toByteArray(Charsets.UTF_8))
+                    zip.write(Markdown.export(n.title, document) { links[it] }.toByteArray(Charsets.UTF_8))
                     zip.closeEntry()
                 }
             }
@@ -294,4 +317,9 @@ class DataTransfer @Inject constructor(
             .take(60)
             .trim(' ', '.')
             .ifBlank { "untitled" }
+
+    private companion object {
+        /** The folder next to a notebook's notes that holds their files in the Markdown ZIP. */
+        const val ATTACHMENTS_FOLDER = "attachments"
+    }
 }
