@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.behnamjalali.planb.core.model.AppLanguage
 import com.behnamjalali.planb.core.model.CalendarSystem
@@ -13,12 +14,16 @@ import com.behnamjalali.planb.core.model.CalendarView
 import com.behnamjalali.planb.core.model.ColorTheme
 import com.behnamjalali.planb.core.model.DashboardConfig
 import com.behnamjalali.planb.core.model.DashboardSection
+import com.behnamjalali.planb.core.model.DayPlanSettings
 import com.behnamjalali.planb.core.model.NumberFormatMode
+import com.behnamjalali.planb.core.model.RitualState
 import com.behnamjalali.planb.core.model.TaskView
 import com.behnamjalali.planb.core.model.ThemeMode
 import com.behnamjalali.planb.core.model.UserSettings
 import java.io.IOException
 import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -53,6 +58,22 @@ class UserPreferencesDataSource @Inject constructor(
         val onboarding = booleanPreferencesKey("onboarding_completed")
         val languageChosen = booleanPreferencesKey("language_chosen")
         val colorTheme = stringPreferencesKey("color_theme")
+
+        // Plan-B Pro smart day (#5 working hours, #8 rituals). Times are minutes of the day.
+        val workStart = intPreferencesKey("day_plan_work_start")
+        val workEnd = intPreferencesKey("day_plan_work_end")
+        val lunchEnabled = booleanPreferencesKey("day_plan_lunch_enabled")
+        val lunchStart = intPreferencesKey("day_plan_lunch_start")
+        val lunchEnd = intPreferencesKey("day_plan_lunch_end")
+        val planBuffer = intPreferencesKey("day_plan_buffer_minutes")
+        val morningReminder = booleanPreferencesKey("ritual_morning_reminder")
+        val morningTime = intPreferencesKey("ritual_morning_time")
+        val eveningReminder = booleanPreferencesKey("ritual_evening_reminder")
+        val eveningTime = intPreferencesKey("ritual_evening_time")
+        val focusDate = longPreferencesKey("ritual_focus_date")
+        val focusTasks = stringPreferencesKey("ritual_focus_tasks")
+        val morningDone = longPreferencesKey("ritual_morning_done")
+        val eveningDone = longPreferencesKey("ritual_evening_done")
 
         /** Normalizer version the search index was built with (device state, never exported). */
         val searchIndexVersion = intPreferencesKey("search_index_version")
@@ -119,6 +140,12 @@ class UserPreferencesDataSource @Inject constructor(
         fun str(key: Preferences.Key<String>): String? = raw?.get(key.name) ?: prefs[key]
         fun int(key: Preferences.Key<Int>): Int? = raw?.get(key.name)?.toIntOrNull() ?: prefs[key]
         fun bool(key: Preferences.Key<Boolean>): Boolean? = raw?.get(key.name)?.toBooleanStrictOrNull() ?: prefs[key]
+        fun long(key: Preferences.Key<Long>): Long? = raw?.get(key.name)?.toLongOrNull() ?: prefs[key]
+        fun time(key: Preferences.Key<Int>, default: LocalTime): LocalTime =
+            int(key)?.takeIf { it in 0 until MINUTES_PER_DAY }?.let { LocalTime.of(it / 60, it % 60) } ?: default
+        fun date(key: Preferences.Key<Long>, default: LocalDate?): LocalDate? =
+            long(key)?.takeIf { it in DATE_RANGE }?.let(LocalDate::ofEpochDay) ?: default
+        val plan = d.dayPlan
         return UserSettings(
             language = str(Keys.language)?.let { tag -> AppLanguage.entries.firstOrNull { tag.startsWith(it.tag) } } ?: d.language,
             themeMode = str(Keys.theme).enumOr(d.themeMode),
@@ -150,11 +177,35 @@ class UserPreferencesDataSource @Inject constructor(
             colorTheme = str(Keys.colorTheme)?.let { key -> ColorTheme.entries.firstOrNull { it.key == key } } ?: d.colorTheme,
             // Installs from before the first-run language screen: finishing onboarding implies a choice.
             languageChosen = prefs[Keys.languageChosen] ?: prefs[Keys.onboarding] ?: d.languageChosen,
+            dayPlan = DayPlanSettings(
+                workStart = time(Keys.workStart, plan.workStart),
+                workEnd = time(Keys.workEnd, plan.workEnd),
+                lunchEnabled = bool(Keys.lunchEnabled) ?: plan.lunchEnabled,
+                lunchStart = time(Keys.lunchStart, plan.lunchStart),
+                lunchEnd = time(Keys.lunchEnd, plan.lunchEnd),
+                bufferMinutes = int(Keys.planBuffer)?.coerceIn(0, MAX_BUFFER) ?: plan.bufferMinutes,
+                morningReminder = bool(Keys.morningReminder) ?: plan.morningReminder,
+                morningTime = time(Keys.morningTime, plan.morningTime),
+                eveningReminder = bool(Keys.eveningReminder) ?: plan.eveningReminder,
+                eveningTime = time(Keys.eveningTime, plan.eveningTime),
+            ),
+            rituals = RitualState(
+                focusDate = date(Keys.focusDate, d.rituals.focusDate),
+                focusTaskIds = str(Keys.focusTasks)?.split(',')?.mapNotNull { it.trim().toLongOrNull() }?.distinct()
+                    ?.take(RitualState.TOP_COUNT) ?: d.rituals.focusTaskIds,
+                morningDoneOn = date(Keys.morningDone, d.rituals.morningDoneOn),
+                eveningDoneOn = date(Keys.eveningDone, d.rituals.eveningDoneOn),
+            ),
         )
     }
 
     private companion object {
         const val AUTO = "AUTO"
+        const val MINUTES_PER_DAY = 24 * 60
+        const val MAX_BUFFER = 120
+
+        /** Plausible epoch days (years 1900–2200); anything else is treated as malformed. */
+        val DATE_RANGE = -25_567L..84_000L
         val DEVICE_KEYS = setOf(Keys.onboarding.name, Keys.languageChosen.name, Keys.searchIndexVersion.name)
     }
 
@@ -182,7 +233,25 @@ class UserPreferencesDataSource @Inject constructor(
         prefs[Keys.onboarding] = s.onboardingCompleted
         prefs[Keys.colorTheme] = s.colorTheme.key
         prefs[Keys.languageChosen] = s.languageChosen
+        val plan = s.dayPlan
+        prefs[Keys.workStart] = plan.workStart.minutes()
+        prefs[Keys.workEnd] = plan.workEnd.minutes()
+        prefs[Keys.lunchEnabled] = plan.lunchEnabled
+        prefs[Keys.lunchStart] = plan.lunchStart.minutes()
+        prefs[Keys.lunchEnd] = plan.lunchEnd.minutes()
+        prefs[Keys.planBuffer] = plan.bufferMinutes
+        prefs[Keys.morningReminder] = plan.morningReminder
+        prefs[Keys.morningTime] = plan.morningTime.minutes()
+        prefs[Keys.eveningReminder] = plan.eveningReminder
+        prefs[Keys.eveningTime] = plan.eveningTime.minutes()
+        val rituals = s.rituals
+        rituals.focusDate?.let { prefs[Keys.focusDate] = it.toEpochDay() } ?: prefs.remove(Keys.focusDate)
+        prefs[Keys.focusTasks] = rituals.focusTaskIds.joinToString(",")
+        rituals.morningDoneOn?.let { prefs[Keys.morningDone] = it.toEpochDay() } ?: prefs.remove(Keys.morningDone)
+        rituals.eveningDoneOn?.let { prefs[Keys.eveningDone] = it.toEpochDay() } ?: prefs.remove(Keys.eveningDone)
     }
+
+    private fun LocalTime.minutes(): Int = hour * 60 + minute
 }
 
 private inline fun <reified E : Enum<E>> String?.enumOr(default: E): E =

@@ -104,6 +104,10 @@ data class UserSettings(
      * count as having chosen.
      */
     val languageChosen: Boolean = false,
+    /** Working hours and ritual reminders (Plan-B Pro #5, #8). */
+    val dayPlan: DayPlanSettings = DayPlanSettings(),
+    /** Today's top tasks and the days the rituals were done (Plan-B Pro #8). */
+    val rituals: RitualState = RitualState(),
 ) {
     /** The palette to draw with: premium themes fall back to the classic one without Pro. */
     fun effectiveColorTheme(isPro: Boolean): ColorTheme = if (isPro || !colorTheme.isPremium) colorTheme else ColorTheme.CLASSIC
