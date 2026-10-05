@@ -27,4 +27,6 @@
     <string name="auto_backup_error_write">the file could not be written. Check the free space or the connection of the folder.</string>
     <string name="settings_day_planning">Day planning and rituals</string>
     <string name="settings_day_planning_summary">Working hours, breaks and ritual reminders</string>
+    <string name="settings_ai_assistant">AI assistant</string>
+    <string name="settings_ai_assistant_summary">Your own provider, key and model</string>
 </resources>

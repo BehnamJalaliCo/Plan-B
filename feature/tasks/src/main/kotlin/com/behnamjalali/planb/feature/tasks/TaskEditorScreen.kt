@@ -93,6 +93,17 @@ import com.behnamjalali.planb.core.ui.presetRule
 import com.behnamjalali.planb.core.ui.priorityLabel
 import com.behnamjalali.planb.core.ui.recurrenceSummary
 import com.behnamjalali.planb.core.ui.reminderLabel
+import com.behnamjalali.planb.core.speech.VoiceInputButton
+import com.behnamjalali.planb.core.speech.appendDictation
+import com.behnamjalali.planb.core.ui.AssistantAction
+import com.behnamjalali.planb.core.ui.AssistantRequest
+import com.behnamjalali.planb.core.ui.AssistantSource
+import com.behnamjalali.planb.core.ui.LocalAssistant
+import com.behnamjalali.planb.core.ui.ProFeature
+import com.behnamjalali.planb.core.ui.rememberProGuard
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -125,8 +136,23 @@ fun TaskEditorDestination(
                     snackbar.showSnackbar(resources.getString(R.string.task_editor_not_found))
                     onClose()
                 }
+                EditorEvent.AssistantApplied -> {
+                    val result = snackbar.showSnackbar(
+                        resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_ai_applied),
+                        actionLabel = resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_undo),
+                        duration = SnackbarDuration.Long,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) viewModel.undoAssistant()
+                }
             }
         }
+    }
+    // Plan-B Pro #39: the contextual assistant (provided by the app; absent in isolated tests).
+    val assistant = LocalAssistant.current
+    val guard = rememberProGuard()
+    var assistantRequest by remember { mutableStateOf<AssistantRequest?>(null) }
+    assistantRequest?.let { request ->
+        assistant?.sheet(request, { assistantRequest = null }, viewModel::applyAssistant)
     }
     val requestClose = { if (viewModel.isDirty) confirmDiscard = true else onClose() }
     BackHandler(onBack = requestClose)
@@ -164,6 +190,27 @@ fun TaskEditorDestination(
             onRemoveBlocker = viewModel::removeBlocker,
         ),
         onDeadline = viewModel::setDeadline,
+        onAssistant = if (assistant != null) {
+            {
+                guard.run(ProFeature.AI_ASSISTANT) {
+                    val f = viewModel.form.value
+                    // Nothing to work with before the task has a title.
+                    if (f.title.isBlank()) return@run
+                    assistantRequest = AssistantRequest(
+                        source = AssistantSource.TASK,
+                        title = f.title,
+                        text = listOf(f.description, f.notes).filter { it.isNotBlank() }.joinToString("\n\n"),
+                        isSelection = false,
+                        actions = listOf(AssistantAction.BREAK_DOWN, AssistantAction.SUGGEST_TITLES),
+                    )
+                }
+            }
+        } else {
+            null
+        },
+        titleVoiceInput = {
+            VoiceInputButton(onResult = { text -> viewModel.update { it.copy(title = appendDictation(it.title, text)) } }, key = "task_title")
+        },
     )
 
     if (confirmDiscard) {
@@ -210,6 +257,10 @@ fun TaskEditorScreen(
     dependencyCandidates: List<Task> = emptyList(),
     planning: TaskPlanningCallbacks = TaskPlanningCallbacks(),
     onDeadline: (LocalDate?) -> Unit = {},
+    /** Opens the assistant for this task (Plan-B Pro #39); null hides the button. */
+    onAssistant: (() -> Unit)? = null,
+    /** The microphone at the end of the title field (Plan-B Pro #40); null hides it. */
+    titleVoiceInput: (@Composable () -> Unit)? = null,
 ) {
     val formatter = PlannerLocals.formatter
     val today = PlannerLocals.today
@@ -242,6 +293,9 @@ fun TaskEditorScreen(
             PlannerTopBar(
                 title = stringResource(if (isNew) R.string.task_editor_new else R.string.task_editor_edit),
                 actions = {
+                    onAssistant?.let { open ->
+                        PlannerIconButton(Icons.Rounded.AutoAwesome, stringResource(com.behnamjalali.planb.core.ui.R.string.ui_ai_assistant), open)
+                    }
                     // The history is a Pro feature; free users find it in More › Activity.
                     if (!isNew && onActivity != null && LocalProAccess.current.isPro) {
                         PlannerIconButton(Icons.Rounded.History, stringResource(R.string.task_editor_activity), onActivity)
@@ -291,6 +345,7 @@ fun TaskEditorScreen(
                 label = stringResource(R.string.task_editor_title),
                 isError = titleTouched && form.title.isBlank(),
                 supportingText = if (titleTouched && form.title.isBlank()) stringResource(R.string.task_editor_title_required) else null,
+                trailingContent = titleVoiceInput,
             )
             PlannerTextField(
                 value = form.description,

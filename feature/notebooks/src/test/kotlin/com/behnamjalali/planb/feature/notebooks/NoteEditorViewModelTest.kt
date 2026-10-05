@@ -7,7 +7,10 @@ import androidx.test.core.app.ApplicationProvider
 import com.behnamjalali.planb.core.data.DocumentFiles
 import com.behnamjalali.planb.core.data.repository.TemplateRepository
 import com.behnamjalali.planb.core.data.repository.TemplateResult
+import com.behnamjalali.planb.core.model.BlockType
 import com.behnamjalali.planb.core.model.EntityId
+import com.behnamjalali.planb.core.ui.AssistantOutcome
+import kotlinx.coroutines.delay
 import com.behnamjalali.planb.core.model.Note
 import com.behnamjalali.planb.core.model.PlannerTemplate
 import com.behnamjalali.planb.core.model.TemplatePayload
@@ -110,5 +113,65 @@ class NoteEditorViewModelTest {
         assertThat(blocks.map { it.value.text }).containsExactly("hel", "lo").inOrder()
         assertThat(blocks[0].revision).isGreaterThan(block.revision)
         withTimeout(20_000) { assertThat(vm.state.first { it.focusId == blocks[1].id }.focusId).isEqualTo(blocks[1].id) }
+    }
+
+    /** Plan-B Pro #39: a selection is what the assistant reads; its changes apply with Undo. */
+    @Test
+    fun assistant_readsTheSelection_andItsChangesCanBeUndone() = runBlocking<Unit> {
+        val notebook = graph.notes.ensureDefaultNotebook("Notes")
+        val id = graph.notes.saveNote(Note(notebookId = notebook, title = "سفر"))
+        val vm = viewModel(SavedStateHandle(mapOf("noteId" to id)))
+        vm.start("Notes")
+        val block = vm.state.awaitItem { !it.loading }.blocks.single()
+        vm.onFocus(block.id)
+        vm.onBlockChange(block.id, TextFieldValue("باید بلیت بخرم و هتل رزرو کنم", TextRange(5)))
+        assertThat(vm.assistantText()).isEqualTo("باید بلیت بخرم و هتل رزرو کنم" to false)
+        vm.onBlockChange(block.id, TextFieldValue("باید بلیت بخرم و هتل رزرو کنم", TextRange(5, 14)))
+        assertThat(vm.assistantText()).isEqualTo("بلیت بخرم" to true)
+
+        vm.applyAssistant(AssistantOutcome.ReplaceSelection("بلیت قطار بخرم"))
+        assertThat(vm.state.value.blocks.single().value.text).isEqualTo("باید بلیت قطار بخرم و هتل رزرو کنم")
+        vm.undoAssistant()
+        assertThat(vm.state.value.blocks.single().value.text).isEqualTo("باید بلیت بخرم و هتل رزرو کنم")
+
+        vm.applyAssistant(AssistantOutcome.AddChecklist(listOf("بلیت", "هتل")))
+        assertThat(vm.state.value.blocks.map { it.type }).containsExactly(BlockType.TEXT, BlockType.CHECKLIST, BlockType.CHECKLIST).inOrder()
+        vm.applyAssistant(AssistantOutcome.SetTitle("سفر شیراز"))
+        assertThat(vm.state.value.title.text).isEqualTo("سفر شیراز")
+        vm.undoAssistant()
+        assertThat(vm.state.value.title.text).isEqualTo("سفر")
+        // Saved like any other edit.
+        vm.flush()
+        withTimeout(20_000) { while (graph.notes.getNote(id)!!.document.blocks.size != 3) delay(20) }
+    }
+
+    /** Plan-B Pro #40: dictation goes in at the caret, with spaces around it. */
+    @Test
+    fun dictation_isInsertedAtTheCaret() = runBlocking<Unit> {
+        val notebook = graph.notes.ensureDefaultNotebook("Notes")
+        val id = graph.notes.saveNote(Note(notebookId = notebook, title = "Note"))
+        val vm = viewModel(SavedStateHandle(mapOf("noteId" to id)))
+        vm.start("Notes")
+        val block = vm.state.awaitItem { !it.loading }.blocks.single()
+        vm.onFocus(block.id)
+        vm.onBlockChange(block.id, TextFieldValue("خرید نان", TextRange(4)))
+        vm.insertDictation("و شیر")
+        val value = vm.state.value.blocks.single().value
+        assertThat(value.text).isEqualTo("خرید و شیر نان")
+        assertThat(value.selection).isEqualTo(TextRange(10))
+    }
+
+    @Test
+    fun assistantText_becomesBlocks() {
+        var n = 0
+        val blocks = AssistantBlocks.fromText("# Plan\n\n- **one**\n2. two\n- [x] done\n```\nplain") { "b${n++}" }
+        assertThat(blocks.map { it.type to it.value.text }).containsExactly(
+            BlockType.HEADING to "Plan",
+            BlockType.BULLET to "one",
+            BlockType.NUMBERED to "two",
+            BlockType.CHECKLIST to "done",
+            BlockType.TEXT to "plain",
+        ).inOrder()
+        assertThat(blocks[3].checked).isTrue()
     }
 }

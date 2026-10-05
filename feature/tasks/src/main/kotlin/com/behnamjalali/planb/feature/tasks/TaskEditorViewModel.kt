@@ -28,6 +28,7 @@ import com.behnamjalali.planb.core.model.TaskReminderKind
 import com.behnamjalali.planb.core.model.TaskReminderRules
 import com.behnamjalali.planb.core.model.TaskStatus
 import com.behnamjalali.planb.core.model.TaskView
+import com.behnamjalali.planb.core.ui.AssistantOutcome
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -186,6 +187,9 @@ sealed interface EditorEvent {
 
     /** The chosen task already waits (directly or not) for this one (Plan-B Pro #14). */
     data object DependencyCycle : EditorEvent
+
+    /** An assistant change was applied (Plan-B Pro #39); the snackbar offers Undo. */
+    data object AssistantApplied : EditorEvent
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -351,6 +355,54 @@ class TaskEditorViewModel @Inject constructor(
                 runCatchingSafely { tasks.save(Task(title = clean, parentTaskId = route.taskId, projectId = currentForm().projectId)) }
                     .onFailure { _events.tryEmit(EditorEvent.Failed) }
             }
+        }
+    }
+
+    /** What the last assistant change replaced: the form before it and the subtasks it saved. */
+    private var beforeAssistant: Pair<TaskForm, List<EntityId>>? = null
+
+    /**
+     * Plan-B Pro #39: subtasks or a title the user confirmed in the assistant sheet. A new task
+     * keeps the subtasks pending until it is saved; an existing one saves them at once. Both can
+     * be undone ([undoAssistant]).
+     */
+    fun applyAssistant(outcome: AssistantOutcome) {
+        val before = currentForm()
+        when (outcome) {
+            is AssistantOutcome.SetTitle -> {
+                beforeAssistant = before to emptyList()
+                update { it.copy(title = outcome.title.replace('\n', ' ').trim()) }
+                _events.tryEmit(EditorEvent.AssistantApplied)
+            }
+            is AssistantOutcome.AddSubtasks -> {
+                val titles = outcome.items.map { it.trim() }.filter { it.isNotEmpty() }
+                if (titles.isEmpty()) return
+                if (isNew) {
+                    beforeAssistant = before to emptyList()
+                    update { it.copy(pendingSubtasks = it.pendingSubtasks + titles) }
+                    _events.tryEmit(EditorEvent.AssistantApplied)
+                } else {
+                    viewModelScope.launch {
+                        runCatchingSafely { titles.map { tasks.save(Task(title = it, parentTaskId = route.taskId, projectId = before.projectId)) } }
+                            .onSuccess { ids ->
+                                beforeAssistant = before to ids
+                                _events.tryEmit(EditorEvent.AssistantApplied)
+                            }
+                            .onFailure { _events.tryEmit(EditorEvent.Failed) }
+                    }
+                }
+            }
+            else -> Unit
+        }
+    }
+
+    fun undoAssistant() {
+        val (form, saved) = beforeAssistant ?: return
+        beforeAssistant = null
+        // Only what the assistant changed goes back; later edits to other fields stay.
+        update { it.copy(title = form.title, pendingSubtasks = form.pendingSubtasks) }
+        if (saved.isNotEmpty()) {
+            viewModelScope.launch { runCatchingSafely { tasks.delete(saved) }.onFailure { _events.tryEmit(EditorEvent.Failed) } }
         }
     }
 

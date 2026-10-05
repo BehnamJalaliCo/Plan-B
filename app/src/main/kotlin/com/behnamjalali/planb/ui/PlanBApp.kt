@@ -43,6 +43,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.behnamjalali.planb.ProStatusViewModel
 import com.behnamjalali.planb.R
 import com.behnamjalali.planb.core.ui.LocalProAccess
+import com.behnamjalali.planb.core.ui.LocalAssistant
+import com.behnamjalali.planb.feature.assistant.AiSettingsRoute
+import com.behnamjalali.planb.feature.assistant.rememberAssistantHost
 import com.behnamjalali.planb.core.ui.ProAccess
 import com.behnamjalali.planb.feature.pro.PaywallRoute
 import com.behnamjalali.planb.core.designsystem.component.PlannerFAB
@@ -103,7 +106,9 @@ fun PlanBApp(
     val proAccess = remember(isPro, navController) {
         ProAccess(isPro = isPro, openPaywall = { feature -> navController.navigate(PaywallRoute(feature?.id)) })
     }
-    CompositionLocalProvider(LocalProAccess provides proAccess) {
+    // Plan-B Pro #39: the contextual assistant sheet for the note and task editors.
+    val assistantHost = rememberAssistantHost(onOpenSettings = { navController.navigate(AiSettingsRoute) })
+    CompositionLocalProvider(LocalProAccess provides proAccess, LocalAssistant provides assistantHost) {
         Scaffold(
             // Test tags double as resource ids so UiAutomator (benchmarks, baseline profiles) can find them.
             modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }

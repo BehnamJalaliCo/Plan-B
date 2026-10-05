@@ -40,6 +40,7 @@ import com.behnamjalali.planb.core.model.NoteDocument
 import com.behnamjalali.planb.core.model.NoteLinks
 import com.behnamjalali.planb.core.model.Notebook
 import com.behnamjalali.planb.core.model.Tag
+import com.behnamjalali.planb.core.ui.AssistantOutcome
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
@@ -124,6 +125,35 @@ sealed interface NoteEditorEvent {
     data object LockRemoved : NoteEditorEvent
     data object Failed : NoteEditorEvent
     data class Rich(val message: RichMessage) : NoteEditorEvent
+
+    /** An assistant change was applied (Plan-B Pro #39); the snackbar offers Undo. */
+    data object AssistantApplied : NoteEditorEvent
+}
+
+/**
+ * Assistant text as note blocks (Plan-B Pro #39): one block per line; "- ", "* ", "• " make
+ * bullets, "1. " numbered items, "- [ ] " checklist items, "# " headings; blank lines and Markdown
+ * emphasis markers are dropped.
+ */
+object AssistantBlocks {
+    private val CHECK = Regex("^[-*•]\\s+\\[( |x|X)]\\s+")
+    private val BULLET = Regex("^[-*•]\\s+")
+    private val NUMBER = Regex("^[0-9۰-۹]+[.)]\\s+")
+    private val HEADING = Regex("^#{1,6}\\s+")
+
+    fun fromText(text: String, newId: () -> String): List<EditorBlock> = text.lines()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() && !it.startsWith("```") }
+        .map { line ->
+            val (type, content, checked) = when {
+                CHECK.containsMatchIn(line) -> Triple(BlockType.CHECKLIST, line.replace(CHECK, ""), line[line.indexOf('[') + 1].lowercaseChar() == 'x')
+                BULLET.containsMatchIn(line) -> Triple(BlockType.BULLET, line.replace(BULLET, ""), false)
+                NUMBER.containsMatchIn(line) -> Triple(BlockType.NUMBERED, line.replace(NUMBER, ""), false)
+                HEADING.containsMatchIn(line) -> Triple(BlockType.HEADING, line.replace(HEADING, ""), false)
+                else -> Triple(BlockType.TEXT, line, false)
+            }
+            EditorBlock(newId(), type, TextFieldValue(content.replace("**", "").replace("__", "")), checked = checked)
+        }
 }
 
 /** Pure block-editing rules; kept separate from Android so they are unit-testable. */
@@ -524,6 +554,84 @@ class NoteEditorViewModel @Inject constructor(
         list.add(target, list.removeAt(i))
         s.copy(blocks = list)
     }
+
+    // region Plan-B Pro #39 (assistant) and #40 (dictation)
+
+    /** Title and blocks before the last assistant change, for Undo. */
+    private var beforeAssistant: Pair<TextFieldValue, List<EditorBlock>>? = null
+
+    private fun focusedTextBlock(): EditorBlock? = _state.value.let { s -> s.blocks.firstOrNull { it.id == s.focusId && !it.type.isRich && it.type != BlockType.DIVIDER } }
+
+    /**
+     * What the assistant may read: the selected text of the focused block (links read as their
+     * titles), or else the whole note as plain text. The second value says it is a selection.
+     */
+    fun assistantText(): Pair<String, Boolean> {
+        val block = focusedTextBlock()
+        val selection = block?.value?.selection
+        if (block != null && selection != null && !selection.collapsed) {
+            return NoteLinks.plain(block.value.text.substring(selection.min, selection.max)) to true
+        }
+        return NoteDocument(blocks = _state.value.blocks.map { it.toNoteBlock() }).plainText() to false
+    }
+
+    /** Applies a change the user confirmed in the assistant sheet; [undoAssistant] reverts it. */
+    fun applyAssistant(outcome: AssistantOutcome) {
+        val s = _state.value
+        if (s.loading || s.needsUnlock) return
+        beforeAssistant = s.title to s.blocks
+        val focused = focusedTextBlock()
+        edited { state ->
+            when (outcome) {
+                is AssistantOutcome.SetTitle -> state.copy(title = TextFieldValue(outcome.title.replace('\n', ' ').trim()), titleRevision = state.titleRevision + 1)
+                is AssistantOutcome.ReplaceSelection -> {
+                    val block = focused ?: return@edited state
+                    val sel = block.value.selection
+                    val text = block.value.text.replaceRange(sel.min, sel.max, outcome.text.trim())
+                    val caret = sel.min + outcome.text.trim().length
+                    state.copy(blocks = state.blocks.map { if (it.id == block.id) it.copy(value = TextFieldValue(text, TextRange(caret))) else it })
+                }
+                is AssistantOutcome.InsertText -> insertAfter(state, focused?.id, AssistantBlocks.fromText(outcome.text, ::newId))
+                is AssistantOutcome.AddChecklist -> insertAfter(state, focused?.id, outcome.items.map { EditorBlock(newId(), BlockType.CHECKLIST, TextFieldValue(it)) })
+                is AssistantOutcome.AddSubtasks -> state
+            }
+        }
+        _events.tryEmit(NoteEditorEvent.AssistantApplied)
+    }
+
+    private fun insertAfter(state: NoteEditorState, afterId: String?, added: List<EditorBlock>): NoteEditorState {
+        if (added.isEmpty()) return state
+        val index = state.blocks.indexOfFirst { it.id == afterId }.takeIf { it >= 0 }?.plus(1) ?: state.blocks.size
+        val blocks = state.blocks.toMutableList().apply { addAll(index, added) }
+        return state.copy(blocks = blocks, focusId = added.last().id, focusVersion = state.focusVersion + 1)
+    }
+
+    fun undoAssistant() {
+        val (title, blocks) = beforeAssistant ?: return
+        beforeAssistant = null
+        edited { it.copy(title = title, titleRevision = it.titleRevision + 1, blocks = blocks) }
+    }
+
+    /** Dictated text goes in at the caret of the focused text block (or into a new block at the end). */
+    fun insertDictation(text: String) {
+        val clean = text.trim()
+        if (clean.isEmpty() || _state.value.needsUnlock) return
+        val block = focusedTextBlock()
+        if (block == null) {
+            edited { s ->
+                val added = EditorBlock(newId(), BlockType.TEXT, TextFieldValue(clean, TextRange(clean.length)))
+                s.copy(blocks = s.blocks + added, focusId = added.id, focusVersion = s.focusVersion + 1)
+            }
+            return
+        }
+        val value = block.value
+        val before = value.text.substring(0, value.selection.min)
+        val after = value.text.substring(value.selection.max)
+        val insert = (if (before.isNotEmpty() && !before.last().isWhitespace()) " " else "") + clean + (if (after.isNotEmpty() && !after.first().isWhitespace()) " " else "")
+        replaceBlockText(block.id, TextFieldValue(before + insert + after, TextRange(before.length + insert.length)))
+    }
+
+    // endregion
 
     fun addBlockAtEnd() = edited { s ->
         val block = EditorBlock(newId(), BlockType.TEXT)

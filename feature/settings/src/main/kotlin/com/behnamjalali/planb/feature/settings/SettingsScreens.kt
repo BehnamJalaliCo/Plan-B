@@ -54,6 +54,7 @@ import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material.icons.rounded.ViewDay
 import androidx.compose.material.icons.rounded.WorkHistory
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -163,6 +164,7 @@ fun SettingsDestination(
     onOpenSecurity: () -> Unit = {},
     onOpenCalendarSettings: () -> Unit = {},
     onOpenDayPlanning: () -> Unit = {},
+    onOpenAssistant: () -> Unit = {},
 ) {
     val settings by viewModel.state.collectAsStateWithLifecycle()
     val entitlement by viewModel.entitlement.collectAsStateWithLifecycle()
@@ -188,6 +190,7 @@ fun SettingsDestination(
         onOpenSecurity = onOpenSecurity,
         onOpenCalendarSettings = onOpenCalendarSettings,
         onOpenDayPlanning = onOpenDayPlanning,
+        onOpenAssistant = onOpenAssistant,
         onLanguage = { language ->
             viewModel.update { it.copy(language = language) }
             AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.tag))
@@ -210,6 +213,7 @@ fun SettingsScreen(
     onOpenSecurity: () -> Unit = {},
     onOpenCalendarSettings: () -> Unit = {},
     onOpenDayPlanning: () -> Unit = {},
+    onOpenAssistant: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -324,6 +328,18 @@ fun SettingsScreen(
                 SettingsRow(
                     stringResource(R.string.settings_day_planning), icon = Icons.Rounded.WorkHistory,
                     subtitle = stringResource(R.string.settings_day_planning_summary), onClick = onOpenDayPlanning,
+                    trailing = if (proStatus == ProStatus.FREE) {
+                        { com.behnamjalali.planb.core.ui.ProBadge() }
+                    } else {
+                        null
+                    },
+                )
+            }
+            // Plan-B Pro #39: the assistant's provider, key and model (the screen shows a teaser without Pro).
+            item {
+                SettingsRow(
+                    stringResource(R.string.settings_ai_assistant), icon = Icons.Rounded.AutoAwesome,
+                    subtitle = stringResource(R.string.settings_ai_assistant_summary), onClick = onOpenAssistant,
                     trailing = if (proStatus == ProStatus.FREE) {
                         { com.behnamjalali.planb.core.ui.ProBadge() }
                     } else {

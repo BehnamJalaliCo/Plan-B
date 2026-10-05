@@ -19,6 +19,10 @@ import com.behnamjalali.planb.core.model.SearchEntityType
 import com.behnamjalali.planb.core.model.SearchResult
 import com.behnamjalali.planb.core.model.TemplateType
 import com.behnamjalali.planb.core.ui.ProFeature
+import com.behnamjalali.planb.feature.assistant.AiSettingsDestination
+import com.behnamjalali.planb.feature.assistant.AiSettingsRoute
+import com.behnamjalali.planb.feature.assistant.AssistantDestination
+import com.behnamjalali.planb.feature.assistant.AssistantRoute
 import com.behnamjalali.planb.feature.calendar.CalendarDestination
 import com.behnamjalali.planb.feature.calendar.CalendarRoute
 import com.behnamjalali.planb.feature.calendar.CalendarSettingsDestination
@@ -309,6 +313,7 @@ fun PlanBNavHost(
                 onOpenSecurity = { nav.navigate(SecurityRoute) },
                 onOpenCalendarSettings = { nav.navigate(CalendarSettingsRoute) },
                 onOpenDayPlanning = { nav.navigate(DayPlanSettingsRoute) },
+                onOpenAssistant = { nav.navigate(AiSettingsRoute) },
             )
         }
         composable<PaywallRoute> { entry -> PaywallDestination(onBack = rememberScreenNavigator(navController, entry).back) }
@@ -378,6 +383,12 @@ fun PlanBNavHost(
             )
         }
         composable<MoodCalendarRoute> { entry -> MoodCalendarDestination(onBack = rememberScreenNavigator(navController, entry).back) }
+        // Plan-B Pro AI (#39): the assistant and its settings.
+        composable<AssistantRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            AssistantDestination(onBack = nav.back, onOpenSettings = { nav.navigate(AiSettingsRoute) }, snackbarHostState = snackbarHostState)
+        }
+        composable<AiSettingsRoute> { entry -> AiSettingsDestination(onBack = rememberScreenNavigator(navController, entry).back) }
         composable<EisenhowerRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
             EisenhowerDestination(onBack = nav.back, onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) }, snackbarHostState = snackbarHostState)

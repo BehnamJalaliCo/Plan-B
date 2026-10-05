@@ -135,6 +135,14 @@ import com.behnamjalali.planb.feature.notebooks.rich.RichMessage
 import com.behnamjalali.planb.feature.notebooks.rich.RichOverlays
 import com.behnamjalali.planb.feature.notebooks.rich.RichUi
 import com.behnamjalali.planb.feature.notebooks.rich.rememberRichUi
+import com.behnamjalali.planb.core.speech.VoiceInputButton
+import com.behnamjalali.planb.core.ui.AssistantAction
+import com.behnamjalali.planb.core.ui.AssistantOutcome
+import com.behnamjalali.planb.core.ui.AssistantRequest
+import com.behnamjalali.planb.core.ui.AssistantSource
+import com.behnamjalali.planb.core.ui.LocalAssistant
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
 
 @Composable
 fun blockTypeLabel(type: BlockType): String = stringResource(
@@ -212,6 +220,14 @@ fun NoteEditorDestination(
                 NoteEditorEvent.LockRemoved -> snackbar.showSnackbar(resources.getString(R.string.note_lock_removed))
                 NoteEditorEvent.Failed -> snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
                 is NoteEditorEvent.Rich -> snackbar.showSnackbar(resources.getString(richMessage(event.message)))
+                NoteEditorEvent.AssistantApplied -> {
+                    val result = snackbar.showSnackbar(
+                        resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_ai_applied),
+                        actionLabel = resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_undo),
+                        duration = SnackbarDuration.Long,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) viewModel.undoAssistant()
+                }
             }
         }
     }
@@ -271,6 +287,9 @@ fun NoteEditorDestination(
             onRequestUnlock = viewModel::requestUnlock,
             onActivity = if (onOpenActivity != null) ({ currentOnActivity?.invoke(viewModel.state.value.noteId) }) else null,
             rich = richUi,
+            onAssistantText = viewModel::assistantText,
+            onAssistant = viewModel::applyAssistant,
+            voiceInput = { VoiceInputButton(onResult = viewModel::insertDictation, key = "note_editor") },
         )
     }
     val passphraseDialog = state.passphraseDialog
@@ -377,6 +396,11 @@ data class NoteEditorActions(
     val onActivity: (() -> Unit)? = null,
     /** Plan-B Pro rich blocks (pickers, recorder, drawing); null shows them read-only. */
     val rich: RichUi? = null,
+    /** Plan-B Pro #39: the selection (true) or the whole note for the assistant. */
+    val onAssistantText: () -> Pair<String, Boolean> = { "" to false },
+    val onAssistant: (AssistantOutcome) -> Unit = {},
+    /** Plan-B Pro #40: the microphone in the block toolbar; null hides it. */
+    val voiceInput: (@Composable () -> Unit)? = null,
 )
 
 @Composable
@@ -395,6 +419,9 @@ fun NoteEditorScreen(
     var menu by remember { mutableStateOf(false) }
     var dialog by rememberSaveable { mutableStateOf<String?>(null) }
     val guard = rememberProGuard()
+    // Plan-B Pro #39: the contextual assistant (provided by the app; absent in isolated tests).
+    val assistant = LocalAssistant.current
+    var assistantRequest by remember { mutableStateOf<AssistantRequest?>(null) }
     val focusRequesters = remember { mutableStateMapOf<String, FocusRequester>() }
     fun requester(id: String) = focusRequesters.getOrPut(id) { FocusRequester() }
     val listState = rememberLazyListState()
@@ -460,6 +487,23 @@ fun NoteEditorScreen(
                         PlannerIconButton(Icons.Rounded.MoreVert, stringResource(com.behnamjalali.planb.core.ui.R.string.ui_more), { menu = true })
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                             buildList {
+                                // Locked notes never reach the assistant.
+                                if (assistant != null && !state.locked && !state.needsUnlock) {
+                                    add(
+                                        com.behnamjalali.planb.core.ui.R.string.ui_ai_assistant to {
+                                            guard.run(ProFeature.AI_ASSISTANT) {
+                                                val (text, selection) = actions.onAssistantText()
+                                                assistantRequest = AssistantRequest(
+                                                    source = AssistantSource.NOTE,
+                                                    title = if (selection) "" else state.title.text,
+                                                    text = text,
+                                                    isSelection = selection,
+                                                    actions = NOTE_ASSISTANT_ACTIONS,
+                                                )
+                                            }
+                                        },
+                                    )
+                                }
                                 add(R.string.note_tags to { dialog = "tags" })
                                 add(R.string.note_move to { dialog = "move" })
                                 add(R.string.note_duplicate to actions.onDuplicate)
@@ -607,6 +651,10 @@ fun NoteEditorScreen(
     }
 
     RichOverlays(state, actions.rich)
+    val request = assistantRequest
+    if (assistant != null && request != null) {
+        assistant.sheet(request, { assistantRequest = null }, actions.onAssistant)
+    }
     when (dialog) {
         "delete" -> ConfirmDeleteDialog(
             stringResource(R.string.note_delete),
@@ -764,6 +812,8 @@ private fun BlockToolbar(focused: EditorBlock?, canMerge: Boolean, enabled: Bool
             verticalAlignment = Alignment.CenterVertically,
         ) {
             item { RichInsertButton(actions.rich, enabled) }
+            // Plan-B Pro #40: dictate into the focused block.
+            actions.voiceInput?.let { mic -> if (enabled) item { mic() } }
             val textTypes = BlockType.entries.filterNot { it.isRich }
             items(textTypes.size) { i ->
                 val type = textTypes[i]
@@ -800,6 +850,15 @@ private fun BlockToolbar(focused: EditorBlock?, canMerge: Boolean, enabled: Bool
 }
 
 private const val FOCUS_ATTEMPTS = 6
+
+private val NOTE_ASSISTANT_ACTIONS = listOf(
+    AssistantAction.SUMMARIZE,
+    AssistantAction.REWRITE,
+    AssistantAction.TRANSLATE,
+    AssistantAction.CONTINUE,
+    AssistantAction.EXTRACT_TASKS,
+    AssistantAction.SUGGEST_TITLES,
+)
 
 private fun richMessage(message: RichMessage) = when (message) {
     RichMessage.FILE_TOO_LARGE -> R.string.rich_error_too_large

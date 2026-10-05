@@ -133,9 +133,11 @@ dependencies {
     implementation(projects.feature.security)
     implementation(projects.feature.reports)
     implementation(projects.feature.journal)
+    implementation(projects.feature.assistant)
     implementation(projects.core.backup)
     implementation(projects.core.billing)
     implementation(projects.core.ai)
+    implementation(projects.core.speech)
     implementation(projects.core.calendarsync)
 
     implementation(libs.androidx.activity.compose)

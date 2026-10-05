@@ -78,4 +78,26 @@ class TaskEditorViewModelTest {
         vm.update { it.copy(startDate = today.toEpochDay()) }
         assertThat(vm.form.awaitItem { it.startDate == today.toEpochDay() }.canSave).isTrue()
     }
+
+    /** Plan-B Pro #39: subtasks and a title from the assistant, each with Undo. */
+    @Test
+    fun assistantSubtasksAndTitle_canBeUndone() = runBlocking<Unit> {
+        val vm = viewModel(TaskForm(title = "مهمانی"))
+        vm.applyAssistant(com.behnamjalali.planb.core.ui.AssistantOutcome.AddSubtasks(listOf("دعوت", " ", "خرید")))
+        assertThat(vm.form.awaitItem { it.pendingSubtasks.isNotEmpty() }.pendingSubtasks).containsExactly("دعوت", "خرید").inOrder()
+        vm.applyAssistant(com.behnamjalali.planb.core.ui.AssistantOutcome.SetTitle("مهمانی تولد"))
+        vm.form.awaitItem { it.title == "مهمانی تولد" }
+        vm.undoAssistant()
+        assertThat(vm.form.awaitItem { it.title == "مهمانی" }.pendingSubtasks).hasSize(2)
+        assertThat(vm.form.awaitItem { it.pendingSubtasks.isNotEmpty() }.pendingSubtasks).containsExactly("دعوت", "خرید").inOrder()
+
+        val id = graph.tasks.save(com.behnamjalali.planb.core.model.Task(title = "سفر"))
+        val existing = main.track(TaskEditorViewModel(SavedStateHandle(mapOf("taskId" to id)), graph.tasks, graph.projects, graph.settings, graph.time, graph.planning))
+        existing.form.awaitItem { it.title == "سفر" }
+        existing.applyAssistant(com.behnamjalali.planb.core.ui.AssistantOutcome.AddSubtasks(listOf("بلیت", "هتل")))
+        val subtasks = graph.tasks.observeSubtasks(id).awaitItem { it.size == 2 }
+        assertThat(subtasks.map { it.title }).containsExactly("بلیت", "هتل")
+        existing.undoAssistant()
+        graph.tasks.observeSubtasks(id).awaitItem { it.isEmpty() }
+    }
 }

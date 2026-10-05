@@ -93,4 +93,7 @@
     <string name="ui_edit">Edit</string>
     <string name="ui_more">More options</string>
     <string name="ui_habit_check_in">%1$s: check in</string>
+    <string name="ui_ai_assistant">AI assistant</string>
+    <string name="ui_ai_applied">Applied the assistant\'s change</string>
+    <string name="ui_undo">Undo</string>
 </resources>

@@ -113,6 +113,8 @@ import com.behnamjalali.planb.feature.settings.R as SettingsR
 import com.behnamjalali.planb.feature.templates.R as TemplatesR
 import com.behnamjalali.planb.feature.today.R as TodayR
 import com.behnamjalali.planb.feature.journal.R as JournalR
+import com.behnamjalali.planb.feature.assistant.R as AssistantR
+import com.behnamjalali.planb.core.speech.R as SpeechR
 
 /**
  * Full-app screenshots: the real Hilt graph, Room and navigation with seeded data and a
@@ -147,6 +149,8 @@ class AppScreenshotTest(private val variant: Variant) {
     @Inject lateinit var deviceCalendars: FakeDeviceCalendarStore
     @Inject lateinit var preferences: UserPreferencesDataSource
     @Inject lateinit var attachments: AttachmentRepository
+    @Inject lateinit var aiSettings: com.behnamjalali.planb.core.ai.AiSettingsRepository
+    @Inject lateinit var dictation: com.behnamjalali.planb.core.speech.FakeVoiceDictation
 
     private var scenario: ActivityScenario<MainActivity>? = null
     private val context: Context get() = ApplicationProvider.getApplicationContext()
@@ -1093,6 +1097,85 @@ class AppScreenshotTest(private val variant: Variant) {
         clickDescription(s(JournalR.string.journal_calendar))
         waitFor(hasText(s(JournalR.string.insights_weekday)))
         capture("notebooks", "mood_calendar")
+    }
+
+    // endregion
+
+    // region Plan-B Pro AI: assistant (#39) and voice input (#40), with a scripted provider and recognizer
+
+    private suspend fun configureAssistant() {
+        aiSettings.setProvider(com.behnamjalali.planb.core.ai.AiProviders.AVALAI)
+        aiSettings.setApiKey("test-key")
+        aiSettings.enableWithConsent()
+    }
+
+    @Test
+    fun assistantSetup() {
+        launch(pro = true)
+        openMore(AppR.string.more_assistant)
+        waitFor(hasText(s(AssistantR.string.assistant_setup_title)))
+        capture("assistant", "assistant_setup")
+    }
+
+    @Test
+    fun assistantChat() {
+        launch(pro = true) { configureAssistant() }
+        openMore(AppR.string.more_assistant)
+        click(s(AssistantR.string.assistant_suggest_focus))
+        waitFor(hasSetTextAction() and hasText(s(AssistantR.string.assistant_suggest_focus)))
+        clickDescription(s(AssistantR.string.assistant_send))
+        waitFor(hasText(t("ناهار با سارا", "lunch with Sara"), substring = true))
+        capture("assistant", "assistant_chat")
+    }
+
+    @Test
+    fun assistantPlanDay() {
+        launch(pro = true) { configureAssistant() }
+        openMore(AppR.string.more_assistant)
+        click(s(AssistantR.string.assistant_plan_day))
+        waitFor(hasText(s(AssistantR.string.assistant_plan_day_title)))
+        waitFor(hasText(fixtures.tasks[2].title))
+        capture("assistant", "assistant_plan_day")
+    }
+
+    @Test
+    fun aiSettings() {
+        launch(pro = true) { configureAssistant() }
+        openMore(AppR.string.more_assistant)
+        waitFor(hasText(s(AssistantR.string.assistant_plan_day)))
+        clickDescription(s(AssistantR.string.ai_settings_title))
+        waitFor(hasText("AvalAI"))
+        capture("assistant", "ai_settings")
+    }
+
+    @Test
+    fun noteAssistant() {
+        launch(pro = true) { configureAssistant() }
+        click(s(AppR.string.nav_notebooks))
+        click(fixtures.notes.first().title)
+        waitFor(hasContentDescription(s(NotesR.string.note_title_hint)))
+        clickDescription(s(UiR.string.ui_more))
+        click(s(UiR.string.ui_ai_assistant))
+        click(s(AssistantR.string.assistant_action_extract))
+        waitFor(hasText(s(AssistantR.string.assistant_add_checklist)))
+        capture("notebooks", "note_assistant")
+    }
+
+    @Test
+    fun voiceInputQuickCapture() {
+        dictation.script = listOf(
+            com.behnamjalali.planb.core.speech.DictationEvent.Ready,
+            com.behnamjalali.planb.core.speech.DictationEvent.Level(0.5f),
+            com.behnamjalali.planb.core.speech.DictationEvent.Partial(t("فردا ساعت ۵ عصر جلسه با علی", "Meeting with Ali tomorrow at 5pm")),
+        )
+        dictation.hold = true
+        shadowOf(context as android.app.Application).grantPermissions(android.Manifest.permission.RECORD_AUDIO)
+        launch(pro = true)
+        clickDescription(s(AppR.string.quick_capture))
+        waitFor(hasSetTextAction())
+        clickDescription(s(SpeechR.string.speech_voice_input))
+        waitFor(hasText(t("جلسه با علی", "Meeting with Ali"), substring = true))
+        capture("capture", "voice_input")
     }
 
     // endregion

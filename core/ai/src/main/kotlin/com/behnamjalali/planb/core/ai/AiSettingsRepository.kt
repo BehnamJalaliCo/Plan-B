@@ -204,15 +204,16 @@ class AiSettingsRepository @Inject constructor(
 
     /**
      * Like [endpoint]; with [requireEnabled] false it also works before the assistant is turned
-     * on, so the settings screen can test the key and load the model list.
+     * on, so the settings screen can test the key and load the model list (which needs no
+     * model: [requireModel] false).
      */
-    suspend fun endpoint(requireEnabled: Boolean): AiEndpoint? {
+    suspend fun endpoint(requireEnabled: Boolean, requireModel: Boolean = true): AiEndpoint? {
         val prefs = data.first()
         val settings = current()
         if (requireEnabled && !settings.enabled) return null
         val provider = settings.provider ?: return null
         val baseUrl = settings.effectiveBaseUrl.takeIf { it.isNotBlank() } ?: return null
-        val model = settings.model.takeIf { it.isNotBlank() } ?: return null
+        val model = settings.model.takeIf { it.isNotBlank() || !requireModel } ?: return null
         val sealed = prefs[Keys.sealedKey] ?: return null
         val key = runCatching { String(cipher.decrypt(Base64.getDecoder().decode(sealed)), Charsets.UTF_8) }.getOrNull() ?: return null
         return AiEndpoint(provider.wireFormat, baseUrl, model, key)
