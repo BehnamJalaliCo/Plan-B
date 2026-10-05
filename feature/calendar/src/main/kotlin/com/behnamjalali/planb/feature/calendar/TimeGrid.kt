@@ -680,6 +680,10 @@ private fun TimeBlock(
     val y = with(density) { (previewStart * pxPerMinute).toDp() }
     val height = with(density) { ((previewEnd - previewStart) * pxPerMinute).toDp() }.coerceAtLeast(18.dp)
     val width = columnWidth / slot.columns
+    // Lines of text need more room with a larger font.
+    val textScale = density.fontScale.coerceIn(1f, 2f)
+    val roomForTime = height > 40.dp * textScale
+    val showGrips = height > 56.dp * textScale
 
     val timeText = formatter.timeRange(TimeBlocks.timeOf(previewStart), TimeBlocks.timeOf(previewEnd))
     val moveLabel = stringResource(R.string.calendar_move_block)
@@ -757,13 +761,13 @@ private fun TimeBlock(
             ),
     ) {
         Column(Modifier.padding(start = Spacing.sm, end = Spacing.xs, top = 2.dp)) {
-            Text(placedTitle(item), style = MaterialTheme.typography.labelMedium, color = colors.content, maxLines = if (height > 40.dp) 2 else 1, overflow = TextOverflow.Ellipsis)
-            if (height > 36.dp) {
+            Text(placedTitle(item), style = MaterialTheme.typography.labelMedium, color = colors.content, maxLines = if (height > 64.dp * textScale) 2 else 1, overflow = TextOverflow.Ellipsis)
+            if (roomForTime) {
                 Text(timeText, style = MaterialTheme.typography.labelSmall, color = colors.content.copy(alpha = 0.8f), maxLines = 1)
             }
         }
         if (draggable && !moving) {
-            ResizeHandle(Modifier.align(Alignment.TopCenter), colors.accent, top = true) { delta, done ->
+            ResizeHandle(Modifier.align(Alignment.TopCenter), colors.accent, top = true, showGrip = showGrips) { delta, done ->
                 val block = current
                 if (done) {
                     val start = TimeBlocks.snap(block.startMinute + topDelta).coerceIn(0, block.endMinute - TimeBlocks.MIN_MINUTES)
@@ -775,7 +779,7 @@ private fun TimeBlock(
                     topDelta += delta / pxPerMinute
                 }
             }
-            ResizeHandle(Modifier.align(Alignment.BottomCenter), colors.accent, top = false) { delta, done ->
+            ResizeHandle(Modifier.align(Alignment.BottomCenter), colors.accent, top = false, showGrip = showGrips) { delta, done ->
                 val block = current
                 if (done) {
                     val end = TimeBlocks.snap(block.endMinute + bottomDelta).coerceIn(block.startMinute + TimeBlocks.MIN_MINUTES, TimeBlocks.DAY_MINUTES)
@@ -793,7 +797,7 @@ private fun TimeBlock(
 
 /** A grip on a block's edge; dragging it changes the start or the end. */
 @Composable
-private fun ResizeHandle(modifier: Modifier, color: Color, top: Boolean, onDrag: (delta: Float, done: Boolean) -> Unit) {
+private fun ResizeHandle(modifier: Modifier, color: Color, top: Boolean, showGrip: Boolean, onDrag: (delta: Float, done: Boolean) -> Unit) {
     val drag by rememberUpdatedState(onDrag)
     Box(
         modifier
@@ -810,7 +814,8 @@ private fun ResizeHandle(modifier: Modifier, color: Color, top: Boolean, onDrag:
             },
         contentAlignment = if (top) Alignment.TopCenter else Alignment.BottomCenter,
     ) {
-        Box(
+        // Small blocks keep the grab area but not the grip, which would cover their title.
+        if (showGrip) Box(
             Modifier
                 .padding(vertical = 3.dp)
                 .width(20.dp)

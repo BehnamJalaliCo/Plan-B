@@ -21,6 +21,8 @@ import com.behnamjalali.planb.core.model.TemplateType
 import com.behnamjalali.planb.core.ui.ProFeature
 import com.behnamjalali.planb.feature.calendar.CalendarDestination
 import com.behnamjalali.planb.feature.calendar.CalendarRoute
+import com.behnamjalali.planb.feature.calendar.CalendarSettingsDestination
+import com.behnamjalali.planb.feature.calendar.CalendarSettingsRoute
 import com.behnamjalali.planb.feature.calendar.EventEditorDestination
 import com.behnamjalali.planb.feature.calendar.EventEditorRoute
 import com.behnamjalali.planb.feature.focus.FocusDestination
@@ -285,6 +287,7 @@ fun PlanBNavHost(
                 onOpenPro = { nav.navigate(PaywallRoute()) },
                 onCustomizeToday = onCustomizeToday,
                 onOpenSecurity = { nav.navigate(SecurityRoute) },
+                onOpenCalendarSettings = { nav.navigate(CalendarSettingsRoute) },
             )
         }
         composable<PaywallRoute> { entry -> PaywallDestination(onBack = rememberScreenNavigator(navController, entry).back) }
@@ -317,6 +320,8 @@ fun PlanBNavHost(
             val nav = rememberScreenNavigator(navController, entry)
             SmartListsDestination(onBack = nav.back, onEdit = { nav.navigate(SmartListEditorRoute(it ?: 0)) })
         }
+        // Plan-B Pro calendar (WP2a): holidays and device calendar sync settings (#2, #3).
+        composable<CalendarSettingsRoute> { entry -> CalendarSettingsDestination(onBack = rememberScreenNavigator(navController, entry).back) }
         composable<EisenhowerRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
             EisenhowerDestination(onBack = nav.back, onOpenTask = { nav.navigate(TaskEditorRoute(taskId = it)) }, snackbarHostState = snackbarHostState)

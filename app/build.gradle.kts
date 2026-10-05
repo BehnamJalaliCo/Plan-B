@@ -128,6 +128,7 @@ dependencies {
     implementation(projects.core.backup)
     implementation(projects.core.billing)
     implementation(projects.core.ai)
+    implementation(projects.core.calendarsync)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)

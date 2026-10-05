@@ -10,6 +10,8 @@
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_calendar">Calendar</string>
     <string name="settings_calendar_system">Calendar system</string>
+    <string name="settings_calendar_extras">Holidays and device calendars</string>
+    <string name="settings_calendar_extras_summary">Official holidays, the Hijri date and sync with Google Calendar</string>
     <string name="settings_calendar_jalali">Jalali (Solar Hijri)</string>
     <string name="settings_calendar_gregorian">Gregorian</string>
     <string name="settings_calendar_auto">Language default · %1$s</string>

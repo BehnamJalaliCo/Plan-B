@@ -33,6 +33,9 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import com.behnamjalali.planb.MainActivity
 import com.behnamjalali.planb.core.billing.DeveloperBilling
+import com.behnamjalali.planb.core.calendarsync.DeviceEventData
+import com.behnamjalali.planb.core.calendarsync.FakeDeviceCalendarStore
+import com.behnamjalali.planb.core.datastore.UserPreferencesDataSource
 import com.behnamjalali.planb.core.billing.EntitlementRepository
 import com.behnamjalali.planb.core.billing.ProProduct
 import com.behnamjalali.planb.core.data.security.SecurityPreferences
@@ -130,6 +133,8 @@ class AppScreenshotTest(private val variant: Variant) {
     @Inject lateinit var security: SecurityPreferences
     @Inject lateinit var smartLists: SmartListRepository
     @Inject lateinit var planning: TaskPlanningRepository
+    @Inject lateinit var deviceCalendars: FakeDeviceCalendarStore
+    @Inject lateinit var preferences: UserPreferencesDataSource
 
     private var scenario: ActivityScenario<MainActivity>? = null
     private val context: Context get() = ApplicationProvider.getApplicationContext()
@@ -672,6 +677,83 @@ class AppScreenshotTest(private val variant: Variant) {
         click(s(UiR.string.repeat_custom))
         waitFor(hasText(s(UiR.string.repeat_monthly_on_weekday)))
         capture("tasks", "advanced_recurrence")
+    }
+
+    // endregion
+
+    // region Plan-B Pro calendar (#2, #3, #6, #7), captured as a Pro user.
+
+    private val fa get() = variant.language == AppLanguage.PERSIAN
+    private fun t(faText: String, enText: String) = if (fa) faText else enText
+
+    /** 22 Aban 1405 (13 November 2026), 10:00 Tehran: an official holiday (martyrdom of Fatima). */
+    private val holidayMorning = java.time.Instant.parse("2026-11-13T06:30:00Z")
+
+    @Test
+    fun calendarHolidays() {
+        launch(pro = true) {
+            clock.instant = holidayMorning
+            val day = java.time.LocalDate.of(2026, 11, 13)
+            events.save(com.behnamjalali.planb.core.model.CalendarEvent(title = t("دیدار با خانواده", "Family visit"), date = day, startTime = java.time.LocalTime.of(11, 0), endTime = java.time.LocalTime.of(13, 0), allDay = false, color = AccentColor.PEACH))
+        }
+        click(s(AppR.string.nav_calendar))
+        selectTab(s(CalendarR.string.calendar_view_month))
+        waitFor(hasText(t("دیدار با خانواده", "Family visit"), substring = true))
+        waitFor(hasText(s(CalendarR.string.calendar_lunar_note)))
+        capture("calendar", "calendar_holidays_month")
+        selectTab(s(CalendarR.string.calendar_view_day))
+        waitFor(hasText(s(CalendarR.string.calendar_lunar_note)))
+        capture("calendar", "calendar_holiday_day")
+    }
+
+    /** Today's time blocks, an unscheduled tray and two device calendar events (sync on, show only). */
+    private suspend fun seedPlannedDay() {
+        val today = fixtures.today
+        val zone = clock.zone()
+        fun at(hour: Int, minute: Int = 0) = today.atTime(hour, minute).atZone(zone).toInstant()
+        tasks.save(Task(title = t("نوشتن طرح فصل ۳", "Outline chapter 3"), dueDate = today, estimatedMinutes = 90, scheduledStart = at(11), scheduledEnd = at(12, 30), priority = Priority.HIGH))
+        tasks.save(Task(title = t("پاسخ به ایمیل‌ها", "Reply to emails"), dueDate = today, estimatedMinutes = 30))
+        preferences.updateCalendarSync {
+            it.copy(enabled = true, visibleCalendarIds = setOf(1, 2), targetCalendarId = null, lastSyncAt = clock.now().toEpochMilli())
+        }
+        deviceCalendars.addForeign(1, DeviceEventData(t("جلسهٔ برنامه‌ریزی اسپرینت", "Sprint planning"), "", at(14).toEpochMilli(), at(15).toEpochMilli(), false, zone.id))
+        deviceCalendars.addForeign(2, DeviceEventData(t("دندان‌پزشکی", "Dentist"), "", at(17).toEpochMilli(), at(17, 45).toEpochMilli(), false, zone.id))
+    }
+
+    @Test
+    fun calendarTimeBlocking() {
+        launch(pro = true) { seedPlannedDay() }
+        click(s(AppR.string.nav_calendar))
+        selectTab(s(CalendarR.string.calendar_view_day))
+        waitFor(hasText(s(CalendarR.string.calendar_unscheduled)))
+        waitFor(hasText(t("دندان‌پزشکی", "Dentist"), substring = true))
+        capture("calendar", "calendar_time_blocking")
+    }
+
+    @Test
+    fun calendarTimeline() {
+        launch(pro = true) { seedPlannedDay() }
+        click(s(AppR.string.nav_calendar))
+        selectTab(s(CalendarR.string.calendar_view_timeline))
+        waitFor(hasText(s(CalendarR.string.calendar_now)))
+        // Device events arrive in the same state as Plan-B's items (the timed ones may be below the fold).
+        waitFor(hasText(t("پاسخ به ایمیل‌ها", "Reply to emails"), substring = true))
+        capture("calendar", "calendar_timeline")
+    }
+
+    @Test
+    fun calendarSyncSettings() {
+        launch(pro = true) {
+            preferences.updateCalendarSync {
+                it.copy(enabled = true, visibleCalendarIds = setOf(1, 2), targetCalendarId = 1, lastSyncAt = clock.now().toEpochMilli())
+            }
+        }
+        openMore(AppR.string.more_settings)
+        click(s(SettingsR.string.settings_calendar_extras))
+        waitFor(hasText(s(CalendarR.string.calendar_settings_holidays)))
+        // The calendar list is below the fold at 150% font.
+        if (variant.fontScale == 1f) waitFor(hasText("Family"))
+        capture("calendar", "calendar_sync_settings")
     }
 
     // endregion

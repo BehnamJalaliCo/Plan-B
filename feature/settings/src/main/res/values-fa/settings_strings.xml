@@ -8,6 +8,8 @@
     <string name="settings_theme_dark">تیره</string>
     <string name="settings_calendar">تقویم</string>
     <string name="settings_calendar_system">نوع تقویم</string>
+    <string name="settings_calendar_extras">مناسبت‌ها و تقویم‌های گوشی</string>
+    <string name="settings_calendar_extras_summary">تعطیلات رسمی، تاریخ قمری و همگام‌سازی با تقویم گوگل</string>
     <string name="settings_calendar_jalali">هجری شمسی</string>
     <string name="settings_calendar_gregorian">میلادی</string>
     <string name="settings_calendar_auto">پیش‌فرض زبان، %1$s</string>

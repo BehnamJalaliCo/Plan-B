@@ -77,6 +77,10 @@ import androidx.compose.material.icons.rounded.EventAvailable
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import java.time.DayOfWeek
@@ -97,6 +101,8 @@ data class CalendarCallbacks(
     /** Plan-B Pro #3: copy a device calendar event into Plan-B. */
     val onImportDevice: (DeviceCalendarItem) -> Unit = {},
 )
+
+private val LargeFontSegmentsWidth = 600.dp
 
 @Composable
 private fun modeLabel(mode: CalendarMode): String = stringResource(
@@ -128,12 +134,27 @@ fun CalendarScreen(
                 PlannerIconButton(Icons.Rounded.Add, stringResource(R.string.calendar_new_event), { callbacks.onNewEvent(state.selected) })
             },
         )
+        // Five views: with a large font the control gets room to scroll instead of cutting labels.
+        val large = LocalDensity.current.fontScale > 1.2f
+        val segmentScroll = rememberScrollState()
+        LaunchedEffect(large, state.mode) {
+            // The width is known after layout: keep the selected view in sight.
+            if (large) {
+                androidx.compose.runtime.snapshotFlow { segmentScroll.maxValue }.collect { max ->
+                    if (max in 1 until Int.MAX_VALUE) segmentScroll.scrollTo(max * state.mode.ordinal / CalendarMode.entries.lastIndex)
+                }
+            }
+        }
         PlannerSegmentedControl(
             options = CalendarMode.entries,
             selected = state.mode,
             onSelect = callbacks.onModeChange,
             label = { modeLabel(it) },
-            modifier = Modifier.padding(horizontal = Spacing.screen).fillMaxWidth(),
+            modifier = if (large) {
+                Modifier.horizontalScroll(segmentScroll).padding(horizontal = Spacing.screen).width(LargeFontSegmentsWidth)
+            } else {
+                Modifier.padding(horizontal = Spacing.screen).fillMaxWidth()
+            },
         )
         when {
             state.error -> PlannerErrorState(stringResource(R.string.calendar_error))

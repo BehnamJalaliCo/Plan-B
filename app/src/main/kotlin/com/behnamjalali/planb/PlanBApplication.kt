@@ -27,6 +27,7 @@ class PlanBApplication : Application() {
     @Inject lateinit var trash: com.behnamjalali.planb.core.data.repository.TrashRepository
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
     @Inject lateinit var personalization: PersonalizationSync
+    @Inject lateinit var calendarSync: com.behnamjalali.planb.core.calendarsync.CalendarSyncController
 
     override fun onCreate() {
         super.onCreate()
@@ -39,6 +40,8 @@ class PlanBApplication : Application() {
         notifier.createChannels(notifier.localizedContext(stored.language.tag))
         // Widgets, launcher shortcuts and the watch follow data and Plan-B Pro changes.
         personalization.start()
+        // Plan-B Pro #3: two-way device calendar sync, only while the user has turned it on.
+        calendarSync.start()
         appScope.launch {
             // Alarms can be lost (force-stop, restore); re-sync them off the main thread.
             runCatching { reminders.rescheduleAll() }

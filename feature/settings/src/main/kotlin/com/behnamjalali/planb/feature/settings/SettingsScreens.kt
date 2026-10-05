@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.Alarm
 import androidx.compose.material.icons.rounded.Animation
 import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Celebration
 import androidx.compose.material.icons.rounded.CalendarViewWeek
 import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.Dashboard
@@ -159,6 +160,7 @@ fun SettingsDestination(
     onCustomizeToday: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
     onOpenSecurity: () -> Unit = {},
+    onOpenCalendarSettings: () -> Unit = {},
 ) {
     val settings by viewModel.state.collectAsStateWithLifecycle()
     val entitlement by viewModel.entitlement.collectAsStateWithLifecycle()
@@ -182,6 +184,7 @@ fun SettingsDestination(
         },
         onOpenPro = onOpenPro,
         onOpenSecurity = onOpenSecurity,
+        onOpenCalendarSettings = onOpenCalendarSettings,
         onLanguage = { language ->
             viewModel.update { it.copy(language = language) }
             AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language.tag))
@@ -202,6 +205,7 @@ fun SettingsScreen(
     proStatus: ProStatus = ProStatus.FREE,
     onOpenPro: () -> Unit = {},
     onOpenSecurity: () -> Unit = {},
+    onOpenCalendarSettings: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -279,6 +283,13 @@ fun SettingsScreen(
                     subtitle = settings.firstDayOfWeekOverride?.let { formatter.weekdayName(it) }
                         ?: stringResource(R.string.settings_first_day_auto, formatter.weekdayName(settings.firstDayOfWeek)),
                     onClick = { dialog = "firstDay" },
+                )
+            }
+            item {
+                // Plan-B Pro #2 and #3: Iran's holidays, Hijri dates and device calendar sync.
+                SettingsRow(
+                    stringResource(R.string.settings_calendar_extras), icon = Icons.Rounded.Celebration,
+                    subtitle = stringResource(R.string.settings_calendar_extras_summary), onClick = onOpenCalendarSettings,
                 )
             }
             item {
