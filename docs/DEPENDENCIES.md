@@ -28,6 +28,7 @@ The merged release manifest must request only the permissions in
 | Compose BOM | 2026.09.00 | Apache 2.0 | UI toolkit (foundation, material3 1.4, animation, ui) |
 | Material Icons Extended | via BOM | Apache 2.0 | Icons |
 | androidx.activity:activity-compose | 1.13.0 | Apache 2.0 | Compose activity integration, SAF launchers |
+| androidx.health.connect:connect-client | 1.1.0 | Apache 2.0 | Plan-B Pro Health Connect (#27): read-only aggregated daily totals (brings Guava 31.1-android and protobuf-lite, mostly removed by R8) |
 | androidx.appcompat | 1.8.0 | Apache 2.0 | Per-app language API (`AppCompatDelegate`) |
 | androidx.core:core-ktx | 1.19.1 | Apache 2.0 | Notifications, KTX helpers |
 | androidx.core:core-splashscreen | 1.2.0 | Apache 2.0 | Splash screen on all API levels |

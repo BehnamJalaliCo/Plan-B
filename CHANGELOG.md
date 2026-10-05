@@ -117,6 +117,29 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
     mood and energy, tags, a streak and recent pages; the ritual reflections land on the same
     page. A **mood calendar** in your calendar (Jalali or Gregorian) with simple insights, and
     an optional daily reminder.
+- Plan-B Pro **habits and focus** (#26–#30):
+  - **Focus Pro**: ambient sounds (rain, ocean waves, brown, pink and white noise) generated on
+    the phone, with volume and a preview, that keep playing with the screen off while a session
+    runs; **strict mode** turns on Do Not Disturb during a session (after you allow it, with an
+    explanation) and puts your setting back when the session pauses or ends, even if Plan-B was
+    closed in between; a daily focus goal and long breaks after every few sessions.
+  - **Health Connect**: link a habit to steps, sleep, water, exercise or distance with a daily
+    goal; it is checked off when the goal is reached (up to a week back, whenever you open
+    Plan-B). Access is asked per kind of data, read only; Android 9–13 can install Health
+    Connect from the habit editor.
+  - **Advanced habit statistics**: streaks, rates for the week, month and year and the last 12
+    weeks and months, the best and hardest weekday, the 30-day trend and a year heatmap in your
+    calendar (Jalali or Gregorian).
+  - **Challenges and badges**: 7, 21, 30 or 66-day challenges on a habit, 24 badges for streaks,
+    focus hours, tasks, journal runs, mood check-ins and challenges, a gallery with progress and
+    a small celebration when you earn one (calm with reduced motion).
+  - **Mood and energy tracker**: quick check-ins (several a day, from Today, Habits or More),
+    the last 30 days as a chart, mood by energy and time of day, and how your mood goes with
+    habits, focus and (if you allow it) sleep. The journal's check-in is part of it.
+  - New permissions: foreground service for media playback (focus sounds, granted at install),
+    Do Not Disturb access (strict mode, only after you allow it) and Health Connect read
+    permissions for steps, sleep, water, exercise and distance (asked one at a time when you
+    link a habit). See PRIVACY.md.
 
 ### Changed
 - Today's timeline also shows tasks at the start of their time block.
@@ -129,6 +152,8 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
 - The launcher entry is now an activity alias (to allow alternate icons); widgets add the
   normal WorkManager permissions `WAKE_LOCK`, `ACCESS_NETWORK_STATE` and `FOREGROUND_SERVICE`
   (no runtime permission).
+- Habits, Focus and journal events are delivered through channels (none is lost while a screen
+  is being recreated). The habit editor keeps a habit's Health Connect link when it is saved.
 
 ## [1.0.1] — 2026-10-04
 
