@@ -58,7 +58,8 @@ on with your own key; then only the text you choose is sent, directly to the pro
 Payment for Pro goes through Cafe Bazaar. Biometrics are used only for the Pro App lock and
 locked notes (your device's own fingerprint or screen lock), and "keep awake" only lets Pro
 automatic backups and the trash clean-up finish. Calendar access is asked only when you turn on
-sync with your device calendars (Pro).
+sync with your device calendars (Pro). The microphone is used only when you record a voice note or
+tap the microphone to dictate (Pro); dictation keeps no audio.
 
 ## Keywords
 

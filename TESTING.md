@@ -29,13 +29,15 @@ needs no emulator. CI also runs the device suite on an Android emulator.
 | `core:calendarsync` | 24 | Two-way device calendar sync on an in-memory provider (Pro #3): mirroring and links, edits and deletions both ways, last writer wins, missing calendars and stale links, never touching foreign events, Pro/permission/off, recurrences, reading and importing device events, device-only settings; event mapping and RRULEs |
 | `core:backup` | 39 | Notes knowledge round trip in format 2 (links, versions, journal entries, mood entries, writing-goal and journal preferences) and relative `.md` links in the Markdown ZIP; Planning data round trip (deadlines, nag, reminder kinds, dependencies, advanced recurrence, smart-list JSON), Automatic backups (file names, pruning to 21 without touching other files, scheduling config, runner success/failure/skip), format 2 with v3 tables and attachment files (round trip, missing files, zip-slip names, size limits, rollback of files), backup round trip, validation of corrupt/foreign/newer archives, limits, transactional restore, CSV/JSON/Markdown export and non-overwriting import |
 | `core:billing` | 15 | Entitlement policy (lifetime, 7-day grace, clock moved back), offline cache, purchase, restore, revocation, on-device signature verification |
-| `core:ai` | 11 | Both wire formats against MockWebServer, error mapping, timeouts, HTTPS-only URLs, provider catalog, encrypted key storage and consent |
+| `core:ai` | 35 | Both wire formats against MockWebServer, SSE streaming (OpenAI deltas and `[DONE]`, Anthropic `content_block_delta`/`message_stop`/`error`, one-piece JSON fallback, cancellation), the SSE parser, error mapping, timeouts, HTTPS-only URLs, provider catalog, encrypted key storage and consent; prompt building (context marked as data, history, plan input), tolerant parsing of lists and plans (Markdown fences, prose, bullets, Persian digits), context truncation and token estimates, `AiAssistant` when not configured |
+| `core:speech` | 8 | Voice input ViewModel with a fake recognizer (partial text, final text delivered once, Done keeps what was heard, errors, cancel), recognizer error mapping, levels, language tags, joining dictated text |
+| `feature:assistant` | 14 | Plan proposals checked against working hours, busy time, now and each other; planner context text; chat with the chosen context (locked notes never offered), streaming, history and neutral errors; plan my day as a preview, accept and undo; contextual actions (fenceless text, extracted tasks created on confirm with undo, not configured); settings (key check, model list, consent before turning on, forget) |
 | `feature:pro` | 9 | Paywall states, purchase, cancel, restore, store unavailable, price formatting, `ProGate` and `rememberProGuard` |
-| `feature:*` (others) | 137 | Notes knowledge in feature:notebooks (link insertion and repair in the editor, session versions, the link `VisualTransformation` offsets, graph filtering and capping, clipper parsing and share-intent validation) and the journal ViewModel (prompt rotation across process death, page creation, mood/energy/tags, ritual pages and streak, settings); Calendar time blocking (snapping, side-by-side layout, clipping, scheduling and moving blocks), the day timeline's gaps and now marker, device events and holidays in the calendar state, Task editor planning fields, smart lists and Eisenhower ViewModels, the advanced repeat dialog, project timeline layout (300+ tasks, RTL), ViewModels of Today, Tasks, Habits, Focus and Search on real repositories (30), Trash and Activity, automatic backup settings, locking notes in the editor, block editing, task form validation |
-| `app` | 348 | Persian default locale, smoke test, 9 end-to-end flows, 300 screenshot tests (including the Pro notes knowledge screens: note links and backlinks, version history, note graph, web clipper, writing mode, journal and mood calendar; the Pro calendar: month with holidays, holiday day with the Hijri date, time blocking, timeline and calendar sync settings, the Plan-B Pro screen, Trash, Activity, Security, the lock screen, Statistics, My year, Appearance, the smart list builder, Eisenhower matrix, project timeline, task editor planning section and advanced repeat dialog), launcher/store icon rendering, Glance widget content and the launcher icon switcher |
+| `feature:*` (others) | 161 | Plan-B Pro AI and voice in the editors (assistant changes and undo in the note and task editors, dictation at the caret, assistant text as blocks, Quick Capture dictation through the quick-add parser into a dated task); Notes knowledge in feature:notebooks (link insertion and repair in the editor, session versions, the link `VisualTransformation` offsets, graph filtering and capping, clipper parsing and share-intent validation) and the journal ViewModel (prompt rotation across process death, page creation, mood/energy/tags, ritual pages and streak, settings); Calendar time blocking (snapping, side-by-side layout, clipping, scheduling and moving blocks), the day timeline's gaps and now marker, device events and holidays in the calendar state, Task editor planning fields, smart lists and Eisenhower ViewModels, the advanced repeat dialog, project timeline layout (300+ tasks, RTL), ViewModels of Today, Tasks, Habits, Focus and Search on real repositories (30), Trash and Activity, automatic backup settings, locking notes in the editor, block editing, task form validation |
+| `app` | 414 | Persian default locale, smoke test, 9 end-to-end flows, 336 screenshot tests (including the Pro assistant: setup, chat, plan my day, settings, the note editor's actions and Quick Capture voice input; the Pro notes knowledge screens: note links and backlinks, version history, note graph, web clipper, writing mode, journal and mood calendar; the Pro calendar: month with holidays, holiday day with the Hijri date, time blocking, timeline and calendar sync settings, the Plan-B Pro screen, Trash, Activity, Security, the lock screen, Statistics, My year, Appearance, the smart list builder, Eisenhower matrix, project timeline, task editor planning section and advanced repeat dialog), launcher/store icon rendering, Glance widget content and the launcher icon switcher |
 | `wear` | 2 | Watch state updates (optimistic task completion and habit check-in) |
 
-Total: **1,171 JVM tests**, all passing locally and in CI.
+Total: **1,348 JVM tests**, all passing locally and in CI.
 
 ### End-to-end flows (`app/src/test/.../e2e`)
 
@@ -50,8 +52,8 @@ an upgrade that already chose starts at the welcome; existing users never see on
 
 ### Screenshot tests (`app/src/test/.../screenshots`)
 
-`AppScreenshotTest` launches the real app with seeded data and captures 61 screens in six
-variants (Persian/English × light/dark, plus 150% font in both languages): 366 images in
+`AppScreenshotTest` launches the real app with seeded data and captures 72 screens in six
+variants (Persian/English × light/dark, plus 150% font in both languages): 434 images in
 `artifacts/screenshots/<feature>/`, shown in [docs/UI_GALLERY.md](docs/UI_GALLERY.md). Clicks
 are dispatched through semantics actions (no touch ripples) and animations settle on the test
 clock, so images are pixel-stable. `AppIconTest` renders the adaptive icon, the themed icon and
@@ -62,6 +64,8 @@ the 512×512 store icon.
 `AppFlowsTest` runs with `HiltTestRunner` and an in-memory database: the first run (language
 screen, welcome, skipping the slides), all
 top-level tabs, quick capture creating a task.
+
+JVM app tests never reach a network or a microphone: `TestAiModules.kt` replaces the provider client with a scripted `FakeAiApi`, the Keystore cipher with an in-memory one, and the speech recognizer with `FakeVoiceDictation`.
 
 ### Benchmarks
 

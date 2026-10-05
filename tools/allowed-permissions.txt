@@ -30,9 +30,10 @@ android.permission.WRITE_CALENDAR
 # background job runs. Its foreground-service permission is removed in the manifest.
 android.permission.WAKE_LOCK
 
-# Plan-B Pro voice notes (#19): runtime permission asked in context, with an explanation, only
-# when the user records a voice note (or dictates a transcript on Android 12 and older). The
-# recording stays in the note on the device.
+# Plan-B Pro voice notes (#19) and voice input (#40): runtime permission asked in context, with an
+# explanation, only when the user records a voice note or taps a microphone to dictate (or
+# dictates a transcript on Android 12 and older). Recordings stay in the note on the device;
+# dictation keeps no audio (the device's speech service returns only text).
 android.permission.RECORD_AUDIO
 
 # Normal (install-time, no prompt). Plan-B Pro handwriting to text (#18): ML Kit downloads the

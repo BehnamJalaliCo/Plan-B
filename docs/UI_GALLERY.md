@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **398**.
+Total screenshots: **434**.
 
 
 ## Today
@@ -47,6 +47,12 @@ Total screenshots: **398**.
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/capture/quick_capture_smart_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_en_light.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_en_light_font150.png" width="220"/> |
+
+### `voice_input`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/capture/voice_input_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/capture/voice_input_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/capture/voice_input_en_light.png" width="220"/> | <img src="../artifacts/screenshots/capture/voice_input_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/capture/voice_input_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/capture/voice_input_en_light_font150.png" width="220"/> |
 
 ## Tasks
 
@@ -162,6 +168,12 @@ Total screenshots: **398**.
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/notebooks/mood_calendar_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/mood_calendar_en_light_font150.png" width="220"/> |
 
+### `note_assistant`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/note_assistant_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_assistant_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_assistant_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_assistant_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_assistant_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_assistant_en_light_font150.png" width="220"/> |
+
 ### `note_audio`
 
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
@@ -233,6 +245,32 @@ Total screenshots: **398**.
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/notebooks/writing_mode_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/writing_mode_en_light_font150.png" width="220"/> |
+
+## Assistant
+
+### `ai_settings`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/assistant/ai_settings_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/assistant/ai_settings_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/assistant/ai_settings_en_light.png" width="220"/> | <img src="../artifacts/screenshots/assistant/ai_settings_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/assistant/ai_settings_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/assistant/ai_settings_en_light_font150.png" width="220"/> |
+
+### `assistant_chat`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/assistant/assistant_chat_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_chat_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_chat_en_light.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_chat_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_chat_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_chat_en_light_font150.png" width="220"/> |
+
+### `assistant_plan_day`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/assistant/assistant_plan_day_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_plan_day_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_plan_day_en_light.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_plan_day_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_plan_day_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_plan_day_en_light_font150.png" width="220"/> |
+
+### `assistant_setup`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/assistant/assistant_setup_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_setup_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_setup_en_light.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_setup_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_setup_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/assistant/assistant_setup_en_light_font150.png" width="220"/> |
 
 ## More
 

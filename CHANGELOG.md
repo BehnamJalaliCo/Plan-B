@@ -117,6 +117,23 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
     mood and energy, tags, a streak and recent pages; the ritual reflections land on the same
     page. A **mood calendar** in your calendar (Jalali or Gregorian) with simple insights, and
     an optional daily reminder.
+- Plan-B Pro **AI assistant with your own key** (#39), More › Assistant:
+  - Choose a provider (Iranian gateways such as AvalAI first, DeepSeek, Qwen, OpenRouter, Groq,
+    OpenAI, Anthropic, Gemini or any OpenAI-compatible address), add your key (stored encrypted on
+    the phone, never backed up), pick a model from suggestions or the provider's list, check the
+    connection and turn it on after reading exactly what is sent and where.
+  - Ask about your plan with the context you choose (today, this week or one note) and see what
+    is sent and its size first; answers stream in.
+  - **Plan my day / week**: proposed time blocks, checked against your working hours and
+    calendar, written only when you accept, with Undo.
+  - In the note editor: summarize, rewrite, translate, continue, find tasks or suggest a title for
+    the selection or the whole note; in the task editor: break into subtasks or suggest a title.
+    Every change is a preview first and can be undone.
+- Plan-B Pro **Persian voice input** (#40): a microphone in Quick Capture, the task title, the
+  note editor and the assistant. Speak Persian (or English) and see the words as you talk; in
+  Quick Capture «فردا ساعت ۵ عصر جلسه با علی» becomes a task tomorrow at 17:00. Uses the phone's
+  speech service (on-device when it can); Plan-B keeps no audio. The microphone permission is
+  asked only when you tap the microphone.
 
 ### Changed
 - Today's timeline also shows tasks at the start of their time block.

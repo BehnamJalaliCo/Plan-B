@@ -88,9 +88,9 @@ The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable;
 37. `auto_backup` — automatic scheduled backups keeping the last 21 versions
 38. `trash_history` — 30-day trash and activity history
 
-**AI**
-39. `ai_assistant` — AI assistant with your own provider key
-40. `voice_input` — Persian voice input
+**AI** (implemented, see [AI assistant and voice input](#ai-assistant-and-voice-input-39-40))
+39. `ai_assistant` — AI assistant with your own provider key ✅
+40. `voice_input` — Persian voice input ✅
 
 ## Modules
 
@@ -99,7 +99,9 @@ The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable;
 | `core:billing` | `ProProduct`, `Entitlement`, `BillingClient`, `BazaarBillingClient` (Poolakey 2.2.0 from JitPack, group-filtered), `FakeBillingClient`, `PurchaseSignatureVerifier`, `EntitlementPolicy`, `EntitlementRepository` |
 | `core:ui` | `ProFeature` (+ groups, strings, icons), `LocalProAccess`, `ProGate`, `rememberProGuard`, `ProTeaser`, `ProBadge` |
 | `feature:pro` | `PaywallRoute(featureId)`, `PaywallViewModel`, `PaywallScreen` (paywall and "Your Pro") |
-| `core:ai` | AI provider catalog, encrypted key storage, `AiClient` (infrastructure for #39) |
+| `core:ai` | #39: provider catalog, encrypted key storage, `AiClient` (`AiApi`: chat, SSE streaming, test, model list), `AiAssistant`, `AssistantPrompts`, `AssistantParsing`, `AiContextBudget` |
+| `core:speech` | #40 (and #19's recognizer plumbing): `VoiceDictation` / `PlatformVoiceDictation`, `SpeechIntents`, `VoiceInputViewModel`, `VoiceInputButton`, `FakeVoiceDictation` |
+| `feature:assistant` | #39: `AssistantRoute` (chat, plan my day/week), `AiSettingsRoute`, `AiActionSheet` (contextual actions), `PlanValidator` |
 | `core:calendarsync` | #3: `DeviceCalendarStore` (CalendarContract behind an interface; `ContentResolverCalendarStore`, `FakeDeviceCalendarStore`), `CalendarSyncEngine`, `CalendarSyncRepository`, `CalendarSyncController` + `CalendarSyncWorker` |
 | `feature:journal` | #25: `JournalRoute`, `MoodCalendarRoute` and their ViewModels |
 | `app` | `BillingModule` (Bazaar in release, fake in debug), `ProStatusViewModel`, provides `LocalProAccess`, Pro routes, More entry |
@@ -437,15 +439,79 @@ it is on, the user has Pro and the permission is granted. Settings (enabled, sho
 target, last sync) are device-only keys of the user preferences file: never exported, never
 overwritten by a restore.
 
-`core:ai` holds the provider catalog (`AiProviders`: generic Iranian OpenAI-compatible gateway,
-AvalAI, DeepSeek, Qwen/DashScope, OpenRouter, Groq, OpenAI, Anthropic, Gemini, custom), the
-`AiSettingsRepository` (off by default, explicit consent timestamp, key encrypted with an
-Android Keystore AES-GCM key in a device-only file) and `AiClient` (OpenAI chat-completions and
-Anthropic Messages, HTTPS only, timeouts, `testConnection()`, `listModels()`). Errors map to
-neutral categories (`INVALID_KEY`, `NETWORK_UNREACHABLE`, `RATE_LIMITED`, `PROVIDER_ERROR`);
-the UI must only ever say to check the key or the internet connection. Only the text the user
-chooses is sent, directly to their provider. Anthropic has no suggested model ids in the
-catalog: the assistant UI should offer `listModels()` results.
+## AI assistant and voice input (#39, #40)
+
+No schema change and no new DataStore file: assistant settings stay in the device-only
+`planb_ai_settings` file of `core:ai` (never exported or backed up); chats live only in memory.
+Free users see the More entry, the Settings row (Pro badge) and the editor actions; each shows a
+`ProTeaser` or opens the Pro screen only when tapped.
+
+**#39 AI assistant (BYOK).** More › Assistant; Settings › AI assistant; the note editor's menu
+(AI assistant) and the task editor's top bar.
+- *Settings* (`AiSettingsRoute`): providers from `AiProviders.all` — Iranian gateways first (a
+  generic OpenAI-compatible gateway, then AvalAI), DeepSeek, Qwen, OpenRouter, Groq, OpenAI,
+  Anthropic, Gemini, custom. Address (only `https://`; also enforced by `AiClient` and
+  `usesCleartextTraffic="false"`), key (typed once, stored encrypted with the Keystore key, never
+  shown again; "Remove"), model (suggestions plus the provider's `listModels()`; a provider without
+  suggestions such as Anthropic loads the list right after the key is checked), "Check the
+  connection", "Forget provider and key". "Use the assistant" needs a complete setup and an
+  explicit consent dialog that names the provider and host and says what is sent
+  (`enableWithConsent()` records the time).
+- *Transport*: `AiClient.stream` sends `"stream": true` and reads server-sent events
+  (`SseParser`, `AiStreamDecoder`: OpenAI `choices[0].delta.content` … `[DONE]`; Anthropic
+  `content_block_delta`/`text_delta` … `message_stop`, `error` events) and falls back to a one-piece
+  JSON answer when a gateway ignores streaming. Cancelling stops the request. Errors are only the
+  neutral `AiError` categories (`INVALID_KEY`, `NETWORK_UNREACHABLE`, `RATE_LIMITED`,
+  `PROVIDER_ERROR`, `NOT_CONFIGURED`): the UI says to check the key, the model or the internet
+  connection, nothing else. Neither the key nor any text is logged; no analytics.
+- *Prompts* (`AssistantPrompts`): English instructions, replies in the app language; the user's
+  text is wrapped in `<<<PLANB_CONTEXT … PLANB_CONTEXT>>>` and declared data. *Parsing*
+  (`AssistantParsing`): the first JSON object/array inside Markdown fences or prose (string-aware
+  bracket matching, lenient JSON), else bulleted/numbered lines; plans accept `id`/`task_id` and
+  Persian digits.
+- *Size*: `AiContextBudget` cuts context to 12,000 characters at a paragraph, line or sentence
+  break (marked "shortened to fit") and shows "N characters · about M tokens" (≈4 Latin or 2
+  Persian characters per token). Chat history: the last 10 messages, 4,000 characters each.
+- *Chat* (`AssistantViewModel`): context chips Nothing / Today / This week / A note (recent notes,
+  locked notes never offered); "Sent with your question" expands to the exact text; "Sent only to
+  <host>". Streaming replies with Stop; Clear. Dictation in the question field (#40).
+- *Plan my day / week*: open tasks of Today (and Upcoming for 7 days) without a time block, fixed
+  time or open blockers (at most 40), working hours, events and existing blocks as busy times.
+  `PlanValidator` drops proposals for tasks not offered or repeated, days outside the range, bad
+  times, outside working hours, before now (next 5-minute mark), shorter than 5 min or longer than
+  8 h, or overlapping busy time or each other ("N blocks were left out"). Accept writes the chosen
+  blocks in one transaction (`DayPlanRepository.applyBlocks`); the snackbar's Undo restores the
+  previous blocks.
+- *Contextual actions* (`AiActionSheet` through `LocalAssistant` in `core:ui`, so editors don't
+  depend on the assistant module): note editor — summarize, rewrite, translate (to the other app
+  language), continue, find tasks, suggest a title — on the selection of the focused block or the
+  whole note; task editor — break into subtasks, suggest a title. Text results: Replace the
+  selection / Insert below / Add to the note / Copy; lists are checkable: "Add N tasks" (created in
+  the sheet, with Undo), "Add as a checklist", "Add N subtasks" (pending for a new task, saved for
+  an existing one), "Use this title". Every editor change shows a snackbar with Undo.
+
+**#40 Persian voice input** (`core:speech`). A microphone in Quick Capture's field, the task
+title, the note editor's block toolbar (inserts at the caret) and the assistant's question field.
+`PlatformVoiceDictation` runs `SpeechRecognizer` on the main thread with partial results,
+`EXTRA_PREFER_OFFLINE` and `fa-IR` or `en-US` by the app language; the on-device recognizer is
+tried first and the regular speech service takes over when it lacks the language. The listening
+dialog shows a level-driven microphone, the words heard so far (polite live region), Done (keeps
+what was heard) and Cancel. `RECORD_AUDIO` is asked after an explanation, with "Open settings" when
+denied for good; no speech service → a calm explanation (install/enable one, add Persian for
+offline use); errors map to neutral reasons (nothing heard, network/offline language, busy,
+language missing). In Quick Capture the text joins the title and goes through `QuickAddParser`
+(#1), so «فردا ساعت ۵ عصر جلسه با علی» becomes "جلسه با علی" tomorrow at 17:00 (a note's dictation
+goes to its body once it has a title). Voice-note transcription (#19) shares `SpeechIntents` and
+`RecognitionListenerAdapter` and dictates through `VoiceDictation` on Android 12 and older.
+
+**Size and permissions.** No new dependency (OkHttp, kotlinx.serialization and the platform
+`SpeechRecognizer` were already in the app) and no new permission (`INTERNET`, `RECORD_AUDIO`,
+`ACCESS_NETWORK_STATE` were already allowlisted). Release APK (unsigned, R8): 17,228,170 →
+17,485,074 bytes (+0.25 MB, code and strings of the two packages).
+
+**Limitations.** Recognition quality, offline Persian and whether audio leaves the device depend on
+the installed speech service. The assistant needs network access to the user's provider; replies
+are only as good as the chosen model. Week plans propose time blocks, not new planned dates.
 
 ## Rich notes (#15, #17–#20, #23)
 

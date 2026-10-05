@@ -27,7 +27,7 @@ device (a local database and a preferences file) and are readable only by Plan-B
 | Run at startup (`RECEIVE_BOOT_COMPLETED`) | To restore your reminders after the device restarts. |
 | Internet (`INTERNET`) | Used by the optional AI assistant, which is off until you turn it on and add your own provider key, and for the one-time handwriting model download of Plan-B Pro notes (below), only after you agree. Nothing else in the app uses the network. |
 | Network state (`ACCESS_NETWORK_STATE`) | Granted at install, never asked. Lets the handwriting model download wait for a connection (or for Wi-Fi, if you choose "Only over Wi-Fi"). |
-| Microphone (`RECORD_AUDIO`) | Plan-B Pro voice notes. Asked only when you record a voice note, after an explanation (and, on Android 12 and older, when you dictate a transcript). The recording is stored in the note on your device. |
+| Microphone (`RECORD_AUDIO`) | Plan-B Pro voice notes and voice input. Asked only when you record a voice note or tap the microphone to dictate, after an explanation (and, on Android 12 and older, when you dictate a transcript). A recording is stored in the note on your device; dictation keeps no audio, only the recognized text. |
 | Pay through Cafe Bazaar (`com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR`) | Lets the installed Cafe Bazaar app handle Plan-B Pro purchases. |
 | Biometrics (`USE_BIOMETRIC`, `USE_FINGERPRINT`) | Plan-B Pro App lock and locked notes: your device's own fingerprint, face or screen lock confirms it's you. Plan-B never sees or stores biometric data. |
 | Keep awake (`WAKE_LOCK`) | Lets short background jobs finish: Plan-B Pro automatic backups and emptying the 30-day trash. |
@@ -40,7 +40,7 @@ Play services and nothing goes to a server of ours.
 Plan-B does not access contacts, location, accounts or shared storage, and has no camera
 permission. Your calendars are read only after you turn on calendar sync (above); the choice of
 calendars stays on this device and is not part of backups. The microphone is used only while you
-record a voice note or dictate a transcript.
+record a voice note or dictate.
 
 ## Photos, files, scans, drawings and voice notes (Plan-B Pro)
 
@@ -83,6 +83,21 @@ your own API key and confirm what will be sent. Then:
 - Your key is stored encrypted on the device with a key that cannot leave it; it is never
   included in backups or exports and never logged.
 - You can turn the assistant off or remove the key at any time.
+- What a request can contain is always something you start: your question plus the context you
+  pick and see before sending (today's or this week's tasks and calendar, or one note; locked
+  notes are never offered), the note text or selection you run an action on, a task's title and
+  notes, or, for "Plan my day/week", your open tasks, working hours and busy times. Nothing is
+  sent in the background.
+- Conversations are kept only in memory while the Assistant screen is open; Plan-B stores no
+  copy of questions or answers and has no analytics. Changes the assistant proposes (a plan,
+  subtasks, new tasks, text) are written only after you accept them, and can be undone.
+
+## Voice input (Plan-B Pro)
+
+Dictation uses the speech recognition service installed on your phone (Persian or English, by
+the app language; Plan-B asks it to recognize on the device when it can). Plan-B records and keeps
+no audio from dictation; it receives only the recognized text. Whether that service sends audio to
+its own servers is up to the service you installed and its settings.
 
 ## Backups, exports and imports
 
@@ -158,7 +173,7 @@ Plan-B یک برنامه‌ریز آفلاین است. **هر چیزی که وا
 | اجرا پس از روشن شدن دستگاه | بازگرداندن یادآورها پس از راه‌اندازی دوبارهٔ دستگاه. |
 | اینترنت | برای دستیار هوش مصنوعی اختیاری که تا وقتی خودتان روشنش نکنید و کلید شخصی وارد نکنید خاموش است، و برای دریافت یک‌بارهٔ مدل دست‌خط در یادداشت‌های Plan-B Pro (پایین‌تر)، فقط پس از موافقت شما. هیچ بخش دیگری از برنامه از شبکه استفاده نمی‌کند. |
 | وضعیت شبکه | هنگام نصب داده می‌شود و هرگز پرسیده نمی‌شود. دریافت مدل دست‌خط منتظر اتصال (یا اگر «فقط با وای‌فای» را انتخاب کنید، منتظر وای‌فای) می‌ماند. |
-| میکروفون | یادداشت‌های صوتی Plan-B Pro. فقط وقتی یادداشت صوتی ضبط می‌کنید و پس از توضیح درخواست می‌شود (و در اندروید ۱۲ و قدیمی‌تر، وقتی متن گفتار را با صحبت کردن می‌سازید). صدای ضبط‌شده در همان یادداشت روی گوشی شما می‌ماند. |
+| میکروفون | یادداشت‌های صوتی و ورودی صوتی Plan-B Pro. فقط وقتی یادداشت صوتی ضبط می‌کنید یا برای گفتن متن روی میکروفون می‌زنید و پس از توضیح درخواست می‌شود (و در اندروید ۱۲ و قدیمی‌تر، وقتی متن گفتار را با صحبت کردن می‌سازید). صدای ضبط‌شده در همان یادداشت روی گوشی شما می‌ماند؛ از گفتن متن هیچ صدایی نگه داشته نمی‌شود و فقط متن تشخیص‌داده‌شده می‌ماند. |
 | پرداخت از طریق کافه‌بازار | برنامهٔ کافه‌بازار نصب‌شده روی دستگاه، خرید Plan-B Pro را انجام می‌دهد. |
 | بیومتریک (اثر انگشت) | قفل برنامه و یادداشت‌های قفل‌شدهٔ Plan-B Pro: اثر انگشت، چهره یا قفل صفحهٔ خود گوشی هویت شما را تأیید می‌کند. Plan-B هیچ دادهٔ بیومتریکی نمی‌بیند و ذخیره نمی‌کند. |
 | بیدار نگه داشتن دستگاه | تمام شدن کارهای کوتاه پس‌زمینه: پشتیبان‌گیری خودکار Plan-B Pro و خالی شدن سطل زبالهٔ ۳۰ روزه. |
@@ -166,7 +181,7 @@ Plan-B یک برنامه‌ریز آفلاین است. **هر چیزی که وا
 
 Plan-B به مخاطبین، موقعیت مکانی، حساب‌ها یا حافظهٔ مشترک دسترسی ندارد و مجوز دوربین هم ندارد. تقویم‌های شما
 فقط پس از روشن کردن همگام‌سازی تقویم (بالا) خوانده می‌شوند؛ انتخاب تقویم‌ها روی همین گوشی می‌ماند و در پشتیبان‌ها نیست.
-میکروفون فقط هنگام ضبط یادداشت صوتی یا گفتن متن گفتار استفاده می‌شود.
+میکروفون فقط هنگام ضبط یادداشت صوتی یا گفتن متن استفاده می‌شود.
 
 ## عکس، فایل، اسکن، نقاشی و یادداشت صوتی (Plan-B Pro)
 
@@ -207,6 +222,21 @@ Plan-B به مخاطبین، موقعیت مکانی، حساب‌ها یا حا
 - کلید شما به‌صورت رمزشده و با کلیدی که از دستگاه خارج نمی‌شود نگهداری می‌شود؛ هرگز در
   پشتیبان یا خروجی قرار نمی‌گیرد و هرگز در گزارش‌ها ثبت نمی‌شود.
 - هر زمان بخواهید می‌توانید دستیار را خاموش یا کلید را حذف کنید.
+- هر درخواست فقط چیزی است که خودتان شروع می‌کنید: پرسش شما همراه زمینه‌ای که انتخاب می‌کنید و پیش
+  از فرستادن می‌بینید (کارها و تقویم امروز یا این هفته، یا یک یادداشت؛ یادداشت‌های قفل‌شده هرگز
+  پیشنهاد نمی‌شوند)، متن یادداشت یا بخش انتخاب‌شده‌ای که روی آن کاری انجام می‌دهید، عنوان و یادداشت
+  یک کار، یا برای «برنامهٔ امروز/هفته‌ام را بچین»، کارهای باز، ساعت کاری و زمان‌های پر شما. هیچ چیزی
+  در پس‌زمینه فرستاده نمی‌شود.
+- گفت‌وگو فقط تا وقتی صفحهٔ دستیار باز است در حافظه می‌ماند؛ Plan-B هیچ نسخه‌ای از پرسش‌ها و پاسخ‌ها
+  نگه نمی‌دارد و هیچ آماری جمع نمی‌کند. تغییرهایی که دستیار پیشنهاد می‌کند (برنامه، زیرکار، کار تازه،
+  متن) فقط پس از تأیید شما نوشته می‌شوند و قابل بازگردانی‌اند.
+
+## ورودی صوتی (Plan-B Pro)
+
+گفتن متن با سرویس تشخیص گفتاری که روی گوشی شما نصب است انجام می‌شود (فارسی یا انگلیسی، به زبان
+برنامه؛ Plan-B از آن می‌خواهد در صورت امکان روی خود گوشی تشخیص دهد). Plan-B هیچ صدایی از گفتن متن
+ضبط یا نگهداری نمی‌کند و فقط متن تشخیص‌داده‌شده را می‌گیرد. اینکه آن سرویس صدا را به سرورهای خودش
+بفرستد یا نه به سرویس نصب‌شده و تنظیمات آن بستگی دارد.
 
 ## پشتیبان‌گیری، خروجی و ورودی
 
