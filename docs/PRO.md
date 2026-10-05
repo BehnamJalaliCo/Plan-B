@@ -28,6 +28,15 @@ The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable;
 6. `time_blocking` — time blocking (drag tasks onto calendar hours) ✅
 7. `day_timeline` — vertical day timeline ✅
 8. `daily_rituals` — morning planning and evening shutdown ritual
+**Planning & calendar** (#1, #4, #5, #8 and #9–#14 implemented, see [Planning](#planning-4-914) and [Smart day](#smart-day-1-5-8))
+1. `persian_quick_add` — Persian natural-language quick add ✅
+2. `iran_holidays` — official Iranian holidays, occasions and Hijri (lunar) dates
+3. `calendar_sync` — two-way sync with the device calendar (Google Calendar through Android's calendar provider)
+4. `advanced_recurrence` — advanced recurrence ("second Monday of every month", "3 days after completion") ✅
+5. `auto_planning` — automatic day planning (auto-schedule tasks into free time) ✅
+6. `time_blocking` — time blocking (drag tasks onto calendar hours)
+7. `day_timeline` — vertical day timeline
+8. `daily_rituals` — morning planning and evening shutdown ritual ✅
 9. `project_timeline` — project Gantt/timeline view ✅
 10. `smart_lists` — custom smart lists and filters ✅
 11. `deadlines` — separate deadline and planned date ✅
@@ -235,6 +244,113 @@ firing, deadlines and locks keep showing).
 | 14 | Task editor › Waits for; task rows; timeline | `task_dependencies` (task waits for blocker). The editor picks tasks with search; a choice that would close a circle (DFS over all dependencies, tolerant of cycles already in restored data) is refused with a message, and the repository rejects it too (`DependencyCycleException`). Task lists carry the number of open blockers: a lock badge, and checking off a blocked task (checkbox, swipe, editor status) asks "Complete anyway?". Completing or deleting a blocker unblocks at once. |
 
 
+## Smart day (#1, #5, #8)
+
+No schema change: time blocks are `tasks.scheduled_start`/`scheduled_end`, ritual reflections
+are journal pages (`journal_entries` + a note), working hours, ritual reminder times and the
+top 3 are user preferences (`day_plan_*`, `ritual_*` keys, part of the exported preferences).
+Free users see a teaser (Quick Capture hint, Today card and header button, Settings row with a
+Pro badge); each opens the Pro screen only when tapped. If Pro ends, blocks and journal pages
+stay, ritual reminders that were switched on keep firing and can be switched off.
+
+### #1 Natural-language quick add (`core:nlp`, `QuickAddParser`)
+
+Fully on the device, deterministic, table-tested (231 Persian/English cases). Quick Capture
+reads the text while typing (tasks: every kind; events: date, time, repeat, duration,
+reminder), highlights recognized parts inside the field and lists them as chips; tapping a chip
+dismisses that interpretation (its words stay in the title; the dismissal is keyed by kind and
+words, so it survives further typing). The date/time/priority chips show what will be saved; a
+date, time or priority picked by hand dismisses the matching part. Rules:
+
+- **Normalization** for matching only: Persian/Arabic-Indic digits → ASCII, Arabic ي/ك → ی/ک,
+  half-spaces, diacritics and the ezafe «ی»/«ٔ» after «ه» ignored, so «پس‌فردا», «پس فردا» and
+  «پسفردا» are the same. Ordinal endings («۱۵ام», "15th") are dropped.
+- **Reading order**: word by word from the start; at each word the first matching rule wins in
+  this order: #tag, @project, `!`/`!!`/`p1`, reminder, deadline, repeat, relative time, date,
+  time, duration, priority word. Each kind is taken once (later mentions stay in the title),
+  tags repeat.
+- **Dates**: امروز/today, فردا/tomorrow, پس‌فردا/"day after tomorrow", امشب/tonight (today,
+  evening hours). A weekday alone is the next one *after* today; «این/همین …»/"this …" may be
+  today; «… بعد/آینده/دیگه» and "next …" are that weekday of next week (by the user's first
+  day of week). «آخر هفته»/"weekend" is the weekend day on or after today (Friday for weeks that
+  start on Saturday, otherwise Saturday); «هفته بعد»/"next week" is the first day of next week;
+  «اول ماه (بعد)»/«ماه بعد»/"next month" the 1st of next month and «آخر ماه»/"end of month" the
+  last day of this month, in the user's calendar; «سال بعد» the first day of next year.
+  «۳ روز دیگه/دیگر/بعد», "in 3 days", "3 days from now" (days, weeks, months, years; months in
+  the user's calendar). «۱۵ مهر» (Jalali month names always Jalali), «۲۵ دسامبر», "oct 15",
+  "15th of october", with an optional year; without a year the next such day (a day that
+  doesn't exist, «۳۱ مهر», is not a date). Numeric «۱۵/۷» is day/month in the user's calendar
+  (month/day when the second number can't be a month, "10/15"); «۱۴۰۵/۸/۱», "2026-12-01" choose
+  the calendar by the year (1300–1699 Jalali, 1900–2299 Gregorian).
+- **Times**: «ساعت ۵»/"at 5" (a bare number counts only after «ساعت»/"at"), «۵ عصر», «۸ صبح»,
+  «۱۰ شب», «۱ ظهر», «۵ و نیم», "5pm", "17:30". Time-of-day words alone (ظهر 12:00, صبح 09:00,
+  بعدازظهر 15:00, عصر 17:00, شب 20:00, نیمه‌شب 00:00; "noon", "this evening" 18:00) count after a
+  date, at the end of the text or next to another part («مهمانی شب یلدا» stays text).
+  **Ambiguous hours** — 1–11 with no صبح/عصر/am/pm and no leading zero: without a date or
+  with today, the next upcoming of h:mm and (h+12):mm (at 18:00 «ساعت ۵» is tomorrow 05:00;
+  with «امروز» it stays today 17:00); on another day 1–6 means the afternoon and 7–11 the
+  morning; with «امشب»/"tonight" the evening. A time alone puts the task on today, or tomorrow
+  when that time has passed.
+- **Repeats**: «هر روز/هفته/ماه/سال», «هر ۳ روز (یکبار)», «هر دوشنبه (و پنجشنبه)», «یک روز در
+  میان», «روزهای کاری» (Saturday–Wednesday for Saturday weeks, else Monday–Friday), "every day",
+  "every other day", "every mon and thu", "every weekday", with «تا …»/"until …" as the end.
+  Adjectives («روزانه», "weekly") count only next to another part (English also at the end), so
+  «گزارش هفتگی» stays a title. A repeat without a date starts today or on its first weekday.
+- **Priority**: فوری, مهم, خیلی مهم, «اولویت بالا», `!!`/`!!!`, `p1`, urgent, important → high;
+  `!`, `p2`, «اولویت متوسط» → medium; `p3`, «اولویت پایین/کم», "low priority" → low.
+- **Tags** `#کار`, **project** `@name` (existing projects, whole name, half-spaces and spaces
+  ignored, or a unique prefix; otherwise the word stays), **deadline** «تا جمعه», «مهلت ۲۰
+  مهر», «ددلاین …», "by friday", "deadline oct 20", **duration** «۴۵ دقیقه», «۲ ساعت», «یک ساعت و
+  نیم», «نیم ساعت», "for 45 min", "1.5h", **reminder** «یادم بنداز ۱۰ دقیقه قبل», «۱۵ دقیقه قبل
+  یادم بنداز», "remind me 1 hour before" (alone: at the time). «۲ ساعت دیگه»/"in 2 hours" is a
+  relative time (now + 2 h).
+- Numbers that are not part of a pattern stay text: «۳ کتاب بخرم», «سه تا نان», «اتاق ۱۲».
+- The rest is the title (connectors and punctuation left at either end removed). A text made
+  only of parts is saved with its words as the title.
+
+### #5 Automatic day planning (`DayPlanner` in `core:model`, `DayPlanRepository` in `core:data`)
+
+Today › **Plan my day** (and the morning ritual) builds a preview from a snapshot; nothing is
+written until **Accept** (all or some blocks, one transaction). Deterministic rules:
+
+- The day is the working hours (Settings › Day planning and rituals, default 09:00–18:00); on
+  the current day it starts at the next 5-minute mark. An optional lunch break is never used.
+- Busy: timed events of the day (an end before the start runs to midnight; all-day events don't
+  block), tasks with a due time today (for their estimate, default 30 min) and existing time
+  blocks; each busy range gets the buffer (default 10 min, 0–30) on both sides, and every placed
+  block keeps the buffer before the next.
+- Candidates: today's list (planned today or earlier, or deadline within 3 days), open, without
+  a time block or a fixed time. Tasks waiting for others (#14) are never scheduled and listed as
+  such.
+- Order: deadline passed or today, then deadline within 2 days, then the rest; within each,
+  higher priority, older planned date, nearer deadline, manual order, id.
+- Each task gets its estimate (default 30, minimum 5 min) in the **earliest gap that holds it
+  whole** (first fit, never split, blocks start on 5-minute marks); tasks that fit nowhere are
+  listed as "didn't fit".
+- All maths is on instants with the device zone, so DST days have 23/25 hours and a working-hour
+  boundary in a skipped hour moves forward.
+- **Replan** (a button on Today when blocks were missed, only on tap): unfinished blocks of the
+  last 14 days that started before now, lie on an earlier day or now overlap something busy are
+  moved, in their order and length, into the free time left; blocks still ahead stay.
+- Today's timeline shows tasks at their block start; the calendar package shows blocks too.
+
+### #8 Morning planning and evening shutdown (`feature:today` `ritual/`)
+
+Today's header button (or a reminder) opens a full-screen step flow. **Morning**: unfinished
+tasks from earlier → Today / Tomorrow / Drop (archive, restorable); pick today's top 3 (shown on
+Today); today's calendar and free time in the working hours; optional Plan my day; an intention.
+**Evening**: what was completed today (a calm celebration); leftovers → Tomorrow / Next week /
+Drop; one line about the day; tomorrow's top 3. Moving a task clears its old time block.
+Finishing marks the ritual done for the day (`ritual_*_done`). The intention and the reflection
+are appended (heading + text) to the **journal page** of the day: a note in the "Journal"
+notebook («دفتر روزانه», created when missing) linked from `journal_entries` (`prompt_id`
+`ritual_morning`/`ritual_evening`), exactly where the daily journal (#25) reads its pages; a
+locked page is never touched. **Reminders** (`RitualReminders` in `core:notifications`): off by
+default; one inexact daily alarm per ritual at the chosen time (request codes and notification
+ids 8 and 16, the free slot 0 of the `id × 8 + code` scheme), skipped on a day the ritual was
+done, opening `planb://open/ritual/morning|evening`; re-armed after delivery, boot, clock or zone
+changes and whenever the settings change (also after a restore). Switching one on asks for the
+notification permission (Android 13+) in context.
 
 ## Calendar (#2, #3, #6, #7)
 

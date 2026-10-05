@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan-B Pro smart day: quick-add parsing (#1), day planning (#5) and rituals (#8). -->
+<resources>
+    <string name="capture_smart_teaser">Type “tomorrow 5pm #work” and the details fill themselves in</string>
+    <string name="capture_part_remove">%2$s, read from “%1$s”. Tap to keep it as text</string>
+    <string name="capture_part_deadline">Deadline %1$s</string>
+    <string name="capture_part_duration">Takes %1$s</string>
+
+    <string name="today_rituals">Daily rituals</string>
+    <string name="today_plan_day">Plan my day</string>
+    <string name="today_replan">Replan (%1$s)</string>
+    <string name="today_top3">Top 3 today</string>
+    <string name="today_smart_day_hint">Fit today\'s tasks into your free time</string>
+    <string name="today_plan_applied">Added to your day</string>
+
+    <string name="ritual_morning">Morning planning</string>
+    <string name="ritual_morning_sub">Review, pick your top 3, plan the day</string>
+    <string name="ritual_evening">Evening shutdown</string>
+    <string name="ritual_evening_sub">Celebrate, tidy up leftovers, plan tomorrow</string>
+    <string name="ritual_done_today">Done today</string>
+    <string name="ritual_step_of">Step %1$s of %2$s</string>
+    <string name="ritual_next">Next</string>
+    <string name="ritual_back">Back</string>
+    <string name="ritual_finish">Finish</string>
+    <string name="ritual_close">Close</string>
+    <string name="ritual_review_title">Unfinished from before</string>
+    <string name="ritual_review_hint">Decide what happens to each one. Dropped tasks are archived, not deleted.</string>
+    <string name="ritual_review_empty">Nothing left over. A fresh start.</string>
+    <string name="ritual_move_today">Today</string>
+    <string name="ritual_move_tomorrow">Tomorrow</string>
+    <string name="ritual_move_next_week">Next week</string>
+    <string name="ritual_drop">Drop</string>
+    <string name="ritual_top3_title">Pick today\'s top 3</string>
+    <string name="ritual_top3_hint">Which tasks would make today a good day?</string>
+    <string name="ritual_top3_selected">%1$s of %2$s chosen</string>
+    <string name="ritual_top3_empty">No tasks for today yet. Add some with Quick Capture.</string>
+    <string name="ritual_calendar_title">Today\'s calendar</string>
+    <string name="ritual_calendar_free">%1$s free within your working hours</string>
+    <string name="ritual_calendar_empty">No events today.</string>
+    <string name="ritual_plan_title">Plan your day</string>
+    <string name="ritual_plan_hint">Plan-B can fit your tasks into the free time. You review every block before anything changes.</string>
+    <string name="ritual_intention_title">Set an intention</string>
+    <string name="ritual_intention_hint">One sentence for how you want today to go.</string>
+    <string name="ritual_intention_label">Today I want to…</string>
+    <string name="ritual_intention_heading">Intention</string>
+    <string name="ritual_done_title">What you finished today</string>
+    <plurals name="ritual_done_count">
+        <item quantity="one">%1$s task done. Well done.</item>
+        <item quantity="other">%1$s tasks done. Well done.</item>
+    </plurals>
+    <string name="ritual_done_empty">A quiet day is a day too. Rest well.</string>
+    <string name="ritual_leftovers_title">Leftovers</string>
+    <string name="ritual_leftovers_hint">Give each one a new home. Dropped tasks are archived, not deleted.</string>
+    <string name="ritual_leftovers_empty">All clear for today.</string>
+    <string name="ritual_journal_title">One line about today</string>
+    <string name="ritual_journal_hint">What went well, what you learned. It is saved to your journal notebook.</string>
+    <string name="ritual_journal_label">Today…</string>
+    <string name="ritual_journal_heading">Evening reflection</string>
+    <string name="ritual_journal_notebook">Journal</string>
+    <string name="ritual_tomorrow_title">Tomorrow\'s top 3</string>
+    <string name="ritual_tomorrow_empty">Nothing planned for tomorrow yet.</string>
+    <string name="ritual_failed">Couldn\'t save. Try again.</string>
+
+    <string name="plan_title">Plan my day</string>
+    <string name="plan_replan_title">Replan the rest of the day</string>
+    <string name="plan_hours">Working hours %1$s, buffer %2$s</string>
+    <string name="plan_change_hours">Change</string>
+    <string name="plan_preview_hint">Review the proposed times. Nothing changes until you accept.</string>
+    <string name="plan_accept">Accept (%1$s)</string>
+    <string name="plan_cancel">Not now</string>
+    <string name="plan_moved">Moved</string>
+    <string name="plan_not_fit_title">Didn\'t fit today</string>
+    <string name="plan_blocked_title">Waiting for other tasks</string>
+    <string name="plan_empty">Every task for today already has a time.</string>
+    <string name="plan_replan_empty">Your time blocks are all still ahead. Nothing to move.</string>
+    <string name="plan_no_room">No free time is left in your working hours today.</string>
+    <string name="plan_no_buffer">none</string>
+
+    <string name="dayplan_settings_title">Day planning and rituals</string>
+    <string name="dayplan_hours_section">Working hours</string>
+    <string name="dayplan_start">Day starts</string>
+    <string name="dayplan_end">Day ends</string>
+    <string name="dayplan_hours_invalid">The end must be after the start; otherwise nothing can be planned.</string>
+    <string name="dayplan_lunch">Lunch break</string>
+    <string name="dayplan_lunch_start">Break starts</string>
+    <string name="dayplan_lunch_end">Break ends</string>
+    <string name="dayplan_buffer">Buffer between blocks</string>
+    <string name="dayplan_rituals_section">Ritual reminders</string>
+    <string name="dayplan_morning_reminder">Morning planning reminder</string>
+    <string name="dayplan_evening_reminder">Evening shutdown reminder</string>
+    <string name="dayplan_reminder_time">Remind me at</string>
+    <string name="dayplan_off">Off</string>
+    <string name="dayplan_reminder_note">Reminders only nudge you. Nothing in your plan changes on its own.</string>
+</resources>

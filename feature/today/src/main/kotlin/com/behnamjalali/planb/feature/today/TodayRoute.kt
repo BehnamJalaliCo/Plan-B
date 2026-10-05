@@ -31,6 +31,17 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.behnamjalali.planb.core.designsystem.component.PlannerBottomSheet
 import com.behnamjalali.planb.core.designsystem.component.PlannerIconButton
+import com.behnamjalali.planb.core.designsystem.component.PlannerPill
+import com.behnamjalali.planb.core.designsystem.component.SettingsRow
+import com.behnamjalali.planb.core.ui.ProFeature
+import com.behnamjalali.planb.core.ui.rememberProGuard
+import com.behnamjalali.planb.feature.today.plan.DayPlanSheet
+import com.behnamjalali.planb.feature.today.plan.PlanMode
+import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import com.behnamjalali.planb.core.designsystem.theme.Spacing
 import com.behnamjalali.planb.core.model.DashboardConfig
 import com.behnamjalali.planb.core.model.DashboardSection
@@ -53,16 +64,51 @@ fun TodayDestination(
         }
     }
     val resources = LocalResources.current
+    val scope = rememberCoroutineScope()
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { snackbarHostState.showSnackbar(resources.getString(R.string.capture_failed)) }
     }
+    // Plan-B Pro smart day: opened only by the user's tap; free users get the Pro screen.
+    val guard = rememberProGuard()
+    var planMode by rememberSaveable { mutableStateOf<PlanMode?>(null) }
+    var choosingRitual by rememberSaveable { mutableStateOf(false) }
     TodayScreen(
         state = state,
-        actions = actions.copy(onCustomize = { customizing = true }),
+        actions = actions.copy(
+            onCustomize = { customizing = true },
+            onRituals = { guard.run(ProFeature.DAILY_RITUALS) { choosingRitual = true } },
+            onPlanDay = { mode -> guard.run(ProFeature.AUTO_PLANNING) { planMode = mode } },
+        ),
         onToggleTask = viewModel::setTaskCompleted,
         onCheckInHabit = viewModel::checkInHabit,
         contentPadding = contentPadding,
     )
+    planMode?.let { mode ->
+        DayPlanSheet(
+            mode = mode,
+            onDismiss = { planMode = null },
+            onApplied = {
+                planMode = null
+                scope.launch { snackbarHostState.showSnackbar(resources.getString(R.string.today_plan_applied)) }
+            },
+            onFailed = { scope.launch { snackbarHostState.showSnackbar(resources.getString(R.string.ritual_failed)) } },
+            onOpenSettings = {
+                planMode = null
+                actions.onOpenDayPlanSettings()
+            },
+        )
+    }
+    val data = (state as? TodayUiState.Success)?.data
+    if (choosingRitual && data != null) {
+        RitualChooserSheet(
+            data = data,
+            onDismiss = { choosingRitual = false },
+            onSelect = {
+                choosingRitual = false
+                actions.onOpenRitual(it)
+            },
+        )
+    }
     val config = (state as? TodayUiState.Success)?.data?.dashboard
     if (customizing && config != null) {
         DashboardCustomizeSheet(
@@ -71,6 +117,34 @@ fun TodayDestination(
             onMove = viewModel::moveSection,
             onVisibleChange = viewModel::setSectionVisible,
         )
+    }
+}
+
+/** Morning planning and evening shutdown (Plan-B Pro #8); the one that fits the hour comes first. */
+@Composable
+fun RitualChooserSheet(data: TodayData, onDismiss: () -> Unit, onSelect: (RitualKind) -> Unit) {
+    val evening = data.greeting == Greeting.EVENING || data.greeting == Greeting.NIGHT
+    val kinds = if (evening) listOf(RitualKind.EVENING, RitualKind.MORNING) else listOf(RitualKind.MORNING, RitualKind.EVENING)
+    PlannerBottomSheet(onDismiss = onDismiss) {
+        Text(stringResource(R.string.today_rituals), style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(Spacing.md))
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            kinds.forEach { kind ->
+                val morning = kind == RitualKind.MORNING
+                val done = (if (morning) data.rituals.morningDoneOn else data.rituals.eveningDoneOn) == data.date
+                SettingsRow(
+                    title = stringResource(if (morning) R.string.ritual_morning else R.string.ritual_evening),
+                    subtitle = stringResource(if (morning) R.string.ritual_morning_sub else R.string.ritual_evening_sub),
+                    icon = if (morning) Icons.Rounded.WbSunny else Icons.Rounded.Bedtime,
+                    onClick = { onSelect(kind) },
+                    trailing = if (done) {
+                        { PlannerPill(stringResource(R.string.ritual_done_today), icon = Icons.Rounded.Check) }
+                    } else {
+                        null
+                    },
+                )
+            }
+        }
     }
 }
 

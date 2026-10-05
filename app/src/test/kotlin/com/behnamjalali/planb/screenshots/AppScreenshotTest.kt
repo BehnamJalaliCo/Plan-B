@@ -754,6 +754,60 @@ class AppScreenshotTest(private val variant: Variant) {
         // The calendar list is below the fold at 150% font.
         if (variant.fontScale == 1f) waitFor(hasText("Family"))
         capture("calendar", "calendar_sync_settings")
+    // region Plan-B Pro smart day (#1, #5, #8), captured as a Pro user.
+
+    @Test
+    fun quickCaptureSmart() {
+        launch(pro = true)
+        clickDescription(s(AppR.string.quick_capture))
+        val fa = variant.language == AppLanguage.PERSIAN
+        waitFor(hasSetTextAction()).performTextInput(
+            if (fa) "فردا ساعت ۵ عصر جلسه با تیم #کار فوری ۴۵ دقیقه" else "Team sync tomorrow 5pm #work !! for 45 min",
+        )
+        // The parsed parts appear as chips under the field.
+        waitFor(hasText(if (fa) "#کار" else "#work"))
+        capture("capture", "quick_capture_smart")
+    }
+
+    @Test
+    fun planMyDay() {
+        launch(pro = true)
+        click(s(TodayR.string.today_plan_day))
+        waitFor(hasText(s(TodayR.string.plan_preview_hint)))
+        waitFor(hasText(fixtures.tasks[2].title))
+        capture("today", "plan_my_day")
+    }
+
+    @Test
+    fun morningRitual() {
+        launch(pro = true)
+        clickDescription(s(TodayR.string.today_rituals))
+        click(s(TodayR.string.ritual_morning_sub))
+        waitFor(hasText(s(TodayR.string.ritual_review_title)))
+        waitFor(hasText(fixtures.tasks[3].title))
+        capture("today", "ritual_morning")
+    }
+
+    @Test
+    fun eveningRitual() {
+        launch(pro = true)
+        clickDescription(s(TodayR.string.today_rituals))
+        click(s(TodayR.string.ritual_evening_sub))
+        waitFor(hasText(s(TodayR.string.ritual_done_title)))
+        waitFor(hasText(fixtures.tasks[4].title))
+        capture("today", "ritual_evening")
+    }
+
+    @Test
+    fun dayPlanSettings() {
+        launch(pro = true) {
+            settings.update { it.copy(dayPlan = it.dayPlan.copy(lunchEnabled = true, morningReminder = true)) }
+        }
+        openMore(AppR.string.more_settings)
+        click(s(SettingsR.string.settings_day_planning))
+        waitFor(hasText(s(TodayR.string.dayplan_hours_section)))
+        waitFor(hasText(s(TodayR.string.dayplan_lunch)))
+        capture("settings", "day_planning")
     }
 
     // endregion

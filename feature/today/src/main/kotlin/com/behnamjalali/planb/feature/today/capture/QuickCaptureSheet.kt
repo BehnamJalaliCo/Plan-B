@@ -47,6 +47,10 @@ import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.ui.PlannerDatePickerDialog
 import com.behnamjalali.planb.core.ui.PlannerLocals
 import com.behnamjalali.planb.core.ui.PlannerTimePickerDialog
+import com.behnamjalali.planb.core.ui.LocalProAccess
+import com.behnamjalali.planb.core.ui.ProFeature
+import com.behnamjalali.planb.core.ui.rememberProGuard
+import com.behnamjalali.planb.core.nlp.QuickAddResult
 import com.behnamjalali.planb.feature.today.R
 import java.time.LocalDate
 import java.time.LocalTime
@@ -87,6 +91,11 @@ fun QuickCaptureSheet(
     val dateEpoch by viewModel.dateEpoch.collectAsStateWithLifecycle()
     val timeSeconds by viewModel.timeSeconds.collectAsStateWithLifecycle()
     val highPriority by viewModel.highPriority.collectAsStateWithLifecycle()
+    val parsed by viewModel.parsed.collectAsStateWithLifecycle()
+    val isPro = LocalProAccess.current.isPro
+    // Plan-B Pro #1: the text is read as it is typed (on the device, no network).
+    LaunchedEffect(isPro) { viewModel.setSmartInput(isPro) }
+    val guard = rememberProGuard()
     val defaultNotebook = stringResource(com.behnamjalali.planb.core.data.R.string.data_default_notebook)
     val haptics = rememberPlannerHaptics()
 
@@ -119,6 +128,8 @@ fun QuickCaptureSheet(
         date = dateEpoch?.let(LocalDate::ofEpochDay),
         time = timeSeconds?.let { LocalTime.ofSecondOfDay(it.toLong()) },
         highPriority = highPriority,
+        parsed = parsed,
+        smartInput = isPro,
         onDismiss = onDismiss,
         onTypeChange = viewModel::setType,
         onTitleChange = viewModel::setTitle,
@@ -127,6 +138,8 @@ fun QuickCaptureSheet(
         onTimeChange = viewModel::setTime,
         onPriorityChange = viewModel::setHighPriority,
         onSave = { viewModel.save(defaultNotebook) },
+        onDismissPart = { viewModel.dismissPart(it.key) },
+        onSmartTeaser = { guard.run(ProFeature.PERSIAN_QUICK_ADD) {} },
     )
 }
 
@@ -147,6 +160,10 @@ fun QuickCaptureContent(
     onTimeChange: (LocalTime?) -> Unit,
     onPriorityChange: (Boolean) -> Unit,
     onSave: () -> Unit,
+    parsed: QuickAddResult? = null,
+    smartInput: Boolean = false,
+    onDismissPart: (com.behnamjalali.planb.core.nlp.QuickAddPart) -> Unit = {},
+    onSmartTeaser: () -> Unit = {},
 ) {
     val formatter = PlannerLocals.formatter
     val today = PlannerLocals.today
@@ -195,7 +212,16 @@ fun QuickCaptureContent(
                 imeAction = if (type == CaptureType.NOTE) ImeAction.Next else ImeAction.Done,
             ),
             keyboardActions = KeyboardActions(onDone = { if (canSave) onSave() }),
+            visualTransformation = rememberPartsHighlight(parsed),
         )
+        val smartType = type == CaptureType.TASK || type == CaptureType.EVENT
+        if (smartType && parsed != null) {
+            Spacer(Modifier.height(Spacing.sm))
+            ParsedParts(parsed, onDismiss = onDismissPart)
+        } else if (smartType && !smartInput) {
+            Spacer(Modifier.height(Spacing.xs))
+            SmartInputTeaser(onClick = onSmartTeaser)
+        }
         if (type == CaptureType.NOTE) {
             Spacer(Modifier.height(Spacing.sm))
             PlannerTextField(
@@ -208,6 +234,9 @@ fun QuickCaptureContent(
             )
         }
         if (type == CaptureType.TASK || type == CaptureType.EVENT) {
+            val date = parsed?.date ?: date
+            val time = parsed?.time ?: time
+            val highPriority = parsed?.priority?.let { it == com.behnamjalali.planb.core.model.Priority.HIGH } ?: highPriority
             Spacer(Modifier.height(Spacing.md))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 PlannerChip(formatter.relativeDate(today, today), date == today, { onDateChange(today) }, icon = Icons.Rounded.Today)

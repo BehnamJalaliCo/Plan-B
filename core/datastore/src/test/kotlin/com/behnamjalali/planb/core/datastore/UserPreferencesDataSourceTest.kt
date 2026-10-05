@@ -10,12 +10,16 @@ import com.behnamjalali.planb.core.model.CalendarSyncSettings
 import com.behnamjalali.planb.core.model.CalendarSystem
 import com.behnamjalali.planb.core.model.ColorTheme
 import com.behnamjalali.planb.core.model.DashboardSection
+import com.behnamjalali.planb.core.model.DayPlanSettings
+import com.behnamjalali.planb.core.model.RitualState
 import com.behnamjalali.planb.core.model.ThemeMode
 import com.behnamjalali.planb.core.model.UserSettings
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.nio.file.Files
 import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.SupervisorJob
@@ -153,6 +157,36 @@ class UserPreferencesDataSourceTest {
         target.import(exported)
         assertThat(target.current().calendarSystemOverride).isNull()
         assertThat(target.current().firstDayOfWeekOverride).isNull()
+    }
+
+    @Test
+    fun dayPlanAndRituals_roundTripThroughABackup_andMalformedValuesFallBack() = runTest {
+        val a = UserPreferencesDataSource(newStore(Files.createTempDirectory("plan-a").toFile(), backgroundScope))
+        val day = LocalDate.of(2026, 10, 4)
+        val plan = DayPlanSettings(
+            workStart = LocalTime.of(8, 30), workEnd = LocalTime.of(16, 45), lunchEnabled = true,
+            lunchStart = LocalTime.of(12, 15), lunchEnd = LocalTime.of(13, 0), bufferMinutes = 15,
+            morningReminder = true, morningTime = LocalTime.of(7, 45), eveningReminder = true, eveningTime = LocalTime.of(22, 0),
+        )
+        val rituals = RitualState(focusDate = day, focusTaskIds = listOf(9, 4, 7), morningDoneOn = day, eveningDoneOn = day.minusDays(1))
+        a.update { it.copy(dayPlan = plan, rituals = rituals) }
+        assertThat(a.current().dayPlan).isEqualTo(plan)
+        assertThat(a.current().rituals).isEqualTo(rituals)
+        val exported = a.export()
+        assertThat(exported["day_plan_work_start"]).isEqualTo("510")
+        val b = UserPreferencesDataSource(newStore(Files.createTempDirectory("plan-b").toFile(), backgroundScope))
+        b.import(exported)
+        assertThat(b.current().dayPlan).isEqualTo(plan)
+        assertThat(b.current().rituals).isEqualTo(rituals)
+        // Out-of-range minutes, a broken id list and a huge date fall back per key.
+        b.import(mapOf("day_plan_work_end" to "5000", "ritual_focus_tasks" to "x,12,,12", "ritual_morning_done" to "999999999"))
+        val s = b.current()
+        assertThat(s.dayPlan.workEnd).isEqualTo(LocalTime.of(16, 45))
+        assertThat(s.rituals.focusTaskIds).containsExactly(12L)
+        assertThat(s.rituals.morningDoneOn).isEqualTo(day)
+        // Clearing the ritual state removes the keys again.
+        b.update { it.copy(rituals = RitualState()) }
+        assertThat(b.current().rituals).isEqualTo(RitualState())
     }
 
     @Test

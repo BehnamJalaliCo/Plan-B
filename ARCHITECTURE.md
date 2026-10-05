@@ -14,6 +14,8 @@ graph TD
   feature["feature:* (today, tasks, calendar, projects, notebooks,<br/>habits, goals, focus, search, templates, review, settings)"] --> ui[core:ui]
   feature --> data[core:data]
   feature --> designsystem[core:designsystem]
+  today[feature:today] --> nlp[core:nlp]
+  nlp --> datetime
   app --> notifications[core:notifications]
   app --> backup[core:backup]
   settings[feature:settings] --> backup
@@ -42,6 +44,8 @@ graph TD
 | `core:model` | Plain Kotlin domain types (tasks, projects, notes, habits, goals, events, focus sessions, templates, settings), recurrence and habit-schedule encodings, habit statistics, goal pace, Markdown conversion. No Android framework types in its API. |
 | `core:common` | `TimeProvider` (the only clock), dispatchers and the application scope, digit localisation (`Digits`, `NumberFormatter`), `SearchNormalizer`, `runCatchingSafely`, a minute ticker for "today". |
 | `core:datetime` | Calendar engines (Jalali via ICU, Gregorian), Iran's official holidays, occasions and Hijri dates (`iran/`), month grids, the recurrence engine, reminder trigger computation with DST handling, and the resource-backed `PlannerDateFormatter`. |
+| `core:nlp` | Plan-B Pro natural-language quick add: an on-device, table-driven Persian/English parser (`QuickAddParser`) for dates, times, repeats, priority, tags, projects, deadlines, durations and reminders. |
+| `core:datetime` | Calendar engines (Jalali via ICU, Gregorian), month grids, the recurrence engine, reminder trigger computation with DST handling, and the resource-backed `PlannerDateFormatter`. |
 | `core:database` | Room entities, DAOs, relations, the FTS4 `search_index`, migrations and exported schemas. |
 | `core:datastore` | User preferences in Preferences DataStore with tolerant per-key parsing. |
 | `core:data` | Repositories (the single source of truth for each feature), entity↔model mappers, search indexing, `ReminderScheduler` contract, SAF file helpers. |

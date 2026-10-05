@@ -13,6 +13,8 @@ import com.behnamjalali.planb.core.notifications.Notifier
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -28,6 +30,7 @@ class PlanBApplication : Application() {
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
     @Inject lateinit var personalization: PersonalizationSync
     @Inject lateinit var calendarSync: com.behnamjalali.planb.core.calendarsync.CalendarSyncController
+    @Inject lateinit var rituals: com.behnamjalali.planb.core.notifications.RitualReminders
 
     override fun onCreate() {
         super.onCreate()
@@ -55,6 +58,13 @@ class PlanBApplication : Application() {
             runCatching { trash.purgeExpired() }
         }
         MaintenanceWorker.schedule(this)
+        appScope.launch {
+            // Ritual reminders (Plan-B Pro #8) follow their settings, also after a restore.
+            settings.settings
+                .map { listOf(it.dayPlan.morningReminder, it.dayPlan.morningTime, it.dayPlan.eveningReminder, it.dayPlan.eveningTime) }
+                .distinctUntilChanged()
+                .collect { runCatching { rituals.sync() } }
+        }
     }
 
     private companion object {

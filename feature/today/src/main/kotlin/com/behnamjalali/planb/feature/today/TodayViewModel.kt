@@ -15,6 +15,11 @@ import com.behnamjalali.planb.core.data.repository.TaskFilter
 import com.behnamjalali.planb.core.data.repository.TaskRepository
 import com.behnamjalali.planb.core.model.DashboardConfig
 import com.behnamjalali.planb.core.model.DashboardSection
+import com.behnamjalali.planb.core.model.DayPlanRequest
+import com.behnamjalali.planb.core.model.DayPlanSettings
+import com.behnamjalali.planb.core.model.DayPlanner
+import com.behnamjalali.planb.core.model.PlannedBlock
+import com.behnamjalali.planb.core.model.RitualState
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.EventOccurrence
 import com.behnamjalali.planb.core.model.FocusSession
@@ -26,8 +31,11 @@ import com.behnamjalali.planb.core.model.Streak
 import com.behnamjalali.planb.core.model.Task
 import com.behnamjalali.planb.core.model.TaskView
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -53,8 +61,9 @@ data class HabitToday(val habit: HabitWithHistory, val amount: Int, val streak: 
 sealed interface TimelineItem {
     val time: LocalTime?
 
-    data class TaskItem(val task: Task) : TimelineItem {
-        override val time: LocalTime? get() = task.dueTime
+    /** A task at its due time, or else at the start of its time block (Plan-B Pro #5). */
+    data class TaskItem(val task: Task, val blockStart: LocalTime? = null) : TimelineItem {
+        override val time: LocalTime? get() = task.dueTime ?: blockStart
     }
 
     data class EventItem(val occurrence: EventOccurrence) : TimelineItem {
@@ -75,6 +84,12 @@ data class TodayData(
     val focusMinutesToday: Int,
     val projects: List<ProjectSummary>,
     val notes: List<Note>,
+    /** Working hours and ritual state (Plan-B Pro #5, #8). */
+    val dayPlan: DayPlanSettings = DayPlanSettings(),
+    val rituals: RitualState = RitualState(),
+    val zone: ZoneId = ZoneId.systemDefault(),
+    /** Time blocks that are already past or now clash with an event: "Replan" moves them. */
+    val missedBlocks: Int = 0,
 ) {
     val overdueCount: Int get() = todayTasks.count { it.isOverdue(date) }
     val dueTodayCount: Int get() = todayTasks.count { it.dueDate == date }
@@ -83,9 +98,33 @@ data class TodayData(
     val habitsDone: Int get() = habits.count { it.amount >= it.habit.habit.target }
 
     val timeline: List<TimelineItem>
-        get() = (todayTasks.filter { it.dueDate == date && it.dueTime != null }.map { TimelineItem.TaskItem(it) } +
-            events.map { TimelineItem.EventItem(it) })
+        get() = (
+            todayTasks.mapNotNull { task ->
+                val block = blockStartOn(task)
+                if ((task.dueDate == date && task.dueTime != null) || block != null) TimelineItem.TaskItem(task, block) else null
+            } + events.map { TimelineItem.EventItem(it) }
+            )
             .sortedWith(compareBy<TimelineItem> { it.time != null }.thenBy { it.time })
+
+    /** The local start of [task]'s time block when it lies on [date]. */
+    private fun blockStartOn(task: Task): LocalTime? =
+        task.scheduledStart?.atZone(zone)?.takeIf { it.toLocalDate() == date }?.toLocalTime()
+
+    /** The picked "top 3" of today that are still open, in the picked order. */
+    val focusTasks: List<Task>
+        get() = rituals.focusFor(date).mapNotNull { id -> todayTasks.firstOrNull { it.id == id } }
+
+    /** Today's blocks that "Replan" would move, as of [now]. */
+    fun missedBlocksAt(now: Instant): Int {
+        val blocks = todayTasks.mapNotNull { t ->
+            val start = t.scheduledStart
+            val end = t.scheduledEnd
+            if (start != null && end != null) PlannedBlock(t.id, start, end) else null
+        }
+        if (blocks.isEmpty()) return 0
+        val busy = DayPlanner.eventRanges(events, date, zone) + DayPlanner.taskRanges(todayTasks.filter { it.scheduledStart == null }, date, zone)
+        return DayPlanner.replanCandidates(DayPlanRequest(date, zone, now, dayPlan, busy), blocks).size
+    }
 }
 
 sealed interface TodayUiState {
@@ -113,18 +152,23 @@ class TodayViewModel @Inject constructor(
     /** Test hook: overrides the wait between greeting checks (normally until the next minute). */
     internal var greetingTickMillis: Long? = null
 
-    /** The greeting follows the clock, not data changes, so it never goes stale while the screen is open. */
-    private val greeting: Flow<Greeting> = flow {
+    /**
+     * The clock, minute by minute: the greeting and missed time blocks follow it, not data
+     * changes, so they never go stale while the screen is open.
+     */
+    private val minutes: Flow<Instant> = flow {
         while (true) {
+            emit(time.now().truncatedTo(ChronoUnit.MINUTES))
             val now = time.localNow()
-            emit(greetingFor(now.toLocalTime()))
             val untilNextMinute = 60_000L - (now.second * 1000L + now.nano / 1_000_000L)
             delay(greetingTickMillis ?: untilNextMinute.coerceIn(1_000L, 60_000L))
         }
     }.distinctUntilChanged()
 
     val uiState: StateFlow<TodayUiState> = time.todayFlow().flatMapLatest { today -> dayFlow(today) }
-        .combine(greeting) { data, greeting -> data.copy(greeting = greeting) }
+        .combine(minutes) { data, now ->
+            data.copy(greeting = greetingFor(now.atZone(data.zone).toLocalTime()), missedBlocks = data.missedBlocksAt(now))
+        }
         .map<TodayData, TodayUiState> { TodayUiState.Success(it) }
         .catch { emit(TodayUiState.Error) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayUiState.Loading)
@@ -175,6 +219,9 @@ class TodayViewModel @Inject constructor(
                     .sortedWith(compareBy(nullsLast()) { it.project.dueDate })
                     .take(3),
                 notes = values[8] as List<Note>,
+                dayPlan = s.dayPlan,
+                rituals = s.rituals,
+                zone = zone,
             )
         }
     }

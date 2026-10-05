@@ -23,6 +23,9 @@ object DeepLinks {
     fun event(id: Long): Uri = "$SCHEME://open/event/$id".toUri()
     fun habit(id: Long): Uri = "$SCHEME://open/habit/$id".toUri()
     fun focus(): Uri = "$SCHEME://open/focus".toUri()
+
+    /** The morning or evening ritual (Plan-B Pro #8): `planb://open/ritual/morning|evening`. */
+    fun ritual(path: String): Uri = "$SCHEME://open/ritual/$path".toUri()
 }
 
 /** Localized labels of a task reminder's "Done" and "Snooze" buttons; [nagging] tasks stop nagging when swiped away. */
@@ -129,6 +132,24 @@ class Notifier @Inject constructor(@ApplicationContext private val context: Cont
                     if (taskButtons.nagging) setDeleteIntent(taskActionIntent(ReminderActionReceiver.ACTION_DISMISS, id))
                 }
             }
+            .build()
+        runCatching { manager.notify(notificationId, notification) }
+    }
+
+    /**
+     * A calm daily-ritual nudge (Plan-B Pro #8) with its own [notificationId]; it opens [uri].
+     * The text is generic, so it shows on the lock screen as is.
+     */
+    fun showRitual(notificationId: Int, title: String, text: String, uri: Uri) {
+        if (!manager.areNotificationsEnabled()) return
+        val notification = NotificationCompat.Builder(context, CHANNEL_REMINDERS)
+            .setSmallIcon(R.drawable.ic_stat_planb)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(openIntent(uri, notificationId))
             .build()
         runCatching { manager.notify(notificationId, notification) }
     }

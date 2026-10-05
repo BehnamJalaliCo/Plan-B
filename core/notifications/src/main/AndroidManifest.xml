@@ -16,6 +16,10 @@
         <receiver
             android:name=".ReminderActionReceiver"
             android:exported="false" />
+        <!-- Morning/evening ritual reminders (Plan-B Pro #8): only our own immutable PendingIntents reach it. -->
+        <receiver
+            android:name=".RitualReminderReceiver"
+            android:exported="false" />
         <receiver
             android:name=".RescheduleReceiver"
             android:exported="true">

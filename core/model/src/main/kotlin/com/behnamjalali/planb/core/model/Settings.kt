@@ -132,6 +132,10 @@ data class UserSettings(
     val languageChosen: Boolean = false,
     /** Plan-B Pro #2: what the calendar shows of Iran's official calendar (shown only with Pro). */
     val calendarDecorations: CalendarDecorations = CalendarDecorations(),
+    /** Working hours and ritual reminders (Plan-B Pro #5, #8). */
+    val dayPlan: DayPlanSettings = DayPlanSettings(),
+    /** Today's top tasks and the days the rituals were done (Plan-B Pro #8). */
+    val rituals: RitualState = RitualState(),
 ) {
     /** The palette to draw with: premium themes fall back to the classic one without Pro. */
     fun effectiveColorTheme(isPro: Boolean): ColorTheme = if (isPro || !colorTheme.isPremium) colorTheme else ColorTheme.CLASSIC
