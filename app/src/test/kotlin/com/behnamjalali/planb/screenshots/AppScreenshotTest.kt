@@ -963,6 +963,9 @@ class AppScreenshotTest(private val variant: Variant) {
         openTrip()
         // Links show as their notes' titles; the end of the note lists links and backlinks.
         waitFor(hasText(t("بودجهٔ سفر", "Trip budget"), substring = true))
+        // Wait for the (asynchronously loaded) section: clicking before it exists would make
+        // the click helper scroll the editor's toolbar row looking for it.
+        waitFor(hasText(s(NotesR.string.backlinks_title), substring = true))
         click(s(NotesR.string.backlinks_title))
         waitFor(hasText(t("عکس‌های سفر", "Trip photos")))
         capture("notebooks", "note_links")
