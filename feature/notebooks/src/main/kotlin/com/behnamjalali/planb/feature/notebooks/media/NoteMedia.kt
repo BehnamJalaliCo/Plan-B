@@ -76,7 +76,7 @@ object RecognizedText {
     fun persianShare(text: String): Double {
         val letters = text.filter { it.isLetter() }
         if (letters.isEmpty()) return 0.0
-        return letters.count { it in '؀'..'ۿ' || it in 'ﭐ'..'﷿' || it in 'ﹰ'..'﻿' }.toDouble() / letters.length
+        return letters.count { it.code in 0x0600..0x06FF || it.code in 0xFB50..0xFDFF || it.code in 0xFE70..0xFEFC }.toDouble() / letters.length
     }
 }
 

@@ -163,7 +163,7 @@ object DbValues {
                     in '۰'..'۹' -> append('0' + (ch - '۰'))
                     in '٠'..'٩' -> append('0' + (ch - '٠'))
                     '٫', '/' -> append('.')
-                    '٬', ',', '،', ' ', '‌' -> Unit
+                    '٬', ',', '،', ' ', '\u200C' -> Unit
                     '−' -> append('-')
                     else -> append(ch)
                 }

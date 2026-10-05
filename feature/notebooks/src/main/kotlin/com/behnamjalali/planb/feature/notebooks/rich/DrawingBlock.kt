@@ -9,7 +9,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -42,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -82,6 +82,7 @@ import com.behnamjalali.planb.core.ui.ProFeature
 import com.behnamjalali.planb.core.ui.rememberProGuard
 import com.behnamjalali.planb.feature.notebooks.EditorBlock
 import com.behnamjalali.planb.feature.notebooks.R
+import androidx.core.graphics.createBitmap
 import java.io.ByteArrayOutputStream
 
 /** The paper a drawing is shown on, in both themes (strokes keep their own colors). */
@@ -150,7 +151,7 @@ internal object DrawingRenderer {
     fun png(drawing: Drawing, widthPx: Int = drawing.width): ByteArray {
         val scale = widthPx.toFloat() / drawing.width
         val heightPx = (drawing.height * scale).toInt().coerceAtLeast(1)
-        val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(widthPx, heightPx)
         try {
             val canvas = AndroidCanvas(bitmap)
             canvas.drawColor(Paper.toArgb())
@@ -207,7 +208,7 @@ internal fun DrawScope.drawStrokes(strokes: List<Stroke>, drawingWidth: Int) {
 internal fun DrawingEditorDialog(request: DrawingRequest, onDismiss: () -> Unit, onDone: (Drawing) -> Unit) {
     val history = remember(request) { DrawingHistory(request.drawing) }
     var drawing by remember(request) { mutableStateOf(request.drawing) }
-    var color by remember { mutableStateOf(PenColors.first()) }
+    var color by remember { mutableLongStateOf(PenColors.first()) }
     var width by remember { mutableFloatStateOf(6f) }
     var eraser by remember { mutableStateOf(false) }
     val current = remember { mutableStateListOf<Int>() }
@@ -265,7 +266,7 @@ internal fun DrawingEditorDialog(request: DrawingRequest, onDismiss: () -> Unit,
                     Slider(value = width, onValueChange = { width = it }, valueRange = 2f..24f, modifier = Modifier.weight(1f).padding(horizontal = Spacing.sm))
                 }
                 if (full) Text(stringResource(R.string.rich_drawing_full), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                BoxWithConstraints(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                     val aspect = drawing.width.toFloat() / drawing.height
                     Box(
                         Modifier

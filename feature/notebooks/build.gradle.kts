@@ -16,4 +16,5 @@ dependencies {
     implementation(libs.mlkit.digital.ink)
     implementation(libs.tesseract4android)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.exifinterface)
 }
