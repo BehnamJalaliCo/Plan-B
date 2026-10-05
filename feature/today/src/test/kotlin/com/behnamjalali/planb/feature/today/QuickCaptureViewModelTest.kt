@@ -2,6 +2,9 @@ package com.behnamjalali.planb.feature.today
 
 import androidx.lifecycle.SavedStateHandle
 import com.behnamjalali.planb.core.data.repository.TaskFilter
+import com.behnamjalali.planb.core.speech.DictationEvent
+import com.behnamjalali.planb.core.speech.FakeVoiceDictation
+import com.behnamjalali.planb.core.speech.VoiceInputViewModel
 import com.behnamjalali.planb.core.testing.RealMainDispatcherRule
 import com.behnamjalali.planb.core.testing.TestDataGraph
 import com.behnamjalali.planb.feature.today.capture.CaptureEvent
@@ -115,6 +118,45 @@ class QuickCaptureViewModelTest {
         assertThat(task.tags.map { it.name }).containsExactly("خرید")
         assertThat(task.deadline).isEqualTo(parsed.deadline)
         assertThat(task.reminderOffsetMinutes).isEqualTo(15)
+    }
+
+    /** Plan-B Pro #40: speech → recognizer (fake) → voice field → the same quick-add reading → a dated task. */
+    @Test
+    fun dictation_isReadLikeTypedText_andSavedAsADatedTask() = runBlocking<Unit> {
+        val vm = smartViewModel()
+        val recognizer = FakeVoiceDictation(
+            script = listOf(
+                DictationEvent.Ready,
+                DictationEvent.Partial("فردا ساعت ۵"),
+                DictationEvent.Partial("فردا ساعت ۵ عصر جلسه"),
+                DictationEvent.Final("فردا ساعت ۵ عصر جلسه با علی"),
+            ),
+        )
+        val voice = main.track(VoiceInputViewModel(recognizer))
+        val heard = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(10_000) { voice.results.first() } }
+        voice.start("fa-IR")
+        vm.applyDictation(heard.await())
+        assertThat(recognizer.languages).containsExactly("fa-IR")
+        val parsed = vm.parsed.value!!
+        assertThat(parsed.title).isEqualTo("جلسه با علی")
+
+        val saved = async(start = CoroutineStart.UNDISPATCHED) { withTimeout(20_000) { vm.events.first() } }
+        vm.save("Notes")
+        val task = graph.tasks.getTask((saved.await() as CaptureEvent.Saved).id)!!
+        assertThat(task.title).isEqualTo("جلسه با علی")
+        assertThat(task.dueDate).isEqualTo(graph.time.today().plusDays(1))
+        assertThat(task.dueTime).isEqualTo(java.time.LocalTime.of(17, 0))
+    }
+
+    @Test
+    fun dictation_joinsTextAlreadyTyped() {
+        val vm = viewModel()
+        vm.setTitle("خرید")
+        vm.applyDictation(" نان و شیر ")
+        assertThat(vm.title.value).isEqualTo("خرید نان و شیر")
+        vm.setType(com.behnamjalali.planb.feature.today.capture.CaptureType.NOTE)
+        vm.applyDictation("برای صبحانه")
+        assertThat(vm.body.value).isEqualTo("برای صبحانه")
     }
 
     @Test

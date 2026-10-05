@@ -1,7 +1,6 @@
 package com.behnamjalali.planb.feature.notebooks.media
 
 import android.content.Context
-import android.content.Intent
 import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaExtractor
@@ -9,10 +8,13 @@ import android.media.MediaFormat
 import android.os.Build
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
-import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import androidx.annotation.RequiresApi
+import com.behnamjalali.planb.core.speech.DictationEvent
+import com.behnamjalali.planb.core.speech.RecognitionListenerAdapter
+import com.behnamjalali.planb.core.speech.SpeechIntents
+import com.behnamjalali.planb.core.speech.VoiceDictation
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.OutputStream
@@ -23,6 +25,8 @@ import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -30,36 +34,37 @@ import kotlinx.coroutines.withContext
 /**
  * Transcription through Android's [SpeechRecognizer] (the speech service installed on the
  * device), preferring on-device recognition (`EXTRA_PREFER_OFFLINE`, and the on-device
- * recognizer where Android offers one).
+ * recognizer where Android offers one). The recognizer plumbing is shared with voice input
+ * (`core:speech`).
  *
  * **Recorded files** (Android 13+): the recording is decoded to 16-bit PCM and streamed to the
  * recognizer through `EXTRA_AUDIO_SOURCE` with a segmented session, so the whole file is
  * transcribed. **Older Android versions** cannot hand a file to the speech service, and the
  * microphone cannot record and feed the recognizer at the same time, so there the transcript is
- * dictated live: the user speaks (or replays) the content and the recognized text is stored as
- * the recording's transcript. Whether audio leaves the device is up to the speech service the
- * user installed; Plan-B itself never sends it.
+ * dictated live ([VoiceDictation]): the user speaks (or replays) the content and the recognized
+ * text is stored as the recording's transcript. Whether audio leaves the device is up to the
+ * speech service the user installed; Plan-B itself never sends it.
  */
 @Singleton
-class PlatformSpeechTranscription @Inject constructor(@ApplicationContext private val context: Context) : SpeechTranscription {
+class PlatformSpeechTranscription @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val dictation: VoiceDictation,
+) : SpeechTranscription {
     override fun canTranscribeFiles(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && canDictate()
 
-    override fun canDictate(): Boolean = runCatching { SpeechRecognizer.isRecognitionAvailable(context) }.getOrDefault(false)
+    override fun canDictate(): Boolean = dictation.isAvailable()
 
     override suspend fun transcribeFile(file: File, languageTag: String): String? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || !file.isFile) return null
         val format = withContext(Dispatchers.IO) { PcmDecoder.format(file) } ?: return null
         // The on-device recognizer first; if it lacks the language, the regular service.
         for (onDevice in listOf(true, false)) {
-            if (onDevice && !onDeviceAvailable()) continue
+            if (onDevice && !SpeechIntents.onDeviceAvailable(context)) continue
             val result = transcribeOnce(file, languageTag, format, onDevice)
             if (result != null) return result.ifBlank { null }
         }
         return null
     }
-
-    private fun onDeviceAvailable(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-        runCatching { SpeechRecognizer.isOnDeviceRecognitionAvailable(context) }.getOrDefault(false)
 
     /** Null when this recognizer could not be used (so the next one is tried). */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -76,7 +81,7 @@ class PlatformSpeechTranscription @Inject constructor(@ApplicationContext privat
                     fun finish(value: String?) {
                         if (cont.isActive) cont.resume(value)
                     }
-                    recognizer.setRecognitionListener(object : Listener() {
+                    recognizer.setRecognitionListener(object : RecognitionListenerAdapter() {
                         override fun onSegmentResults(segmentResults: Bundle) = append(text, segmentResults)
                         override fun onEndOfSegmentedSession() = finish(text.toString().trim())
                         override fun onResults(results: Bundle?) {
@@ -91,7 +96,7 @@ class PlatformSpeechTranscription @Inject constructor(@ApplicationContext privat
                             },
                         )
                     })
-                    val intent = recognizeIntent(languageTag)
+                    val intent = SpeechIntents.recognize(context, languageTag, partialResults = false)
                         .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE, read)
                         .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_CHANNEL_COUNT, 1)
                         .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_ENCODING, AudioFormat.ENCODING_PCM_16BIT)
@@ -107,49 +112,17 @@ class PlatformSpeechTranscription @Inject constructor(@ApplicationContext privat
             }
         }
 
-    override suspend fun dictate(languageTag: String): String? = withContext(Dispatchers.Main) {
-        if (!canDictate()) return@withContext null
-        val recognizer = SpeechRecognizer.createSpeechRecognizer(context)
-        try {
-            suspendCancellableCoroutine { cont ->
-                recognizer.setRecognitionListener(object : Listener() {
-                    override fun onResults(results: Bundle?) {
-                        val text = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                        if (cont.isActive) cont.resume(text?.trim()?.ifBlank { null })
-                    }
-                    override fun onError(error: Int) {
-                        if (cont.isActive) cont.resume(null)
-                    }
-                })
-                recognizer.startListening(recognizeIntent(languageTag).putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false))
-                cont.invokeOnCancellation { recognizer.cancel() }
-            }
-        } finally {
-            recognizer.destroy()
-        }
-    }
-
-    private fun recognizeIntent(languageTag: String) = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        .putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageTag)
-        .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-        .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+    override suspend fun dictate(languageTag: String): String? =
+        dictation.listen(languageTag)
+            .filter { it is DictationEvent.Final || it is DictationEvent.Error }
+            .firstOrNull()
+            .let { (it as? DictationEvent.Final)?.text?.trim()?.ifBlank { null } }
 
     private fun append(text: StringBuilder, bundle: Bundle) {
-        bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.takeIf { it.isNotBlank() }?.let {
+        SpeechIntents.best(bundle)?.takeIf { it.isNotBlank() }?.let {
             if (text.isNotEmpty()) text.append(' ')
-            text.append(it.trim())
+            text.append(it)
         }
-    }
-
-    private abstract class Listener : RecognitionListener {
-        override fun onReadyForSpeech(params: Bundle?) = Unit
-        override fun onBeginningOfSpeech() = Unit
-        override fun onRmsChanged(rmsdB: Float) = Unit
-        override fun onBufferReceived(buffer: ByteArray?) = Unit
-        override fun onEndOfSpeech() = Unit
-        override fun onPartialResults(partialResults: Bundle?) = Unit
-        override fun onEvent(eventType: Int, params: Bundle?) = Unit
     }
 }
 

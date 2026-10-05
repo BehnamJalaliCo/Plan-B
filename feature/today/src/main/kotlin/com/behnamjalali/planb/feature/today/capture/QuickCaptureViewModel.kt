@@ -27,6 +27,7 @@ import com.behnamjalali.planb.core.nlp.QuickAddKind
 import com.behnamjalali.planb.core.nlp.QuickAddParser
 import com.behnamjalali.planb.core.nlp.QuickAddProject
 import com.behnamjalali.planb.core.nlp.QuickAddResult
+import com.behnamjalali.planb.core.speech.appendDictation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import java.time.LocalTime
@@ -145,6 +146,19 @@ class QuickCaptureViewModel @Inject constructor(
         reparse()
     }
     fun setBody(value: String) { savedState[KEY_BODY] = value }
+
+    /**
+     * Plan-B Pro #40: dictated text joins the title and is read like typed text, so «فردا ساعت
+     * ۵ عصر جلسه با علی» spoken becomes a task tomorrow at 17:00. A note's dictation goes to its
+     * body once the title is set.
+     */
+    fun applyDictation(text: String) {
+        if (type.value == CaptureType.NOTE && title.value.isNotBlank()) {
+            setBody(appendDictation(body.value, text))
+        } else {
+            setTitle(appendDictation(title.value, text))
+        }
+    }
 
     /** A date picked by hand replaces one read from the text (whose words stay text). */
     fun setDate(value: LocalDate?) {

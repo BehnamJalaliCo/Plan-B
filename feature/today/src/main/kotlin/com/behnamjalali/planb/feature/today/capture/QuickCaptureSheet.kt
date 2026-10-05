@@ -51,6 +51,7 @@ import com.behnamjalali.planb.core.ui.LocalProAccess
 import com.behnamjalali.planb.core.ui.ProFeature
 import com.behnamjalali.planb.core.ui.rememberProGuard
 import com.behnamjalali.planb.core.nlp.QuickAddResult
+import com.behnamjalali.planb.core.speech.VoiceInputButton
 import com.behnamjalali.planb.feature.today.R
 import java.time.LocalDate
 import java.time.LocalTime
@@ -140,6 +141,8 @@ fun QuickCaptureSheet(
         onSave = { viewModel.save(defaultNotebook) },
         onDismissPart = { viewModel.dismissPart(it.key) },
         onSmartTeaser = { guard.run(ProFeature.PERSIAN_QUICK_ADD) {} },
+        // Plan-B Pro #40: dictation goes through the same reading as typed text.
+        voiceInput = { VoiceInputButton(onResult = viewModel::applyDictation, key = "quick_capture") },
     )
 }
 
@@ -164,6 +167,8 @@ fun QuickCaptureContent(
     smartInput: Boolean = false,
     onDismissPart: (com.behnamjalali.planb.core.nlp.QuickAddPart) -> Unit = {},
     onSmartTeaser: () -> Unit = {},
+    /** The microphone at the end of the title field (Plan-B Pro #40); null hides it. */
+    voiceInput: (@Composable () -> Unit)? = null,
 ) {
     val formatter = PlannerLocals.formatter
     val today = PlannerLocals.today
@@ -213,6 +218,7 @@ fun QuickCaptureContent(
             ),
             keyboardActions = KeyboardActions(onDone = { if (canSave) onSave() }),
             visualTransformation = rememberPartsHighlight(parsed),
+            trailingContent = voiceInput,
         )
         val smartType = type == CaptureType.TASK || type == CaptureType.EVENT
         if (smartType && parsed != null) {

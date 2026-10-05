@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="speech_voice_input">Voice input</string>
+    <string name="speech_voice_input_pro">Voice input (Plan-B Pro)</string>
+    <string name="speech_starting">Getting ready…</string>
+    <string name="speech_listening">Listening…</string>
+    <string name="speech_speak_now">Speak now. The words appear here as you talk.</string>
+    <string name="speech_done">Done</string>
+    <string name="speech_close">Close</string>
+    <string name="speech_ok">OK</string>
+    <string name="speech_try_again">Try again</string>
+    <string name="speech_continue">Continue</string>
+    <string name="speech_open_settings">Open settings</string>
+    <string name="speech_permission_title">Microphone</string>
+    <string name="speech_permission_message">To turn what you say into text, Plan-B needs the microphone while you dictate. Your phone\'s speech service recognizes the words; Plan-B keeps no recording.</string>
+    <string name="speech_permission_settings">Microphone access is off for Plan-B. To dictate, turn it on in the app\'s settings under Permissions › Microphone.</string>
+    <string name="speech_unavailable_title">Speech recognition is not available</string>
+    <string name="speech_unavailable_message">This phone has no speech recognition service turned on. Install or enable one (such as Speech Services by Google), add the Persian language for use without the internet, then try again.</string>
+    <string name="speech_error_no_speech">Nothing was understood. Try again and speak a little closer to the phone.</string>
+    <string name="speech_error_network">The speech service could not be reached. Check your internet connection, or add the language for offline use in the phone\'s voice settings.</string>
+    <string name="speech_error_busy">The speech service is busy. Try again in a moment.</string>
+    <string name="speech_error_language">The speech service doesn\'t have this language yet. Add it in the phone\'s voice settings, then try again.</string>
+    <string name="speech_error_other">Listening stopped. Try again.</string>
+</resources>

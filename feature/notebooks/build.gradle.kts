@@ -17,4 +17,6 @@ dependencies {
     implementation(libs.tesseract4android)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.exifinterface)
+    // Speech recognizer plumbing shared with voice input (Plan-B Pro #19, #40).
+    implementation(projects.core.speech)
 }

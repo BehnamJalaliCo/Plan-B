@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="speech_voice_input">ورودی صوتی</string>
+    <string name="speech_voice_input_pro">ورودی صوتی (Plan-B Pro)</string>
+    <string name="speech_starting">در حال آماده شدن…</string>
+    <string name="speech_listening">در حال شنیدن…</string>
+    <string name="speech_speak_now">صحبت کنید. کلمه‌ها همین‌جا نوشته می‌شوند.</string>
+    <string name="speech_done">تمام</string>
+    <string name="speech_close">بستن</string>
+    <string name="speech_ok">باشه</string>
+    <string name="speech_try_again">دوباره امتحان کنید</string>
+    <string name="speech_continue">ادامه</string>
+    <string name="speech_open_settings">باز کردن تنظیمات</string>
+    <string name="speech_permission_title">میکروفون</string>
+    <string name="speech_permission_message">برای تبدیل صحبت شما به متن، Plan-B هنگام گفتن به میکروفون نیاز دارد. سرویس گفتار گوشی کلمه‌ها را تشخیص می‌دهد و Plan-B هیچ صدایی نگه نمی‌دارد.</string>
+    <string name="speech_permission_settings">دسترسی Plan-B به میکروفون خاموش است. برای گفتن متن، آن را در تنظیمات برنامه، بخش «مجوزها › میکروفون» روشن کنید.</string>
+    <string name="speech_unavailable_title">تشخیص گفتار در دسترس نیست</string>
+    <string name="speech_unavailable_message">روی این گوشی سرویس تشخیص گفتاری فعال نیست. یک سرویس (مثل Speech Services by Google) نصب یا فعال کنید، زبان فارسی را برای استفادهٔ بدون اینترنت اضافه کنید و دوباره امتحان کنید.</string>
+    <string name="speech_error_no_speech">چیزی تشخیص داده نشد. دوباره امتحان کنید و کمی نزدیک‌تر به گوشی صحبت کنید.</string>
+    <string name="speech_error_network">به سرویس گفتار دسترسی نبود. اتصال اینترنت را بررسی کنید، یا زبان را برای استفادهٔ بدون اینترنت در تنظیمات صدای گوشی اضافه کنید.</string>
+    <string name="speech_error_busy">سرویس گفتار مشغول است. کمی بعد دوباره امتحان کنید.</string>
+    <string name="speech_error_language">سرویس گفتار هنوز این زبان را ندارد. آن را در تنظیمات صدای گوشی اضافه کنید و دوباره امتحان کنید.</string>
+    <string name="speech_error_other">شنیدن متوقف شد. دوباره امتحان کنید.</string>
+</resources>

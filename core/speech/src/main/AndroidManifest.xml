@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Plan-B Pro voice input (#40) and voice notes (#19): asked at runtime, in context, after an
+        explanation, only when the user starts dictating or recording. Plan-B keeps no audio from
+        dictation; the speech service turns it into text.
+    -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
+    <queries>
+        <!-- SpeechRecognizer needs to see the device's speech service (Android 11+). -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+</manifest>

@@ -12,11 +12,8 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
+    <!-- The speech service query (for SpeechRecognizer) comes from core:speech. -->
     <queries>
-        <!-- SpeechRecognizer needs to see the device's speech service (Android 11+). -->
-        <intent>
-            <action android:name="android.speech.RecognitionService" />
-        </intent>
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>

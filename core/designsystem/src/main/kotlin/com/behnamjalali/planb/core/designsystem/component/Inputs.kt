@@ -189,8 +189,11 @@ fun PlannerTextField(
     leadingIcon: ImageVector? = null,
     placeholder: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    /** An action at the end of the field, such as voice input; null leaves the end empty. */
+    trailingContent: (@Composable () -> Unit)? = null,
 ) {
     OutlinedTextField(
+        trailingIcon = trailingContent,
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
