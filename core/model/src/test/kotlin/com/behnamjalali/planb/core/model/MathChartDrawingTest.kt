@@ -111,6 +111,17 @@ class MathChartDrawingTest {
     }
 
     @Test
+    fun audioWaveform_keepsThePeakOfEachSlice() {
+        val samples = List(96) { if (it == 10) 0.9f else 0.1f }
+        val bars = com.behnamjalali.planb.core.model.rich.AudioData.bars(samples)
+        assertThat(bars).hasSize(48)
+        assertThat(bars[5]).isEqualTo(90)
+        assertThat(bars[0]).isEqualTo(10)
+        assertThat(com.behnamjalali.planb.core.model.rich.AudioData.bars(listOf(0.5f), 4)).containsExactly(50, 50, 50, 50)
+        assertThat(com.behnamjalali.planb.core.model.rich.AudioData.bars(emptyList())).isEmpty()
+    }
+
+    @Test
     fun drawing_eraserUndoRedoAndPointLimit() {
         val a = Stroke(0xFF000000, 4f, listOf(0, 0, 100, 100, 0, 100))
         val b = Stroke(0xFFFF0000, 4f, listOf(0, 500, 100, 100, 500, 100))

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan-B Pro rich note blocks (#15, #17–#20, #23). -->
+<resources>
+    <string name="rich_insert">افزودن</string>
+    <string name="rich_insert_title">افزودن به یادداشت</string>
+    <string name="rich_block_image">عکس</string>
+    <string name="rich_insert_gallery">عکس از گالری</string>
+    <string name="rich_insert_camera">گرفتن عکس</string>
+    <string name="rich_block_file">فایل</string>
+    <string name="rich_block_table">جدول</string>
+    <string name="rich_block_drawing">نقاشی</string>
+    <string name="rich_block_scan">سند اسکن‌شده</string>
+    <string name="rich_insert_scan">اسکن سند</string>
+    <string name="rich_block_audio">صدای ضبط‌شده</string>
+    <string name="rich_insert_audio">ضبط صدا</string>
+    <string name="rich_block_database">پایگاه داده</string>
+    <string name="rich_block_math">فرمول</string>
+    <string name="rich_block_chart">نمودار</string>
+    <string name="rich_read_only">ویرایش این بخش به پلن‌بی پرو نیاز دارد</string>
+    <string name="rich_working">در حال انجام…</string>
+    <string name="rich_importing">در حال افزودن…</string>
+    <string name="rich_recognizing">در حال خواندن متن…</string>
+    <string name="rich_transcribing">در حال تبدیل گفتار به متن…</string>
+    <string name="rich_downloading_model">در حال دریافت مدل دست‌خط…</string>
+    <string name="rich_converting">در حال تبدیل دست‌خط…</string>
+    <string name="rich_missing_file">این فایل در دسترس نیست</string>
+
+    <string name="rich_error_too_large">این فایل بزرگ‌تر از ۳۲ مگابایت است و افزوده نمی‌شود.</string>
+    <string name="rich_error_storage_full">جای پیوست‌ها پر شده است (۱ گیگابایت). چند فایل را حذف کنید و دوباره امتحان کنید.</string>
+    <string name="rich_error_image">این تصویر باز نمی‌شود.</string>
+    <string name="rich_error_import">افزوده نشد. لطفاً دوباره امتحان کنید.</string>
+    <string name="rich_error_nothing_found">متنی پیدا نشد.</string>
+    <string name="rich_error_transcription">تبدیل گفتار به متن روی این گوشی در دسترس نیست.</string>
+    <string name="rich_error_handwriting">تشخیص دست‌خط الان در دسترس نیست. اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.</string>
+    <string name="rich_error_no_app">هیچ برنامه‌ای روی این گوشی نمی‌تواند این را باز کند.</string>
+    <string name="rich_error_camera">دوربین باز نشد.</string>
+    <string name="rich_error_microphone">میکروفون در دسترس نبود.</string>
+
+    <!-- Images, scans and files -->
+    <string name="rich_caption_hint">توضیح عکس را بنویسید</string>
+    <string name="rich_image_cd">عکس: %1$s</string>
+    <string name="rich_image_cd_plain">عکس</string>
+    <string name="rich_open">باز کردن</string>
+    <string name="rich_share">هم‌رسانی</string>
+    <string name="rich_recognize_text">پیدا کردن متن در تصویر</string>
+    <string name="rich_recognized_text">متن این تصویر</string>
+    <string name="rich_recognize_again">خواندن دوبارهٔ متن</string>
+    <string name="rich_scan_cd">صفحهٔ اسکن‌شده</string>
+    <string name="rich_file_size">%1$s · %2$s</string>
+    <string name="rich_crop_title">برش صفحه</string>
+    <string name="rich_crop_hint">گوشه‌ها را تا لبه‌های صفحه بکشید.</string>
+    <string name="rich_crop_cd">صفحه برای برش</string>
+
+    <!-- Table -->
+    <string name="rich_table_add_row">ردیف تازه</string>
+    <string name="rich_table_add_column">ستون تازه</string>
+    <string name="rich_table_header">ردیف عنوان</string>
+    <string name="rich_table_cell_cd">ردیف %1$s، ستون %2$s</string>
+    <string name="rich_table_row_menu">گزینه‌های ردیف %1$s</string>
+    <string name="rich_table_column_menu">گزینه‌های ستون %1$s</string>
+    <string name="rich_table_insert_row_above">افزودن ردیف بالای این</string>
+    <string name="rich_table_insert_row_below">افزودن ردیف زیر این</string>
+    <string name="rich_table_delete_row">حذف ردیف</string>
+    <string name="rich_table_insert_column_before">افزودن ستون پیش از این</string>
+    <string name="rich_table_insert_column_after">افزودن ستون پس از این</string>
+    <string name="rich_table_move_column_start">بردن ستون به جلو</string>
+    <string name="rich_table_move_column_end">بردن ستون به عقب</string>
+    <string name="rich_table_delete_column">حذف ستون</string>
+
+    <!-- Database -->
+    <string name="rich_db_default_name">نام</string>
+    <string name="rich_db_default_amount">مبلغ</string>
+    <string name="rich_db_default_done">انجام شد</string>
+    <string name="rich_db_column_default">ستون %1$s</string>
+    <string name="rich_db_add_row">ردیف تازه</string>
+    <string name="rich_db_add_column">ستون تازه</string>
+    <string name="rich_db_column_name">نام ستون</string>
+    <string name="rich_db_column_type">نوع</string>
+    <string name="rich_db_type_text">متن</string>
+    <string name="rich_db_type_number">عدد</string>
+    <string name="rich_db_type_checkbox">تیک</string>
+    <string name="rich_db_type_date">تاریخ</string>
+    <string name="rich_db_type_select">انتخابی</string>
+    <string name="rich_db_options">گزینه‌ها (هر کدام در یک خط)</string>
+    <string name="rich_db_sort_ascending">مرتب‌سازی صعودی</string>
+    <string name="rich_db_sort_descending">مرتب‌سازی نزولی</string>
+    <string name="rich_db_sort_off">بدون مرتب‌سازی</string>
+    <string name="rich_db_filter">صافی</string>
+    <string name="rich_db_filter_hint">ردیف‌هایی را نشان بده که این ستونشان…</string>
+    <string name="rich_db_filter_number_hint">مثلاً ‎&gt;100 یا ‎&lt;=5</string>
+    <string name="rich_db_filter_clear">برداشتن صافی</string>
+    <string name="rich_db_filter_active">صافی: %1$s</string>
+    <string name="rich_db_edit_column">ویرایش ستون</string>
+    <string name="rich_db_move_start">بردن به جلو</string>
+    <string name="rich_db_move_end">بردن به عقب</string>
+    <string name="rich_db_delete_column">حذف ستون</string>
+    <string name="rich_db_delete_row">حذف ردیف</string>
+    <string name="rich_db_sum">جمع %1$s</string>
+    <string name="rich_db_count">%1$s</string>
+    <string name="rich_db_pick_date">انتخاب تاریخ</string>
+    <string name="rich_db_pick_option">انتخاب کنید</string>
+    <string name="rich_db_cell_cd">%1$s: %2$s</string>
+    <string name="rich_db_empty">خالی</string>
+    <string name="rich_db_checked">تیک‌خورده</string>
+    <string name="rich_db_unchecked">بدون تیک</string>
+    <plurals name="rich_db_rows">
+        <item quantity="one">%1$s ردیف</item>
+        <item quantity="other">%1$s ردیف</item>
+    </plurals>
+
+    <!-- Drawing -->
+    <string name="rich_drawing_cd">نقاشی با %1$s خط</string>
+    <string name="rich_drawing_empty">نقاشی خالی</string>
+    <string name="rich_drawing_edit">ویرایش نقاشی</string>
+    <string name="rich_drawing_pen">قلم</string>
+    <string name="rich_drawing_eraser">پاک‌کن</string>
+    <string name="rich_drawing_width">ضخامت قلم</string>
+    <string name="rich_drawing_color">رنگ %1$s</string>
+    <string name="rich_drawing_undo">واگرد</string>
+    <string name="rich_drawing_redo">انجام دوباره</string>
+    <string name="rich_drawing_clear">پاک کردن همه</string>
+    <string name="rich_drawing_done">تمام</string>
+    <string name="rich_drawing_canvas_cd">صفحهٔ نقاشی. با یک انگشت یا قلم بکشید.</string>
+    <string name="rich_drawing_full">این نقاشی پر شده است. برای ادامه یک نقاشی تازه بسازید.</string>
+    <string name="rich_handwriting_convert">تبدیل به متن</string>
+    <string name="rich_handwriting_language">زبان دست‌خط</string>
+    <string name="rich_handwriting_persian">فارسی</string>
+    <string name="rich_handwriting_english">انگلیسی</string>
+    <string name="rich_handwriting_consent_title">مدل دست‌خط دریافت شود؟</string>
+    <string name="rich_handwriting_consent_message">پلن‌بی برای خواندن دست‌خط به مدل زبان %1$s (حدود ۲۰ مگابایت) از سرورهای گوگل نیاز دارد. این مدل یک بار دریافت می‌شود و بعد بدون اینترنت کار می‌کند. نقاشی‌های شما هرگز از گوشی بیرون نمی‌روند.</string>
+    <string name="rich_handwriting_wifi_only">فقط با وای‌فای</string>
+    <string name="rich_handwriting_download">دریافت</string>
+
+    <!-- Voice -->
+    <string name="rich_audio_record">ضبط</string>
+    <string name="rich_audio_stop">توقف و ذخیره</string>
+    <string name="rich_audio_cancel">دور انداختن</string>
+    <string name="rich_audio_recording">در حال ضبط</string>
+    <string name="rich_audio_permission_title">اجازهٔ میکروفون داده شود؟</string>
+    <string name="rich_audio_permission_message">پلن‌بی فقط وقتی یادداشت صوتی ضبط می‌کنید از میکروفون استفاده می‌کند. صدای ضبط‌شده در همین یادداشت و روی گوشی شما می‌ماند.</string>
+    <string name="rich_audio_permission_settings">میکروفون برای پلن‌بی خاموش است. می‌توانید آن را در تنظیمات برنامه روشن کنید.</string>
+    <string name="rich_audio_continue">ادامه</string>
+    <string name="rich_audio_open_settings">باز کردن تنظیمات</string>
+    <string name="rich_audio_play">پخش</string>
+    <string name="rich_audio_pause">مکث</string>
+    <string name="rich_audio_seek">جای پخش</string>
+    <string name="rich_audio_cd">صدای ضبط‌شده، %1$s</string>
+    <string name="rich_audio_name">یادداشت صوتی</string>
+    <string name="rich_audio_transcribe">تبدیل به متن</string>
+    <string name="rich_audio_dictate_hint">در این نسخهٔ اندروید نمی‌شود صدای ضبط‌شده را به سرویس گفتار داد. حالا صحبت کنید تا گفته‌هایتان متن این صدا شود.</string>
+    <string name="rich_audio_transcript">متن گفتار</string>
+
+    <!-- Math -->
+    <string name="rich_math_hint">مثلاً \\frac{a}{b} یا x^2 + \\sqrt{y}</string>
+    <string name="rich_math_source">ویرایش کد</string>
+    <string name="rich_math_preview">نمایش فرمول</string>
+    <string name="rich_math_empty">فرمول خالی</string>
+    <string name="rich_math_cd">فرمول: %1$s</string>
+    <string name="rich_math_over">تقسیم بر</string>
+    <string name="rich_math_power">به توان</string>
+    <string name="rich_math_sub">زیرنویس</string>
+    <string name="rich_math_sqrt">رادیکال</string>
+    <string name="rich_math_root">ریشهٔ</string>
+    <string name="rich_math_of">از</string>
+    <string name="rich_math_from">از</string>
+    <string name="rich_math_to">تا</string>
+    <string name="rich_math_matrix">ماتریس</string>
+    <string name="rich_math_row">ردیف</string>
+
+    <!-- Chart -->
+    <string name="rich_chart_bar">میله‌ای</string>
+    <string name="rich_chart_line">خطی</string>
+    <string name="rich_chart_pie">دایره‌ای</string>
+    <string name="rich_chart_title_hint">عنوان نمودار</string>
+    <string name="rich_chart_label">برچسب</string>
+    <string name="rich_chart_value">مقدار</string>
+    <string name="rich_chart_add_point">افزودن مقدار</string>
+    <string name="rich_chart_remove_point">حذف %1$s</string>
+    <string name="rich_chart_source">داده‌ها</string>
+    <string name="rich_chart_source_inline">مقدارهای زیر</string>
+    <string name="rich_chart_source_database">از پایگاه داده: %1$s</string>
+    <string name="rich_chart_edit">ویرایش داده‌ها</string>
+    <string name="rich_chart_done_editing">تمام</string>
+    <string name="rich_chart_summary_bar">نمودار میله‌ای %1$s: %2$s</string>
+    <string name="rich_chart_summary_line">نمودار خطی %1$s: %2$s</string>
+    <string name="rich_chart_summary_pie">نمودار دایره‌ای %1$s: %2$s</string>
+    <string name="rich_chart_point">%1$s %2$s</string>
+    <string name="rich_chart_empty">هنوز داده‌ای نیست</string>
+    <string name="rich_chart_default_a">الف</string>
+    <string name="rich_chart_default_b">ب</string>
+    <string name="rich_chart_default_c">ج</string>
+</resources>

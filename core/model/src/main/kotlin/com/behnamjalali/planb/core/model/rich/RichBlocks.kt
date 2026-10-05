@@ -29,6 +29,8 @@ object RichBlocks {
     fun database(block: NoteBlock): DatabaseData = decode(DatabaseData.serializer(), block.data, DatabaseData.empty()).normalized()
     fun chart(block: NoteBlock): ChartData = decode(ChartData.serializer(), block.data, ChartData())
     fun drawing(block: NoteBlock): DrawingRef = decode(DrawingRef.serializer(), block.data, DrawingRef())
+    fun audio(block: NoteBlock): AudioData = decode(AudioData.serializer(), block.data, AudioData())
+    fun encode(value: AudioData): JsonObject = encode(AudioData.serializer(), value)
 
     fun encode(value: TableData): JsonObject = encode(TableData.serializer(), value)
     fun encode(value: DatabaseData): JsonObject = encode(DatabaseData.serializer(), value)

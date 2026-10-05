@@ -118,6 +118,12 @@ import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
+import com.behnamjalali.planb.feature.notebooks.rich.RichBlockRow
+import com.behnamjalali.planb.feature.notebooks.rich.RichInsertButton
+import com.behnamjalali.planb.feature.notebooks.rich.RichMessage
+import com.behnamjalali.planb.feature.notebooks.rich.RichOverlays
+import com.behnamjalali.planb.feature.notebooks.rich.RichUi
+import com.behnamjalali.planb.feature.notebooks.rich.rememberRichUi
 
 @Composable
 fun blockTypeLabel(type: BlockType): String = stringResource(
@@ -130,6 +136,15 @@ fun blockTypeLabel(type: BlockType): String = stringResource(
         BlockType.QUOTE -> R.string.note_block_quote
         BlockType.DIVIDER -> R.string.note_block_divider
         BlockType.CODE -> R.string.note_block_code
+        BlockType.IMAGE -> R.string.rich_block_image
+        BlockType.FILE -> R.string.rich_block_file
+        BlockType.TABLE -> R.string.rich_block_table
+        BlockType.DRAWING -> R.string.rich_block_drawing
+        BlockType.SCAN -> R.string.rich_block_scan
+        BlockType.AUDIO -> R.string.rich_block_audio
+        BlockType.DATABASE -> R.string.rich_block_database
+        BlockType.MATH -> R.string.rich_block_math
+        BlockType.CHART -> R.string.rich_block_chart
     },
 )
 
@@ -143,6 +158,8 @@ private fun blockIcon(type: BlockType, rtl: Boolean) = when (type) {
     BlockType.QUOTE -> Icons.Rounded.FormatQuote
     BlockType.DIVIDER -> Icons.Rounded.HorizontalRule
     BlockType.CODE -> Icons.Rounded.Code
+    // Rich blocks are inserted from the Insert menu, never switched to.
+    else -> Icons.AutoMirrored.Rounded.Subject
 }
 
 @Composable
@@ -178,6 +195,7 @@ fun NoteEditorDestination(
                 NoteEditorEvent.Locked -> snackbar.showSnackbar(resources.getString(R.string.note_locked_done))
                 NoteEditorEvent.LockRemoved -> snackbar.showSnackbar(resources.getString(R.string.note_lock_removed))
                 NoteEditorEvent.Failed -> snackbar.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+                is NoteEditorEvent.Rich -> snackbar.showSnackbar(resources.getString(richMessage(event.message)))
             }
         }
     }
@@ -197,6 +215,7 @@ fun NoteEditorDestination(
     val fallbackName by rememberUpdatedState(stringResource(R.string.note_file_name_fallback))
     val currentOnClose by rememberUpdatedState(onClose)
     val currentOnActivity by rememberUpdatedState(onOpenActivity)
+    val richUi = rememberRichUi(viewModel)
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val fingerprintTitle = stringResource(com.behnamjalali.planb.core.ui.R.string.ui_passphrase_unlock_title)
@@ -235,6 +254,7 @@ fun NoteEditorDestination(
             onRemoveLock = viewModel::removeLock,
             onRequestUnlock = viewModel::requestUnlock,
             onActivity = if (onOpenActivity != null) ({ currentOnActivity?.invoke(viewModel.state.value.noteId) }) else null,
+            rich = richUi,
         )
     }
     val passphraseDialog = state.passphraseDialog
@@ -301,6 +321,8 @@ data class NoteEditorActions(
     val onRemoveLock: () -> Unit = {},
     val onRequestUnlock: () -> Unit = {},
     val onActivity: (() -> Unit)? = null,
+    /** Plan-B Pro rich blocks (pickers, recorder, drawing); null shows them read-only. */
+    val rich: RichUi? = null,
 )
 
 @Composable
@@ -494,7 +516,11 @@ fun NoteEditorScreen(
                 } else {
                     0
                 }
-                BlockRow(block, number, requester(block.id), actions)
+                if (block.type.isRich) {
+                    RichBlockRow(block, state, actions.rich, requester(block.id), actions.onFocus)
+                } else {
+                    BlockRow(block, number, requester(block.id), actions)
+                }
             }
             item(key = "add") {
                 Box(
@@ -508,6 +534,7 @@ fun NoteEditorScreen(
         }
     }
 
+    RichOverlays(state, actions.rich)
     when (dialog) {
         "delete" -> ConfirmDeleteDialog(
             stringResource(R.string.note_delete),
@@ -662,14 +689,16 @@ private fun BlockToolbar(focused: EditorBlock?, canMerge: Boolean, enabled: Bool
             contentPadding = PaddingValues(horizontal = Spacing.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            items(BlockType.entries.size) { i ->
-                val type = BlockType.entries[i]
+            item { RichInsertButton(actions.rich, enabled) }
+            val textTypes = BlockType.entries.filterNot { it.isRich }
+            items(textTypes.size) { i ->
+                val type = textTypes[i]
                 PlannerIconButton(
                     blockIcon(type, rtl),
                     blockTypeLabel(type),
                     { focused?.let { actions.onType(it.id, type) } ?: actions.onAddBlock() },
                     tint = if (focused?.type == type) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    enabled = enabled,
+                    enabled = enabled && focused?.type?.isRich != true,
                 )
             }
             item { Spacer(Modifier.width(Spacing.sm)) }
@@ -697,3 +726,13 @@ private fun BlockToolbar(focused: EditorBlock?, canMerge: Boolean, enabled: Bool
 }
 
 private const val FOCUS_ATTEMPTS = 6
+
+private fun richMessage(message: RichMessage) = when (message) {
+    RichMessage.FILE_TOO_LARGE -> R.string.rich_error_too_large
+    RichMessage.STORAGE_FULL -> R.string.rich_error_storage_full
+    RichMessage.IMAGE_UNREADABLE -> R.string.rich_error_image
+    RichMessage.IMPORT_FAILED -> R.string.rich_error_import
+    RichMessage.NOTHING_RECOGNIZED -> R.string.rich_error_nothing_found
+    RichMessage.TRANSCRIPTION_UNAVAILABLE -> R.string.rich_error_transcription
+    RichMessage.HANDWRITING_UNAVAILABLE -> R.string.rich_error_handwriting
+}

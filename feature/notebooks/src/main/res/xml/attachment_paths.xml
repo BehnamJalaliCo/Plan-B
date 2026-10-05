@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only the attachments folder and the camera's capture folder are reachable through the provider. -->
+<paths>
+    <files-path name="attachments" path="attachments/" />
+    <cache-path name="capture" path="capture/" />
+</paths>

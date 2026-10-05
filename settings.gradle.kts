@@ -18,11 +18,15 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // Cafe Bazaar's in-app billing library (Poolakey) is published only on JitPack. The
-        // content filter keeps every other dependency from ever resolving there.
+        // Cafe Bazaar's in-app billing library (Poolakey) and Tesseract4Android (Persian OCR in
+        // notes) are published only on JitPack. The content filter keeps every other dependency
+        // from ever resolving there.
         exclusiveContent {
             forRepository { maven("https://jitpack.io") { name = "JitPack" } }
-            filter { includeGroup("com.github.cafebazaar.Poolakey") }
+            filter {
+                includeGroup("com.github.cafebazaar.Poolakey")
+                includeGroup("cz.adaptech.tesseract4android")
+            }
         }
     }
 }

@@ -16,7 +16,20 @@ import com.behnamjalali.planb.core.data.repository.TemplateRepository
 import com.behnamjalali.planb.core.data.security.BiometricKeyStore
 import com.behnamjalali.planb.core.data.security.NoteVault
 import javax.crypto.Cipher
+import com.behnamjalali.planb.core.data.repository.AttachmentRepository
+import com.behnamjalali.planb.core.model.Attachment
 import com.behnamjalali.planb.core.model.BlockType
+import com.behnamjalali.planb.core.model.MarkdownAttachment
+import com.behnamjalali.planb.feature.notebooks.media.HandwritingRecognition
+import com.behnamjalali.planb.feature.notebooks.media.PickedContent
+import com.behnamjalali.planb.feature.notebooks.media.SpeechTranscription
+import com.behnamjalali.planb.feature.notebooks.media.TextRecognition
+import com.behnamjalali.planb.feature.notebooks.rich.HandwritingConsent
+import com.behnamjalali.planb.feature.notebooks.rich.RichEditor
+import com.behnamjalali.planb.feature.notebooks.rich.RichMessage
+import com.behnamjalali.planb.feature.notebooks.rich.RichWork
+import com.behnamjalali.planb.feature.notebooks.rich.toNoteBlock
+import kotlinx.serialization.json.JsonObject
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.Markdown
 import com.behnamjalali.planb.core.model.Note
@@ -53,6 +66,10 @@ data class EditorBlock(
      * when this changes, so a value that is a frame behind never overwrites fresh keystrokes.
      */
     val revision: Int = 0,
+    /** Payload of a rich block (Plan-B Pro), see `core.model.rich`. */
+    val data: JsonObject? = null,
+    /** The attachment of an image, file, scan, recording or drawing block. */
+    val attachmentId: Long? = null,
 )
 
 enum class SaveStatus { SAVED, SAVING, FAILED }
@@ -84,6 +101,12 @@ data class NoteEditorState(
     val busy: Boolean = false,
     /** Fingerprint can open locked notes on this device. */
     val fingerprint: Boolean = false,
+    /** The note's attachments by id (rich blocks, Plan-B Pro). */
+    val attachments: Map<Long, Attachment> = emptyMap(),
+    /** Recognition or import running on a block, by block id. */
+    val richWork: Map<String, RichWork> = emptyMap(),
+    /** Asking before a handwriting model is downloaded. */
+    val handwritingConsent: HandwritingConsent? = null,
 )
 
 enum class PassphraseDialog { SETUP, UNLOCK }
@@ -97,6 +120,7 @@ sealed interface NoteEditorEvent {
     data object Locked : NoteEditorEvent
     data object LockRemoved : NoteEditorEvent
     data object Failed : NoteEditorEvent
+    data class Rich(val message: RichMessage) : NoteEditorEvent
 }
 
 /** Pure block-editing rules; kept separate from Android so they are unit-testable. */
@@ -172,6 +196,8 @@ object BlockEditing {
         if (index <= 0) return Result(blocks, null, 0)
         val block = blocks[index]
         val previous = blocks[index - 1]
+        // Text never merges into or out of a rich block (a table, an image, …).
+        if (block.type.isRich || previous.type.isRich) return Result(blocks, null, 0)
         val updated = blocks.toMutableList()
         if (previous.type == BlockType.DIVIDER) {
             updated.removeAt(index - 1)
@@ -188,11 +214,13 @@ object BlockEditing {
         val index = blocks.indexOfFirst { it.id == id }
         if (index < 0) return Result(blocks, null, 0)
         val block = blocks[index]
+        if (block.type.isRich) return Result(blocks, null, 0)
         if (block.type != BlockType.TEXT) {
             return Result(blocks.toMutableList().also { it[index] = block.copy(type = BlockType.TEXT) }, block.id, 0)
         }
         if (index == 0) return Result(blocks, null, 0)
         val previous = blocks[index - 1]
+        if (previous.type.isRich) return Result(blocks, previous.id, 0)
         val updated = blocks.toMutableList()
         if (previous.type == BlockType.DIVIDER) {
             updated.removeAt(index - 1)
@@ -218,6 +246,12 @@ class NoteEditorViewModel @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val vault: NoteVault? = null,
     private val keyStore: BiometricKeyStore? = null,
+    /** Plan-B Pro rich blocks: their files and recognition engines (absent in older tests). */
+    private val attachments: AttachmentRepository? = null,
+    textRecognition: TextRecognition? = null,
+    handwriting: HandwritingRecognition? = null,
+    speech: SpeechTranscription? = null,
+    picked: PickedContent? = null,
 ) : ViewModel() {
     private val route = runCatching { savedState.toRoute<NoteEditorRoute>() }.getOrDefault(NoteEditorRoute())
     private val _state = MutableStateFlow(NoteEditorState())
@@ -235,6 +269,23 @@ class NoteEditorViewModel @Inject constructor(
     private var createdNew = false
 
     private fun newId() = UUID.randomUUID().toString()
+
+    /** Rich blocks (Plan-B Pro #15, #17–#20, #23); see [RichEditor]. */
+    internal val rich = RichEditor(
+        object : RichEditor.Host {
+            override val scope get() = viewModelScope
+            override val state get() = _state.value
+            override fun edit(ownId: String?, transform: (NoteEditorState) -> NoteEditorState) {
+                val own = ownId?.let { id -> transform(_state.value).blocks.firstOrNull { it.id == id }?.value }
+                edited(ownId, own, transform)
+            }
+            override fun update(transform: (NoteEditorState) -> NoteEditorState) = _state.update(transform)
+            override fun message(message: RichMessage) {
+                _events.tryEmit(NoteEditorEvent.Rich(message))
+            }
+        },
+        attachments, textRecognition, handwriting, speech, picked, ::newId,
+    )
 
     private var started = false
 
@@ -314,13 +365,13 @@ class NoteEditorViewModel @Inject constructor(
                 needsUnlock = !canOpen,
                 fingerprint = _state.value.fingerprint,
             )
+            rich.observe(note.id)
         }.onFailure { _state.value = NoteEditorState(loading = false, missing = true) }
     }
 
-    private fun NoteBlock.toEditor() = EditorBlock(id, type, TextFieldValue(text), checked)
+    private fun NoteBlock.toEditor() = EditorBlock(id, type, TextFieldValue(text), checked, data = data, attachmentId = attachmentId)
 
-    private fun document(s: NoteEditorState = _state.value) =
-        NoteDocument(blocks = s.blocks.map { NoteBlock(it.id, it.type, it.value.text, it.checked) })
+    private fun document(s: NoteEditorState = _state.value) = NoteDocument(blocks = s.blocks.map { it.toNoteBlock() })
 
     /**
      * Applies [transform] and bumps the revision of every block whose value the ViewModel changed,
@@ -341,7 +392,7 @@ class NoteEditorViewModel @Inject constructor(
         return new.map { block ->
             val previous = before[block.id] ?: return@map block
             when {
-                block.value == previous.value && block.revision == previous.revision -> block
+                block.value == previous.value && block.data == previous.data && block.revision == previous.revision -> block
                 block.id == ownId && block.value == ownValue -> block.copy(revision = previous.revision)
                 else -> block.copy(revision = previous.revision + 1)
             }
@@ -410,6 +461,8 @@ class NoteEditorViewModel @Inject constructor(
     }
 
     fun setType(id: String, type: BlockType) {
+        // A rich block keeps its kind (its content has no text form to convert).
+        if (type.isRich || (type != BlockType.DIVIDER && _state.value.blocks.firstOrNull { it.id == id }?.type?.isRich == true)) return
         if (type == BlockType.DIVIDER) {
             edited { s ->
                 val index = s.blocks.indexOfFirst { it.id == id }.coerceAtLeast(0)
@@ -555,7 +608,9 @@ class NoteEditorViewModel @Inject constructor(
             save()
             val s = _state.value
             runCatchingSafely {
-                val text = if (markdown) Markdown.export(s.title.text, document(s)) else Markdown.plainText(s.title.text, document(s))
+                // A single file has no room for the attachments: rich blocks name their files.
+                val links = { id: Long -> s.attachments[id]?.let { MarkdownAttachment(null, it.displayName.ifBlank { it.fileName }, it.transcript, it.ocrText) } }
+                val text = if (markdown) Markdown.export(s.title.text, document(s), links) else Markdown.plainText(s.title.text, document(s))
                 files.writeText(uri, text)
             }.onSuccess { _events.tryEmit(NoteEditorEvent.Exported) }
                 .onFailure { _events.tryEmit(NoteEditorEvent.ExportFailed) }
@@ -661,7 +716,12 @@ class NoteEditorViewModel @Inject constructor(
             runCatchingSafely {
                 if (pendingDirty && !s.needsUnlock) notes.updateContent(s.noteId, s.title.text.trim(), document(s))
                 // A note created by opening the editor and left completely empty is discarded.
-                if (createdNew && s.title.text.isBlank() && document(s).isBlank() && !s.missing && !s.locked) notes.discardNote(s.noteId)
+                if (createdNew && s.title.text.isBlank() && document(s).isBlank() && !s.missing && !s.locked) {
+                    notes.discardNote(s.noteId)
+                } else if (!s.missing) {
+                    // Files of rich blocks deleted while editing (older than a few minutes; the rest at the next start).
+                    attachments?.deleteUnused(s.noteId)
+                }
             }
         }
     }

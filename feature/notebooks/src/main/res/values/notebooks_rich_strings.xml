@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan-B Pro rich note blocks (#15, #17–#20, #23). -->
+<resources>
+    <string name="rich_insert">Insert</string>
+    <string name="rich_insert_title">Add to the note</string>
+    <string name="rich_block_image">Photo</string>
+    <string name="rich_insert_gallery">Photo from gallery</string>
+    <string name="rich_insert_camera">Take a photo</string>
+    <string name="rich_block_file">File</string>
+    <string name="rich_block_table">Table</string>
+    <string name="rich_block_drawing">Drawing</string>
+    <string name="rich_block_scan">Scanned document</string>
+    <string name="rich_insert_scan">Scan document</string>
+    <string name="rich_block_audio">Voice recording</string>
+    <string name="rich_insert_audio">Record voice</string>
+    <string name="rich_block_database">Database</string>
+    <string name="rich_block_math">Formula</string>
+    <string name="rich_block_chart">Chart</string>
+    <string name="rich_read_only">Editing this needs Plan-B Pro</string>
+    <string name="rich_working">Working…</string>
+    <string name="rich_importing">Adding…</string>
+    <string name="rich_recognizing">Reading text…</string>
+    <string name="rich_transcribing">Transcribing…</string>
+    <string name="rich_downloading_model">Downloading the handwriting model…</string>
+    <string name="rich_converting">Converting handwriting…</string>
+    <string name="rich_missing_file">This file is not available</string>
+
+    <string name="rich_error_too_large">This file is larger than 32 MB and can\'t be added.</string>
+    <string name="rich_error_storage_full">Attachments are full (1 GB). Remove some files and try again.</string>
+    <string name="rich_error_image">This image can\'t be opened.</string>
+    <string name="rich_error_import">Couldn\'t add this. Please try again.</string>
+    <string name="rich_error_nothing_found">No text was found.</string>
+    <string name="rich_error_transcription">Transcription isn\'t available on this phone.</string>
+    <string name="rich_error_handwriting">Handwriting recognition isn\'t available right now. Check the internet connection and try again.</string>
+    <string name="rich_error_no_app">No app on this phone can open this.</string>
+    <string name="rich_error_camera">The camera couldn\'t be opened.</string>
+    <string name="rich_error_microphone">The microphone couldn\'t be used.</string>
+
+    <!-- Images, scans and files -->
+    <string name="rich_caption_hint">Add a caption</string>
+    <string name="rich_image_cd">Photo: %1$s</string>
+    <string name="rich_image_cd_plain">Photo</string>
+    <string name="rich_open">Open</string>
+    <string name="rich_share">Share</string>
+    <string name="rich_recognize_text">Find text in image</string>
+    <string name="rich_recognized_text">Text in this image</string>
+    <string name="rich_recognize_again">Read text again</string>
+    <string name="rich_scan_cd">Scanned page</string>
+    <string name="rich_file_size">%1$s · %2$s</string>
+    <string name="rich_crop_title">Crop the page</string>
+    <string name="rich_crop_hint">Drag the corners to the edges of the page.</string>
+    <string name="rich_crop_cd">Page to crop</string>
+
+    <!-- Table -->
+    <string name="rich_table_add_row">Add row</string>
+    <string name="rich_table_add_column">Add column</string>
+    <string name="rich_table_header">Header row</string>
+    <string name="rich_table_cell_cd">Row %1$s, column %2$s</string>
+    <string name="rich_table_row_menu">Row %1$s options</string>
+    <string name="rich_table_column_menu">Column %1$s options</string>
+    <string name="rich_table_insert_row_above">Insert row above</string>
+    <string name="rich_table_insert_row_below">Insert row below</string>
+    <string name="rich_table_delete_row">Delete row</string>
+    <string name="rich_table_insert_column_before">Insert column before</string>
+    <string name="rich_table_insert_column_after">Insert column after</string>
+    <string name="rich_table_move_column_start">Move column earlier</string>
+    <string name="rich_table_move_column_end">Move column later</string>
+    <string name="rich_table_delete_column">Delete column</string>
+
+    <!-- Database -->
+    <string name="rich_db_default_name">Name</string>
+    <string name="rich_db_default_amount">Amount</string>
+    <string name="rich_db_default_done">Done</string>
+    <string name="rich_db_column_default">Column %1$s</string>
+    <string name="rich_db_add_row">New row</string>
+    <string name="rich_db_add_column">New column</string>
+    <string name="rich_db_column_name">Column name</string>
+    <string name="rich_db_column_type">Type</string>
+    <string name="rich_db_type_text">Text</string>
+    <string name="rich_db_type_number">Number</string>
+    <string name="rich_db_type_checkbox">Checkbox</string>
+    <string name="rich_db_type_date">Date</string>
+    <string name="rich_db_type_select">Select</string>
+    <string name="rich_db_options">Options (one per line)</string>
+    <string name="rich_db_sort_ascending">Sort ascending</string>
+    <string name="rich_db_sort_descending">Sort descending</string>
+    <string name="rich_db_sort_off">Don\'t sort</string>
+    <string name="rich_db_filter">Filter</string>
+    <string name="rich_db_filter_hint">Show rows where this column…</string>
+    <string name="rich_db_filter_number_hint">For example &gt;100 or &lt;=5</string>
+    <string name="rich_db_filter_clear">Clear filter</string>
+    <string name="rich_db_filter_active">Filtered: %1$s</string>
+    <string name="rich_db_edit_column">Edit column</string>
+    <string name="rich_db_move_start">Move earlier</string>
+    <string name="rich_db_move_end">Move later</string>
+    <string name="rich_db_delete_column">Delete column</string>
+    <string name="rich_db_delete_row">Delete row</string>
+    <string name="rich_db_sum">Sum %1$s</string>
+    <string name="rich_db_count">%1$s</string>
+    <string name="rich_db_pick_date">Pick a date</string>
+    <string name="rich_db_pick_option">Choose</string>
+    <string name="rich_db_cell_cd">%1$s: %2$s</string>
+    <string name="rich_db_empty">empty</string>
+    <string name="rich_db_checked">checked</string>
+    <string name="rich_db_unchecked">not checked</string>
+    <plurals name="rich_db_rows">
+        <item quantity="one">%1$s row</item>
+        <item quantity="other">%1$s rows</item>
+    </plurals>
+
+    <!-- Drawing -->
+    <string name="rich_drawing_cd">Drawing with %1$s strokes</string>
+    <string name="rich_drawing_empty">Empty drawing</string>
+    <string name="rich_drawing_edit">Edit drawing</string>
+    <string name="rich_drawing_pen">Pen</string>
+    <string name="rich_drawing_eraser">Eraser</string>
+    <string name="rich_drawing_width">Pen width</string>
+    <string name="rich_drawing_color">Color %1$s</string>
+    <string name="rich_drawing_undo">Undo</string>
+    <string name="rich_drawing_redo">Redo</string>
+    <string name="rich_drawing_clear">Clear</string>
+    <string name="rich_drawing_done">Done</string>
+    <string name="rich_drawing_canvas_cd">Drawing area. Draw with one finger or a stylus.</string>
+    <string name="rich_drawing_full">This drawing is full. Start a new drawing to keep going.</string>
+    <string name="rich_handwriting_convert">Convert to text</string>
+    <string name="rich_handwriting_language">Handwriting language</string>
+    <string name="rich_handwriting_persian">Persian</string>
+    <string name="rich_handwriting_english">English</string>
+    <string name="rich_handwriting_consent_title">Download the handwriting model?</string>
+    <string name="rich_handwriting_consent_message">To read handwriting, Plan-B needs a %1$s language model (about 20 MB) from Google\'s servers. It is downloaded once and then works offline. Your drawings never leave your phone.</string>
+    <string name="rich_handwriting_wifi_only">Only over Wi-Fi</string>
+    <string name="rich_handwriting_download">Download</string>
+
+    <!-- Voice -->
+    <string name="rich_audio_record">Record</string>
+    <string name="rich_audio_stop">Stop and save</string>
+    <string name="rich_audio_cancel">Discard</string>
+    <string name="rich_audio_recording">Recording</string>
+    <string name="rich_audio_permission_title">Allow the microphone?</string>
+    <string name="rich_audio_permission_message">Plan-B uses the microphone only while you record a voice note. The recording stays in this note on your phone.</string>
+    <string name="rich_audio_permission_settings">The microphone is turned off for Plan-B. You can allow it in the app\'s settings.</string>
+    <string name="rich_audio_continue">Continue</string>
+    <string name="rich_audio_open_settings">Open settings</string>
+    <string name="rich_audio_play">Play</string>
+    <string name="rich_audio_pause">Pause</string>
+    <string name="rich_audio_seek">Position</string>
+    <string name="rich_audio_cd">Voice recording, %1$s</string>
+    <string name="rich_audio_name">Voice note</string>
+    <string name="rich_audio_transcribe">Transcribe</string>
+    <string name="rich_audio_dictate_hint">On this Android version a recording can\'t be sent to the speech service. Speak now and your words become the transcript.</string>
+    <string name="rich_audio_transcript">Transcript</string>
+
+    <!-- Math -->
+    <string name="rich_math_hint">For example \\frac{a}{b} or x^2 + \\sqrt{y}</string>
+    <string name="rich_math_source">Edit source</string>
+    <string name="rich_math_preview">Show formula</string>
+    <string name="rich_math_empty">Empty formula</string>
+    <string name="rich_math_cd">Formula: %1$s</string>
+    <string name="rich_math_over">over</string>
+    <string name="rich_math_power">to the power</string>
+    <string name="rich_math_sub">sub</string>
+    <string name="rich_math_sqrt">square root of</string>
+    <string name="rich_math_root">root</string>
+    <string name="rich_math_of">of</string>
+    <string name="rich_math_from">from</string>
+    <string name="rich_math_to">to</string>
+    <string name="rich_math_matrix">matrix</string>
+    <string name="rich_math_row">row</string>
+
+    <!-- Chart -->
+    <string name="rich_chart_bar">Bar</string>
+    <string name="rich_chart_line">Line</string>
+    <string name="rich_chart_pie">Pie</string>
+    <string name="rich_chart_title_hint">Chart title</string>
+    <string name="rich_chart_label">Label</string>
+    <string name="rich_chart_value">Value</string>
+    <string name="rich_chart_add_point">Add value</string>
+    <string name="rich_chart_remove_point">Remove %1$s</string>
+    <string name="rich_chart_source">Data</string>
+    <string name="rich_chart_source_inline">Values below</string>
+    <string name="rich_chart_source_database">From database: %1$s</string>
+    <string name="rich_chart_edit">Edit data</string>
+    <string name="rich_chart_done_editing">Done</string>
+    <string name="rich_chart_summary_bar">Bar chart %1$s: %2$s</string>
+    <string name="rich_chart_summary_line">Line chart %1$s: %2$s</string>
+    <string name="rich_chart_summary_pie">Pie chart %1$s: %2$s</string>
+    <string name="rich_chart_point">%1$s %2$s</string>
+    <string name="rich_chart_empty">No data yet</string>
+    <string name="rich_chart_default_a">A</string>
+    <string name="rich_chart_default_b">B</string>
+    <string name="rich_chart_default_c">C</string>
+</resources>
