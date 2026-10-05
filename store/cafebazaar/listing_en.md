@@ -59,7 +59,11 @@ Payment for Pro goes through Cafe Bazaar. Biometrics are used only for the Pro A
 locked notes (your device's own fingerprint or screen lock), and "keep awake" only lets Pro
 automatic backups and the trash clean-up finish. Calendar access is asked only when you turn on
 sync with your device calendars (Pro). The microphone is used only when you record a voice note or
-tap the microphone to dictate (Pro); dictation keeps no audio.
+tap the microphone to dictate (Pro); dictation keeps no audio. Focus Pro plays its generated ambient sounds through a
+media service (with a notification) only while a focus session runs, and its strict mode turns on
+Do Not Disturb only after you allow it, putting your setting back afterwards. Health Connect data
+(steps, sleep, water, exercise, distance) is read, never written, and only the kind you link to
+a habit (Pro).
 
 ## Keywords
 

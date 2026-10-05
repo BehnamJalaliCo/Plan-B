@@ -226,4 +226,28 @@ class UserPreferencesDataSourceTest {
         // Defaults: everything shown (only drawn with Plan-B Pro).
         assertThat(UserSettings().calendarDecorations).isEqualTo(CalendarDecorations(true, true, true))
     }
+
+    @Test
+    fun focusPro_roundTripsThroughExportAndToleratesUnknownSounds() = runTest {
+        val dir = Files.createTempDirectory("prefs").toFile()
+        val source = UserPreferencesDataSource(newStore(dir, backgroundScope))
+        val focus = com.behnamjalali.planb.core.model.FocusProSettings(
+            sound = com.behnamjalali.planb.core.model.AmbientSound.RAIN, volume = 35, strict = true,
+            dailyGoalMinutes = 120, longBreakEvery = 3, longBreakMinutes = 20,
+        )
+        source.update { it.copy(focusPro = focus) }
+        val exported = source.export()
+        assertThat(exported["focus_sound"]).isEqualTo("rain")
+        assertThat(exported["focus_strict"]).isEqualTo("true")
+        val other = UserPreferencesDataSource(newStore(Files.createTempDirectory("prefs2").toFile(), backgroundScope))
+        other.import(exported)
+        assertThat(other.current().focusPro).isEqualTo(focus)
+        // Silence is stored as "", a sound from a newer version reads as silence, numbers are clamped.
+        other.import(mapOf("focus_sound" to "thunder", "focus_volume" to "500"))
+        assertThat(other.current().focusPro.sound).isNull()
+        assertThat(other.current().focusPro.volume).isEqualTo(100)
+        source.update { it.copy(focusPro = focus.copy(sound = null)) }
+        assertThat(source.export()["focus_sound"]).isEqualTo("")
+        assertThat(source.current().focusPro.sound).isNull()
+    }
 }

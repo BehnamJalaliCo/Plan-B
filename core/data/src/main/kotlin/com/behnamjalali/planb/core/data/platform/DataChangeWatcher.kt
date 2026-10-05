@@ -22,7 +22,19 @@ class DataChangeWatcher @Inject constructor(private val db: PlanBDatabase) {
         .debounce(DEBOUNCE_MS)
         .map { }
 
+    /**
+     * Emits after writes to the tables Plan-B Pro badges and challenges (#29) are computed from,
+     * coalesced over [ACHIEVEMENT_DEBOUNCE_MS] so a burst of check-ins evaluates once.
+     */
+    @OptIn(FlowPreview::class)
+    val achievementChanges: Flow<Unit> = db.invalidationTracker
+        .createFlow(*ACHIEVEMENT_TABLES, emitInitialState = false)
+        .debounce(ACHIEVEMENT_DEBOUNCE_MS)
+        .map { }
+
     companion object {
+        val ACHIEVEMENT_TABLES = arrayOf("tasks", "habits", "habit_completions", "focus_sessions", "journal_entries", "notes", "mood_entries", "challenges")
+        const val ACHIEVEMENT_DEBOUNCE_MS = 1_500L
         val TABLES = arrayOf("tasks", "habits", "habit_completions", "focus_sessions", "calendar_events")
         const val DEBOUNCE_MS = 400L
     }

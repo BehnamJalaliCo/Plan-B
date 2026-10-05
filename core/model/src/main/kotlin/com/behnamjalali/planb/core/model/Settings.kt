@@ -140,6 +140,8 @@ data class UserSettings(
     val writing: WritingSettings = WritingSettings(),
     /** Journal reminder and the user's own prompts (Plan-B Pro #25). */
     val journal: JournalSettings = JournalSettings(),
+    /** Ambient sound, strict mode, daily goal and long breaks of Focus Pro (#26). */
+    val focusPro: FocusProSettings = FocusProSettings(),
 ) {
     /** The palette to draw with: premium themes fall back to the classic one without Pro. */
     fun effectiveColorTheme(isPro: Boolean): ColorTheme = if (isPro || !colorTheme.isPremium) colorTheme else ColorTheme.CLASSIC

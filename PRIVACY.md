@@ -31,6 +31,9 @@ device (a local database and a preferences file) and are readable only by Plan-B
 | Pay through Cafe Bazaar (`com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR`) | Lets the installed Cafe Bazaar app handle Plan-B Pro purchases. |
 | Biometrics (`USE_BIOMETRIC`, `USE_FINGERPRINT`) | Plan-B Pro App lock and locked notes: your device's own fingerprint, face or screen lock confirms it's you. Plan-B never sees or stores biometric data. |
 | Keep awake (`WAKE_LOCK`) | Lets short background jobs finish: Plan-B Pro automatic backups and emptying the 30-day trash. |
+| Foreground service (`FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`) | Granted at install, never asked. Plan-B Pro Focus Pro: keeps a focus session's ambient sound playing with the screen off, with a notification, only while a session with a sound is running. The sounds are generated on your device. |
+| Do Not Disturb access (`ACCESS_NOTIFICATION_POLICY`) | Plan-B Pro strict focus mode. Android asks you to allow it in system settings; Plan-B explains this first and opens the right screen only when you turn strict mode on. Plan-B turns Do Not Disturb on only while a strict session runs and puts your previous setting back when it pauses or ends (if you changed it yourself in the meantime, your change is kept). |
+| Health Connect (`health.READ_STEPS`, `READ_SLEEP`, `READ_HYDRATION`, `READ_EXERCISE`, `READ_DISTANCE`) | Plan-B Pro habits that check themselves off. Read only; each kind of data is asked for separately, only when you link a habit to it (sleep also when you compare your mood with sleep). See "Health Connect" below. |
 | Calendars (`READ_CALENDAR`, `WRITE_CALENDAR`) | Plan-B Pro sync with your device calendars (for example Google Calendar). Asked only when you turn on **Settings → Holidays and device calendars → Sync with device calendars**. Plan-B reads the events of the calendars you choose to show them in its calendar (they are not copied into Plan-B unless you copy one), and writes, changes or deletes only the events it created itself in the one calendar you choose. Plan-B sends nothing to any server; your calendar app syncs its own calendars as it always does. |
 
 With Plan-B Pro and a paired Wear OS watch, today's open tasks and habits are sent directly to
@@ -273,3 +276,21 @@ Plan-B به مخاطبین، موقعیت مکانی، حساب‌ها یا حا
 Plan-B را بهنام جلالی طراحی و ساخته است. برای پرسش دربارهٔ حریم خصوصی، نظر، پیشنهاد یا
 گزارش مشکل به **behnamjalali88@gmail.com** ایمیل بزنید (تنظیمات ← درباره ← ارسال نظر) یا در
 https://github.com/BehnamJalaliCo/Plan-B یک Issue ثبت کنید.
+
+## Health Connect (Plan-B Pro)
+
+When you link a habit to steps, sleep, water, exercise or distance, Plan-B asks Health Connect
+for permission to **read** that one kind of data. It then reads only the day's total (Health
+Connect adds up and de-duplicates what your apps recorded) for the last seven days, on your
+device, while you use Plan-B, and checks the habit off on days that reached your goal. If you
+allow sleep, the mood tracker also reads how long you slept on days you checked in, to show how
+your mood and sleep go together. Plan-B never writes to Health Connect, never stores the
+individual records, never sends health data anywhere and never puts it in backups (only the
+check-ins it made are part of your habits). You can take access back at any time in Health
+Connect; Plan-B's explanation screen is linked from Health Connect's app permissions.
+
+## Mood, challenges and badges (Plan-B Pro)
+
+Mood and energy check-ins, challenges and badges are stored in Plan-B's database on your device
+and are part of your backups like the rest of your data. Badges are worked out from your own
+data on the device; nothing is compared with other people or sent anywhere.

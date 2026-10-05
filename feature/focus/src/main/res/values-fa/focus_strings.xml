@@ -24,4 +24,32 @@
     <string name="focus_completed_message">جلسه تمام شد. تمرکز عالی بود!</string>
     <string name="focus_break_hint">%1$s استراحت کنید.</string>
     <string name="focus_history_when">%1$s، %2$s</string>
+    <!-- Focus Pro (Plan-B Pro #26) -->
+    <string name="focus_pro_title">تمرکز حرفه‌ای</string>
+    <string name="focus_pro_teaser">صداهای محیطی، «مزاحم نشوید» هنگام تمرکز، هدف روزانه و استراحت‌های طولانی</string>
+    <string name="focus_pro_sound">صدای محیطی</string>
+    <string name="focus_pro_sound_off">سکوت</string>
+    <string name="focus_pro_sound_hint">هنگام اجرای جلسه پخش می‌شود، حتی با صفحهٔ خاموش.</string>
+    <string name="focus_pro_volume">بلندی صدا</string>
+    <string name="focus_pro_strict">حالت سخت‌گیرانه</string>
+    <string name="focus_pro_strict_sub">هنگام اجرای جلسه «مزاحم نشوید» روشن می‌شود و با توقف یا پایان جلسه، تنظیم قبلی‌تان برمی‌گردد.</string>
+    <string name="focus_pro_strict_no_access">Plan-B هنوز اجازهٔ تغییر «مزاحم نشوید» را ندارد.</string>
+    <string name="focus_pro_strict_allow">اجازه دادن</string>
+    <string name="focus_pro_strict_dialog_title">اجازهٔ دسترسی به «مزاحم نشوید»</string>
+    <string name="focus_pro_strict_dialog_text">برای بی‌صدا کردن اعلان‌ها هنگام تمرکز، اندروید می‌خواهد به Plan-B اجازهٔ تغییر «مزاحم نشوید» را بدهید. در صفحهٔ بعد Plan-B را پیدا و روشن کنید و برگردید. Plan-B فقط در جلسه‌های سخت‌گیرانه «مزاحم نشوید» را روشن می‌کند و بعد تنظیم شما را برمی‌گرداند.</string>
+    <string name="focus_pro_strict_open_settings">باز کردن تنظیمات</string>
+    <string name="focus_pro_not_now">حالا نه</string>
+    <string name="focus_pro_goal">هدف روزانه</string>
+    <string name="focus_pro_goal_none">بدون هدف</string>
+    <string name="focus_pro_goal_progress">%1$s از %2$s امروز</string>
+    <string name="focus_pro_long_break_every">استراحت طولانی بعد از</string>
+    <string name="focus_pro_long_break_length">مدت استراحت طولانی</string>
+    <plurals name="focus_pro_sessions">
+        <item quantity="one">%1$s جلسه</item>
+        <item quantity="other">%1$s جلسه</item>
+    </plurals>
+    <string name="focus_pro_cycle">جلسهٔ %1$s از %2$s، استراحت بعدی %3$s</string>
+    <string name="focus_pro_long_break_now">یک دور کامل شد. استراحت طولانی: %1$s.</string>
+    <string name="focus_pro_sound_playing">صدا: %1$s</string>
+    <string name="focus_pro_strict_on">«مزاحم نشوید» روشن است</string>
 </resources>

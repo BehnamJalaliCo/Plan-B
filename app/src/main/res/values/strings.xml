@@ -23,6 +23,10 @@
     <string name="more_goals_sub">Measurable progress over time</string>
     <string name="more_focus">Focus</string>
     <string name="more_focus_sub">Pomodoro and deep-work sessions</string>
+    <string name="more_challenges">Challenges and badges</string>
+    <string name="more_challenges_sub">Habit challenges and your badges</string>
+    <string name="more_mood">Mood and energy</string>
+    <string name="more_mood_sub">Check-ins, trends and patterns</string>
     <string name="more_review">Weekly review</string>
     <string name="more_review_sub">Reflect on the week and plan the next</string>
     <string name="more_settings">Settings</string>
@@ -114,4 +118,11 @@
     <string name="wear_locked">The watch app needs Plan-B Pro on your phone.</string>
     <!-- Share sheet entry of the web clipper (Plan-B Pro #22). -->
     <string name="clipper_share_label">Save to Plan-B</string>
+    <!-- Health Connect's "why does Plan-B ask" screen (Plan-B Pro #27). -->
+    <string name="health_rationale_title">Plan-B and Health Connect</string>
+    <string name="health_rationale_intro">Plan-B can check habits off for you when your daily steps, sleep, water, exercise or distance reach a goal you set.</string>
+    <string name="health_rationale_what">What Plan-B reads: only the daily total of the kind of data a habit is linked to (for example, today\'s steps), and how long you slept on days you checked in your mood, if you allow sleep.</string>
+    <string name="health_rationale_how">How it is used: on this device only, to check habits off and to show your own patterns. Plan-B never writes to Health Connect, never sends this data anywhere and never includes it in backups.</string>
+    <string name="health_rationale_control">You decide: access is asked for one kind of data at a time, only when you link a habit, and you can take it back in Health Connect at any time.</string>
+    <string name="health_rationale_close">Close</string>
 </resources>

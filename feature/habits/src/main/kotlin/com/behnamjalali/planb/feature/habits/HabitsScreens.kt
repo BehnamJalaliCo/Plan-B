@@ -24,6 +24,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Archive
+import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.Mood
 import androidx.compose.material.icons.rounded.Event
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.MoreVert
@@ -112,6 +114,8 @@ fun HabitsDestination(
     onOpenHabit: (EntityId) -> Unit,
     onNewHabit: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onOpenChallenges: () -> Unit = {},
+    onOpenMood: () -> Unit = {},
     viewModel: HabitsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -119,7 +123,7 @@ fun HabitsDestination(
     LaunchedEffect(viewModel) {
         viewModel.failed.collect { snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic)) }
     }
-    HabitsScreen(state, onBack, onOpenHabit, onNewHabit, viewModel::checkIn, viewModel::toggleArchived)
+    HabitsScreen(state, onBack, onOpenHabit, onNewHabit, viewModel::checkIn, viewModel::toggleArchived, onOpenChallenges, onOpenMood)
 }
 
 @Composable
@@ -130,12 +134,17 @@ fun HabitsScreen(
     onNewHabit: () -> Unit,
     onCheckIn: (HabitRow) -> Unit,
     onToggleArchived: () -> Unit,
+    onOpenChallenges: () -> Unit = {},
+    onOpenMood: () -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize()) {
         PlannerTopBar(
             title = stringResource(R.string.habits_title),
             onBack = onBack,
             actions = {
+                // Plan-B Pro #29 and #30: the screens explain themselves to free users.
+                PlannerIconButton(Icons.Rounded.EmojiEvents, stringResource(R.string.habits_challenges), onOpenChallenges)
+                PlannerIconButton(Icons.Rounded.Mood, stringResource(R.string.habits_mood), onOpenMood)
                 PlannerIconButton(Icons.Rounded.Archive, stringResource(R.string.habits_archived), onToggleArchived,
                     tint = if (state.showArchived) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                 PlannerIconButton(Icons.Rounded.Add, stringResource(R.string.habits_new), onNewHabit)
@@ -174,6 +183,8 @@ fun HabitDetailDestination(
     onBack: () -> Unit,
     onEdit: (EntityId) -> Unit,
     snackbarHostState: SnackbarHostState,
+    onOpenStats: (EntityId) -> Unit = {},
+    onOpenChallenges: () -> Unit = {},
     viewModel: HabitDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -185,12 +196,29 @@ fun HabitDetailDestination(
             when (event) {
                 HabitEvent.Deleted -> leaveOnce()
                 HabitEvent.Failed -> snackbarHostState.showSnackbar(resources.getString(com.behnamjalali.planb.core.ui.R.string.ui_error_generic))
+                HabitEvent.ChallengeStarted -> snackbarHostState.showSnackbar(resources.getString(R.string.habit_challenge_started))
             }
         }
     }
     LaunchedEffect(state.missing) { if (state.missing) leaveOnce() }
-    HabitDetailScreen(state, onBack, { onEdit(viewModel.habitId) }, viewModel::adjust, viewModel::setArchived, viewModel::delete)
+    HabitDetailScreen(
+        state, onBack, { onEdit(viewModel.habitId) }, viewModel::adjust, viewModel::setArchived, viewModel::delete,
+        pro = HabitProActions(
+            onOpenStats = { onOpenStats(viewModel.habitId) },
+            onStartChallenge = viewModel::startChallenge,
+            onOpenChallenges = onOpenChallenges,
+            onSyncHealth = viewModel::syncHealth,
+        ),
+    )
 }
+
+/** Plan-B Pro on the habit screen: statistics (#28), challenges (#29), Health Connect (#27). */
+data class HabitProActions(
+    val onOpenStats: () -> Unit = {},
+    val onStartChallenge: (Int) -> Unit = {},
+    val onOpenChallenges: () -> Unit = {},
+    val onSyncHealth: () -> Unit = {},
+)
 
 @Composable
 fun HabitDetailScreen(
@@ -200,6 +228,7 @@ fun HabitDetailScreen(
     onAdjust: (Int) -> Unit,
     onArchive: (Boolean) -> Unit,
     onDelete: () -> Unit,
+    pro: HabitProActions = HabitProActions(),
 ) {
     val item = state.item
     var menu by remember { mutableStateOf(false) }
@@ -258,6 +287,7 @@ fun HabitDetailScreen(
                 StatTile(stringResource(R.string.habit_best_streak), numbers.format(state.bestStreak), Modifier.weight(1f))
                 StatTile(stringResource(R.string.habit_rate_30), numbers.percent(state.rate30), Modifier.weight(1f))
             }
+            HabitProSection(state, pro)
             PlannerSectionHeader(stringResource(R.string.habit_history))
             val weeks = 20
             val doneDays = item.amounts.count { (date, amount) -> amount >= habit.target && date > state.today.minusWeeks(weeks.toLong()) }
@@ -293,6 +323,12 @@ private fun StatTile(label: String, value: String, modifier: Modifier) {
 @Composable
 fun HabitEditorDestination(onClose: () -> Unit, viewModel: HabitEditorViewModel = hiltViewModel()) {
     val form by viewModel.form.collectAsStateWithLifecycle()
+    val health by viewModel.health.collectAsStateWithLifecycle()
+    // Coming back from Health Connect or its install page: check again.
+    androidx.lifecycle.compose.LifecycleResumeEffect(viewModel) {
+        viewModel.refreshHealth()
+        onPauseOrDispose { }
+    }
     val snackbar = remember { SnackbarHostState() }
     val resources = LocalResources.current
     val formatter = PlannerLocals.formatter
@@ -370,6 +406,7 @@ fun HabitEditorDestination(onClose: () -> Unit, viewModel: HabitEditorViewModel 
                 { picker = "time" },
             )
             EditorRow(Icons.Rounded.Event, stringResource(R.string.habit_editor_start), formatter.mediumDate(LocalDate.ofEpochDay(form.startDate)), { picker = "date" })
+            HealthSection(form, health, viewModel)
             Text(stringResource(R.string.habit_editor_color), style = MaterialTheme.typography.labelLarge)
             AccentColorPicker(AccentColor.fromKey(form.color), { c -> viewModel.update { it.copy(color = c.key) } })
             Text(stringResource(R.string.habit_editor_icon), style = MaterialTheme.typography.labelLarge)

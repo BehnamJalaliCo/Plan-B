@@ -49,5 +49,7 @@ internal abstract class DataModule {
     @Binds abstract fun planning(impl: com.behnamjalali.planb.core.data.repository.OfflineTaskPlanningRepository): com.behnamjalali.planb.core.data.repository.TaskPlanningRepository
     @Binds abstract fun attachments(impl: com.behnamjalali.planb.core.data.repository.OfflineAttachmentRepository): com.behnamjalali.planb.core.data.repository.AttachmentRepository
     @Binds abstract fun images(impl: BitmapImageProcessor): ImageProcessor
+    @Binds abstract fun moods(impl: com.behnamjalali.planb.core.data.repository.OfflineMoodRepository): com.behnamjalali.planb.core.data.repository.MoodRepository
+    @Binds abstract fun achievements(impl: com.behnamjalali.planb.core.data.repository.OfflineAchievementRepository): com.behnamjalali.planb.core.data.repository.AchievementRepository
     @Binds abstract fun smartLists(impl: com.behnamjalali.planb.core.data.repository.OfflineSmartListRepository): com.behnamjalali.planb.core.data.repository.SmartListRepository
 }

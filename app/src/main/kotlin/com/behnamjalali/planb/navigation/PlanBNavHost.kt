@@ -43,6 +43,10 @@ import com.behnamjalali.planb.feature.habits.HabitEditorDestination
 import com.behnamjalali.planb.feature.habits.HabitEditorRoute
 import com.behnamjalali.planb.feature.habits.HabitsDestination
 import com.behnamjalali.planb.feature.habits.HabitsRoute
+import com.behnamjalali.planb.feature.habits.ChallengesDestination
+import com.behnamjalali.planb.feature.habits.ChallengesRoute
+import com.behnamjalali.planb.feature.habits.HabitStatsDestination
+import com.behnamjalali.planb.feature.habits.HabitStatsRoute
 import com.behnamjalali.planb.feature.notebooks.NoteEditorDestination
 import com.behnamjalali.planb.feature.notebooks.NoteEditorRoute
 import com.behnamjalali.planb.feature.notebooks.NotebookDetailDestination
@@ -57,6 +61,8 @@ import com.behnamjalali.planb.feature.journal.JournalDestination
 import com.behnamjalali.planb.feature.journal.JournalRoute
 import com.behnamjalali.planb.feature.journal.MoodCalendarDestination
 import com.behnamjalali.planb.feature.journal.MoodCalendarRoute
+import com.behnamjalali.planb.feature.journal.MoodTrackerDestination
+import com.behnamjalali.planb.feature.journal.MoodTrackerRoute
 import com.behnamjalali.planb.feature.pro.PaywallDestination
 import com.behnamjalali.planb.feature.pro.PaywallRoute
 import com.behnamjalali.planb.feature.projects.ProjectDetailDestination
@@ -152,6 +158,7 @@ fun PlanBNavHost(
                     onNewNote = { nav.navigate(NoteEditorRoute()) },
                     onOpenRitual = { nav.navigate(RitualRoute(it.key)) },
                     onOpenDayPlanSettings = { nav.navigate(DayPlanSettingsRoute) },
+                    onMoodCheckIn = { nav.navigate(MoodTrackerRoute(checkIn = true, mood = it)) },
                 ),
                 snackbarHostState = snackbarHostState,
                 contentPadding = contentPadding,
@@ -261,11 +268,28 @@ fun PlanBNavHost(
                 onOpenHabit = { nav.navigate(HabitDetailRoute(it)) },
                 onNewHabit = { nav.navigate(HabitEditorRoute()) },
                 snackbarHostState = snackbarHostState,
+                onOpenChallenges = { nav.navigate(ChallengesRoute()) },
+                onOpenMood = { nav.navigate(MoodTrackerRoute()) },
             )
         }
         composable<HabitDetailRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
-            HabitDetailDestination(onBack = nav.back, onEdit = { nav.navigate(HabitEditorRoute(it)) }, snackbarHostState = snackbarHostState)
+            HabitDetailDestination(
+                onBack = nav.back,
+                onEdit = { nav.navigate(HabitEditorRoute(it)) },
+                snackbarHostState = snackbarHostState,
+                onOpenStats = { nav.navigate(HabitStatsRoute(it)) },
+                onOpenChallenges = { nav.navigate(ChallengesRoute()) },
+            )
+        }
+        // Plan-B Pro habits and focus (#28–#30).
+        composable<HabitStatsRoute> { entry -> HabitStatsDestination(onBack = rememberScreenNavigator(navController, entry).back) }
+        composable<ChallengesRoute> { entry ->
+            ChallengesDestination(onBack = rememberScreenNavigator(navController, entry).back, snackbarHostState = snackbarHostState)
+        }
+        composable<MoodTrackerRoute> { entry ->
+            val nav = rememberScreenNavigator(navController, entry)
+            MoodTrackerDestination(onBack = nav.back, onOpenCalendar = { nav.navigate(MoodCalendarRoute) }, snackbarHostState = snackbarHostState)
         }
         composable<HabitEditorRoute> { entry ->
             val nav = rememberScreenNavigator(navController, entry)
@@ -498,6 +522,9 @@ fun NavHostController.handleDeepLink(uri: Uri) {
         "today" -> navigateTopLevel(TopLevelDestination.TODAY)
         "calendar" -> navigateTopLevel(TopLevelDestination.CALENDAR)
         "habits" -> navigate(HabitsRoute)
+        // Plan-B Pro #29 and #30.
+        "badges" -> navigate(ChallengesRoute(badges = true))
+        "mood" -> navigate(MoodTrackerRoute(checkIn = segments.getOrNull(1) == "check-in"))
         "pro" -> navigate(PaywallRoute(ProFeature.entries.firstOrNull { it.id == segments.getOrNull(1) }?.id))
     }
 }

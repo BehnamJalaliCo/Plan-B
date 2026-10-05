@@ -68,4 +68,64 @@
     <string name="insights_none">Check in your mood for a few days to see your patterns.</string>
     <string name="insights_weekday_cd">%1$s: %2$s</string>
     <string name="insights_no_data">no check-ins</string>
+    <!-- Mood and energy tracker (Plan-B Pro #30) -->
+    <string name="mood_title">Mood and energy</string>
+    <string name="mood_check_in">Check in</string>
+    <string name="mood_check_in_title">How are you right now?</string>
+    <string name="mood_edit_title">Edit check-in</string>
+    <string name="mood_tags">Tags (optional, separated by commas)</string>
+    <string name="mood_save">Save</string>
+    <string name="mood_saved">Check-in saved</string>
+    <string name="mood_deleted">Check-in deleted</string>
+    <string name="mood_undo">Undo</string>
+    <string name="mood_edit">Edit</string>
+    <string name="mood_delete">Delete</string>
+    <string name="mood_entry_menu">Check-in options</string>
+    <string name="mood_today">Today</string>
+    <string name="mood_today_none">No check-in yet today. Several a day are fine.</string>
+    <string name="mood_from_journal">Journal</string>
+    <string name="mood_history">Last %1$s days</string>
+    <string name="mood_history_empty">Your check-ins will appear here.</string>
+    <!-- One check-in, spoken: time, mood, energy, tags. -->
+    <string name="mood_entry_cd">%1$s: %2$s</string>
+    <string name="mood_overview">Overview (%1$s days)</string>
+    <!-- %1$s: average mood, %2$s: the scale maximum. -->
+    <string name="mood_average">Average mood %1$s of %2$s</string>
+    <string name="mood_average_energy">Average energy %1$s of %2$s</string>
+    <!-- %1$s: average of the last days, %2$s: of the days before, %3$s: number of days (7). -->
+    <string name="mood_week_compare">Last %3$s days %1$s, the %3$s before %2$s</string>
+    <plurals name="mood_checkins">
+        <item quantity="one">%1$s check-in</item>
+        <item quantity="other">%1$s check-ins</item>
+    </plurals>
+    <string name="mood_trend">Mood and energy, last %1$s days</string>
+    <string name="mood_trend_cd">Chart of the last %4$s days: average mood %1$s, average energy %2$s, %3$s days with a check-in.</string>
+    <string name="mood_legend_mood">Mood</string>
+    <string name="mood_legend_energy">Energy</string>
+    <string name="mood_vs_energy">Mood by energy</string>
+    <string name="mood_by_day_part">Mood by time of day</string>
+    <string name="mood_part_morning">Morning</string>
+    <string name="mood_part_afternoon">Afternoon</string>
+    <string name="mood_part_evening">Evening</string>
+    <string name="mood_part_night">Night</string>
+    <string name="mood_no_data">no data</string>
+    <string name="mood_patterns">What goes with your mood</string>
+    <string name="mood_patterns_note">Patterns in your own check-ins, not causes.</string>
+    <string name="mood_patterns_none">Check in on at least %1$s days to see patterns.</string>
+    <string name="mood_factor_habits">habits you complete</string>
+    <string name="mood_factor_focus">minutes you focus</string>
+    <string name="mood_factor_sleep">hours you sleep</string>
+    <!-- %1$s: a factor such as "habits you complete", %2$s: strength, %3$s: days. -->
+    <string name="mood_pattern_positive">Your mood tends to be higher with more %1$s (%2$s, %3$s days).</string>
+    <string name="mood_pattern_negative">Your mood tends to be lower with more %1$s (%2$s, %3$s days).</string>
+    <string name="mood_pattern_none">No clear link with %1$s (%2$s days).</string>
+    <string name="mood_strength_weak">weak</string>
+    <string name="mood_strength_moderate">moderate</string>
+    <string name="mood_strength_strong">strong</string>
+    <!-- %1$s: habit, %2$s: mood on days it was done, %3$s: mood on due days it was not. -->
+    <string name="mood_habit_effect">%1$s: mood %2$s on days done, %3$s on days not done</string>
+    <string name="mood_sleep_add">Compare with sleep from Health Connect</string>
+    <string name="mood_sleep_explain">Plan-B reads only how long you slept on days you checked in, on this device. Nothing is written or sent anywhere.</string>
+    <string name="mood_sleep_allow">Allow sleep access</string>
+    <string name="mood_open_calendar">Mood calendar</string>
 </resources>

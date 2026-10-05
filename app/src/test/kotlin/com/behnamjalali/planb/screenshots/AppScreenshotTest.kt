@@ -1035,6 +1035,8 @@ class AppScreenshotTest(private val variant: Variant) {
         clickDescription(s(UiR.string.ui_more))
         click(s(NotesR.string.writing_mode))
         waitFor(hasContentDescription(s(NotesR.string.writing_exit)))
+        // The goal and streak come from the stored settings, which may arrive a moment later.
+        waitFor(hasText(t("۳۲۰", "320"), substring = true))
         capture("notebooks", "writing_mode")
     }
 
@@ -1176,6 +1178,167 @@ class AppScreenshotTest(private val variant: Variant) {
         clickDescription(s(SpeechR.string.speech_voice_input))
         waitFor(hasText(t("جلسه با علی", "Meeting with Ali"), substring = true))
         capture("capture", "voice_input")
+    }
+
+    // endregion
+
+    // region Plan-B Pro habits and focus (#26–#30)
+
+    @Inject lateinit var achievements: com.behnamjalali.planb.core.data.repository.AchievementRepository
+    @Inject lateinit var moods: com.behnamjalali.planb.core.data.repository.MoodRepository
+    @Inject lateinit var health: com.behnamjalali.planb.core.testing.FakeHealthDataSource
+
+    /** Scrolls the screen's (lazy) list until a node matching [matcher] is composed and shown. */
+    private fun scrollTo(matcher: SemanticsMatcher) {
+        compose.waitForIdle()
+        compose.waitUntil(15_000) {
+            val lists = compose.onAllNodes(hasScrollToNodeAction())
+            lists.fetchSemanticsNodes().indices.any { i -> runCatching { lists[i].performScrollToNode(matcher) }.isSuccess } ||
+                compose.onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        runCatching { waitFor(matcher).performScrollTo() }
+        compose.waitForIdle()
+    }
+
+    private suspend fun habitId(index: Int): Long =
+        habits.observeHabits(fixtures.today, fixtures.today).first().first { it.habit.title == fixtures.habits[index].habit.title }.habit.id
+
+    /** "Read a book" is linked to steps with access; a 21-day challenge started 9 days ago; an earlier 7-day one completed. */
+    private suspend fun seedHabitsPro() {
+        val read = habitId(1)
+        val water = habitId(0)
+        habits.save(habits.getHabit(read)!!.copy(healthMetric = com.behnamjalali.planb.core.model.HealthMetric.STEPS, healthThreshold = 8_000))
+        health.grant(com.behnamjalali.planb.core.model.HealthMetric.STEPS)
+        health.set(com.behnamjalali.planb.core.model.HealthMetric.STEPS, fixtures.today, 6_240, clock.zone())
+        val start = clock.instant
+        clock.instant = start.minus(Duration.ofDays(19))
+        achievements.startChallenge(water, 7)
+        clock.instant = start.minus(Duration.ofDays(9))
+        achievements.startChallenge(read, 21)
+        clock.instant = start
+        achievements.evaluate()
+    }
+
+    @Test
+    fun focusPro() {
+        launch(pro = true) {
+            settings.update { it.copy(focusPro = it.focusPro.copy(sound = com.behnamjalali.planb.core.model.AmbientSound.RAIN, strict = true, dailyGoalMinutes = 120)) }
+        }
+        openMore(AppR.string.more_focus)
+        waitFor(hasText(s(FocusR.string.focus_ready)))
+        scrollTo(hasText(s(FocusR.string.focus_pro_goal)))
+        capture("focus", "focus_pro")
+    }
+
+    @Test
+    fun focusProRunning() {
+        launch(pro = true) {
+            focus.start(Duration.ofMinutes(25).toMillis(), null, soundId = "ocean", strict = false)
+            clock.advance(Duration.ofMinutes(7))
+        }
+        openMore(AppR.string.more_focus)
+        waitFor(hasText(s(FocusR.string.focus_pro_sound_playing, s(com.behnamjalali.planb.core.focus.R.string.focus_sound_ocean))))
+        capture("focus", "focus_pro_running")
+    }
+
+    @Test
+    fun habitDetailPro() {
+        launch(pro = true) { seedHabitsPro() }
+        openMore(AppR.string.more_habits)
+        click(fixtures.habits[1].habit.title)
+        waitFor(hasText(s(HabitsR.string.habit_stats_open)))
+        scrollTo(hasText(s(HabitsR.string.habit_stats_open)))
+        capture("habits", "habit_detail_pro")
+    }
+
+    @Test
+    fun habitStats() {
+        launch(pro = true) { seedHabitsPro() }
+        openMore(AppR.string.more_habits)
+        click(fixtures.habits[1].habit.title)
+        click(s(HabitsR.string.habit_stats_open))
+        waitFor(hasText(s(HabitsR.string.habit_stats_rates)))
+        capture("habits", "habit_stats")
+        scrollTo(hasContentDescription(s(HabitsR.string.habit_stats_year_previous)))
+        capture("habits", "habit_stats_year")
+    }
+
+    @Test
+    fun habitEditorHealth() {
+        launch(pro = true) { seedHabitsPro() }
+        openMore(AppR.string.more_habits)
+        click(fixtures.habits[1].habit.title)
+        clickDescription(s(UiR.string.ui_more))
+        click(s(HabitsR.string.habit_edit))
+        waitFor(hasText(s(HabitsR.string.habit_health_title)))
+        waitFor(hasText(s(HabitsR.string.habit_health_connected))).performScrollTo()
+        compose.waitForIdle()
+        capture("habits", "habit_editor_health")
+    }
+
+    @Test
+    fun challengesAndBadges() {
+        launch(pro = true) { seedHabitsPro() }
+        openMore(AppR.string.more_challenges)
+        waitFor(hasText(s(HabitsR.string.challenges_running)))
+        capture("habits", "challenges")
+        selectTab(s(HabitsR.string.badges_tab))
+        waitFor(hasText(s(HabitsR.string.badges_hint)))
+        capture("habits", "badges")
+    }
+
+    @Test
+    fun badgeUnlocked() {
+        launch(pro = true) {
+            // The device's first evaluation catches up silently; the next focus hour is celebrated.
+            achievements.evaluate()
+            focus.start(Duration.ofMinutes(25).toMillis(), null)
+            clock.advance(Duration.ofMinutes(25))
+            focus.finish()
+            clock.instant = com.behnamjalali.planb.e2e.TestClockModule.START
+            achievements.evaluate()
+        }
+        waitFor(hasText(s(HabitsR.string.badge_unlocked)))
+        capture("habits", "badge_unlocked")
+    }
+
+    /** Check-ins over the last weeks: mornings and evenings, better on days with a walk. */
+    private suspend fun seedMoods() {
+        val start = clock.instant
+        val read = habitId(1)
+        (0L until 24L).forEach { daysAgo ->
+            val day = fixtures.today.minusDays(daysAgo)
+            val good = daysAgo % 3 != 1L
+            clock.setLocal(day, java.time.LocalTime.of(8, 30))
+            moods.checkIn(if (good) 4 else 2, if (good) 4 else 2, if (daysAgo % 5 == 0L) listOf(t("کار", "work")) else emptyList())
+            if (daysAgo % 2 == 0L) {
+                clock.setLocal(day, java.time.LocalTime.of(21, 0))
+                moods.checkIn(if (good) 5 else 3, 3)
+            }
+            if (good && daysAgo > 11) habits.checkIn(read, day)
+        }
+        clock.instant = start
+    }
+
+    @Test
+    fun moodTracker() {
+        launch(pro = true) { seedMoods() }
+        openMore(AppR.string.more_mood)
+        waitFor(hasText(s(JournalR.string.mood_today)))
+        capture("journal", "mood_tracker")
+        scrollTo(hasText(s(JournalR.string.mood_patterns)))
+        capture("journal", "mood_patterns")
+    }
+
+    @Test
+    fun moodCheckInFromToday() {
+        launch(pro = true)
+        waitFor(hasText(fixtures.tasks.first().title, substring = true))
+        val face = hasContentDescription(s(TodayR.string.today_mood_cd, s(TodayR.string.today_mood_4)))
+        scrollTo(face)
+        clickDescription(s(TodayR.string.today_mood_cd, s(TodayR.string.today_mood_4)))
+        waitFor(hasText(s(JournalR.string.mood_check_in_title)))
+        capture("journal", "mood_check_in")
     }
 
     // endregion

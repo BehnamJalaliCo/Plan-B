@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Focus Pro (Plan-B Pro #26). Normal permissions (granted at install, no prompt):
+         the ambient sound keeps playing with the screen off through a media-playback
+         foreground service that runs only while a session with a sound is running. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Strict mode turns on Do Not Disturb during a session. Android additionally needs the
+         user to allow "Do Not Disturb access" in system settings; Plan-B asks in context. -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+
+    <application>
+        <service
+            android:name=".FocusSoundService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+    </application>
+</manifest>

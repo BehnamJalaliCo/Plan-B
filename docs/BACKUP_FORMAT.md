@@ -149,6 +149,11 @@ per-file or total limits below (`AttachmentLimits` equals them), so every one fi
   grant Pro) and the AI assistant settings, **including the provider key** (stored encrypted
   with a key that never leaves the device). Neither lives in the preferences file that is
   exported.
+- Plan-B Pro device state of habits and focus (`planb_wellbeing_state`): the Do Not Disturb
+  filter to restore after a strict focus session, the days Health Connect already checked off
+  and the last celebrated badge. Health Connect data itself is never stored or backed up; only
+  the habit check-ins it caused are. Badges and challenge statuses in a backup stay as they are;
+  re-evaluating them on the restored data gives the same results.
 
 ### 1.4 `preferences.json`
 
@@ -169,6 +174,9 @@ DataStore key is written, with its value converted by `toString()`. The keys com
 | `default_task_view` | `TaskView` name | yes |
 | `default_calendar_view` | `CalendarView` name | yes |
 | `focus_minutes` (1..180), `short_break_minutes` (1..60) | Int | yes |
+| `focus_sound` | Plan-B Pro Focus Pro default sound: `rain`, `ocean`, `brown`, `pink`, `white`, or `""` (silence); unknown ids read as silence | yes |
+| `focus_volume` (0..100), `focus_daily_goal` (0..720 minutes), `focus_long_break_every` (1..12), `focus_long_break_minutes` (1..90) | Int | yes |
+| `focus_strict` | `true` or `false` | yes |
 | `onboarding_completed` | not exported | **no.** It is device-specific, so the current device value is kept. |
 
 Import (`UserPreferencesDataSource.import`) merges the backup into the current settings:
