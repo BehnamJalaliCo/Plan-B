@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Hijri (lunar) months, Plan-B Pro #2 -->
+    <string-array name="hijri_month_names">
+        <item>Muharram</item>
+        <item>Safar</item>
+        <item>Rabi\' al-Awwal</item>
+        <item>Rabi\' al-Thani</item>
+        <item>Jumada al-Awwal</item>
+        <item>Jumada al-Thani</item>
+        <item>Rajab</item>
+        <item>Sha\'ban</item>
+        <item>Ramadan</item>
+        <item>Shawwal</item>
+        <item>Dhu al-Qa\'dah</item>
+        <item>Dhu al-Hijjah</item>
+    </string-array>
+    <!-- %1$s day, %2$s month, %3$s year (AH) -->
+    <string name="date_pattern_hijri">%1$s %2$s %3$s AH</string>
+
+    <!-- Official holidays -->
+    <string name="occasion_nowruz">Nowruz</string>
+    <string name="occasion_republic_day">Islamic Republic Day</string>
+    <string name="occasion_nature_day">Nature Day (Sizdah Bedar)</string>
+    <string name="occasion_khomeini_demise">Death anniversary of Imam Khomeini</string>
+    <string name="occasion_khordad_15">15 Khordad uprising</string>
+    <string name="occasion_revolution_day">Islamic Revolution Victory Day</string>
+    <string name="occasion_oil_nationalization">Oil Nationalization Day</string>
+    <string name="occasion_tasua">Tasua</string>
+    <string name="occasion_ashura">Ashura</string>
+    <string name="occasion_arbaeen">Arbaeen</string>
+    <string name="occasion_prophet_demise">Demise of the Prophet and martyrdom of Imam Hasan</string>
+    <string name="occasion_imam_reza">Martyrdom of Imam Reza</string>
+    <string name="occasion_imam_hasan_askari">Martyrdom of Imam Hasan Askari</string>
+    <string name="occasion_prophet_birth">Birth of the Prophet and Imam Sadiq</string>
+    <string name="occasion_fatima_martyrdom">Martyrdom of Fatima</string>
+    <string name="occasion_imam_ali_birth">Birth of Imam Ali (Father\'s Day)</string>
+    <string name="occasion_mabath">Mab\'ath</string>
+    <string name="occasion_mahdi_birth">Birth of Imam Mahdi</string>
+    <string name="occasion_imam_ali_martyrdom">Martyrdom of Imam Ali</string>
+    <string name="occasion_eid_fitr">Eid al-Fitr</string>
+    <string name="occasion_eid_fitr_2">Eid al-Fitr holiday</string>
+    <string name="occasion_imam_sadiq">Martyrdom of Imam Sadiq</string>
+    <string name="occasion_eid_adha">Eid al-Adha</string>
+    <string name="occasion_eid_ghadir">Eid al-Ghadir</string>
+
+    <!-- Occasions -->
+    <string name="occasion_saadi">Saadi Day</string>
+    <string name="occasion_teachers">Teachers\' Day</string>
+    <string name="occasion_ferdowsi">Ferdowsi Day (Persian language)</string>
+    <string name="occasion_tirgan">Tirgan</string>
+    <string name="occasion_constitution">Constitution Day</string>
+    <string name="occasion_avicenna">Avicenna Day (Doctors\' Day)</string>
+    <string name="occasion_shahriar">Shahriar Day (Persian poetry)</string>
+    <string name="occasion_rumi">Rumi Day</string>
+    <string name="occasion_hafez">Hafez Day</string>
+    <string name="occasion_mehregan">Mehregan</string>
+    <string name="occasion_students">Students\' Day</string>
+    <string name="occasion_yalda">Yalda Night</string>
+    <string name="occasion_sepandarmazgan">Sepandarmazgan</string>
+    <string name="occasion_engineers">Engineers\' Day</string>
+    <string name="occasion_tree_planting">Tree Planting Day</string>
+    <string name="occasion_chaharshanbe_suri">Chaharshanbe Suri</string>
+    <string name="occasion_islamic_new_year">Islamic New Year</string>
+    <string name="occasion_mothers_day">Birth of Fatima (Mother\'s Day)</string>
+    <string name="occasion_imam_hussein_birth">Birth of Imam Hussein</string>
+    <string name="occasion_ramadan_start">Start of Ramadan</string>
+    <string name="occasion_qadr_night">Night of Qadr</string>
+    <string name="occasion_girls_day">Birth of Fatima Masumeh (Girls\' Day)</string>
+    <string name="occasion_imam_reza_birth">Birth of Imam Reza</string>
+    <string name="occasion_arafah">Day of Arafah</string>
+</resources>

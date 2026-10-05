@@ -1,0 +1,33 @@
+{
+  "description": "First day (Gregorian date) of each Hijri month in Iran's published calendar for the solar years 1405 and 1406. Used by HijriCalendar instead of the tabular calculation for these months (Plan-B Pro #2).",
+  "source": "Jalali Holiday API, https://holidayapi.ir/jalali/{year}/{month}/{day}, which republishes the Iranian calendar of time.ir (itself based on the calendar of the Iranian Calendar Center, Institute of Geophysics, University of Tehran). Each month start was derived from the Hijri day given for that month's occasions; all occasions of a month agree, except the 'last day of the month' entries (labelled 30 in a 29-day month).",
+  "retrieved": "2026-10-05",
+  "verification": "Not checked against the printed official calendar. Lunar dates in Iran are fixed by sighting the new moon and may still move by a day; the app says so wherever it shows them.",
+  "monthStarts": {
+    "1447-10": "2026-03-21",
+    "1447-11": "2026-04-19",
+    "1447-12": "2026-05-18",
+    "1448-01": "2026-06-16",
+    "1448-02": "2026-07-16",
+    "1448-03": "2026-08-14",
+    "1448-04": "2026-09-13",
+    "1448-05": "2026-10-12",
+    "1448-06": "2026-11-11",
+    "1448-07": "2026-12-11",
+    "1448-08": "2027-01-10",
+    "1448-09": "2027-02-08",
+    "1448-10": "2027-03-10",
+    "1448-11": "2027-04-09",
+    "1448-12": "2027-05-08",
+    "1449-01": "2027-06-07",
+    "1449-02": "2027-07-06",
+    "1449-03": "2027-08-04",
+    "1449-04": "2027-09-03",
+    "1449-05": "2027-10-02",
+    "1449-06": "2027-11-01",
+    "1449-07": "2027-11-30",
+    "1449-08": "2027-12-30",
+    "1449-09": "2028-01-29",
+    "1449-10": "2028-02-27"
+  }
+}

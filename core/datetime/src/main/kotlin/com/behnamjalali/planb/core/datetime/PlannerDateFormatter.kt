@@ -2,6 +2,7 @@ package com.behnamjalali.planb.core.datetime
 
 import android.content.res.Resources
 import com.behnamjalali.planb.core.common.NumberFormatter
+import com.behnamjalali.planb.core.datetime.iran.HijriDate
 import com.behnamjalali.planb.core.model.CalendarSystem
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -25,6 +26,7 @@ class PlannerDateFormatter(
     private val weekdayNames = resources.getStringArray(R.array.weekday_names)
     private val weekdayShort = resources.getStringArray(R.array.weekday_short_names)
     private val weekdayNarrow = resources.getStringArray(R.array.weekday_narrow_names)
+    private val hijriMonths by lazy { resources.getStringArray(R.array.hijri_month_names) }
 
     private val isJalali get() = calendarSystem == CalendarSystem.JALALI
 
@@ -76,6 +78,10 @@ class PlannerDateFormatter(
         today.minusDays(1) -> resources.getString(R.string.date_yesterday)
         else -> shortDate(date, today)
     }
+
+    /** e.g. "۲ ربیع‌الثانی ۱۴۴۸" / "2 Rabi' al-Thani 1448 AH" (Plan-B Pro #2). */
+    fun hijriDate(date: HijriDate): String =
+        resources.getString(R.string.date_pattern_hijri, numbers.format(date.day), hijriMonths[date.month - 1], numbers.format(date.year))
 
     fun monthYear(month: CalendarMonth): String =
         resources.getString(R.string.date_pattern_month_year, monthName(month.month), numbers.format(month.year))
