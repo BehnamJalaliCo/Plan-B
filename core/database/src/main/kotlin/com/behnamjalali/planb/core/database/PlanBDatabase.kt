@@ -127,6 +127,9 @@ abstract class PlanBDatabase : RoomDatabase() {
     /** Read and retention queries for note links, history, the graph and the journal (no tables of its own). */
     abstract fun noteKnowledgeDao(): com.behnamjalali.planb.core.database.dao.NoteKnowledgeDao
 
+    /** Read queries for badges, challenges and the mood tracker (no tables of its own). */
+    abstract fun wellbeingDao(): com.behnamjalali.planb.core.database.dao.WellbeingDao
+
     companion object {
         const val VERSION = 3
 

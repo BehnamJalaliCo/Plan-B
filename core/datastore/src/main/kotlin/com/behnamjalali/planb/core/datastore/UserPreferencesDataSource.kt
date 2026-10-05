@@ -16,7 +16,9 @@ import com.behnamjalali.planb.core.model.CalendarView
 import com.behnamjalali.planb.core.model.ColorTheme
 import com.behnamjalali.planb.core.model.DashboardConfig
 import com.behnamjalali.planb.core.model.DashboardSection
+import com.behnamjalali.planb.core.model.AmbientSound
 import com.behnamjalali.planb.core.model.DayPlanSettings
+import com.behnamjalali.planb.core.model.FocusProSettings
 import com.behnamjalali.planb.core.model.JournalSettings
 import com.behnamjalali.planb.core.model.NumberFormatMode
 import com.behnamjalali.planb.core.model.RitualState
@@ -99,6 +101,14 @@ class UserPreferencesDataSource @Inject constructor(
         val journalReminder = booleanPreferencesKey("journal_reminder")
         val journalTime = intPreferencesKey("journal_reminder_time")
         val journalPrompts = stringPreferencesKey("journal_custom_prompts")
+
+        // Plan-B Pro Focus Pro (#26): defaults for new sessions, daily goal, long breaks.
+        val focusSound = stringPreferencesKey("focus_sound")
+        val focusVolume = intPreferencesKey("focus_volume")
+        val focusStrict = booleanPreferencesKey("focus_strict")
+        val focusGoal = intPreferencesKey("focus_daily_goal")
+        val focusLongEvery = intPreferencesKey("focus_long_break_every")
+        val focusLongMinutes = intPreferencesKey("focus_long_break_minutes")
 
         /** Normalizer version the search index was built with (device state, never exported). */
         val searchIndexVersion = intPreferencesKey("search_index_version")
@@ -261,6 +271,15 @@ class UserPreferencesDataSource @Inject constructor(
                 reminderTime = time(Keys.journalTime, d.journal.reminderTime),
                 customPrompts = str(Keys.journalPrompts)?.let(::parsePrompts) ?: d.journal.customPrompts,
             ),
+            focusPro = FocusProSettings(
+                // "" is "no sound"; an unknown id (a newer version's sound) also reads as silence.
+                sound = str(Keys.focusSound).let { if (it == null) d.focusPro.sound else AmbientSound.fromId(it) },
+                volume = int(Keys.focusVolume)?.coerceIn(0, 100) ?: d.focusPro.volume,
+                strict = bool(Keys.focusStrict) ?: d.focusPro.strict,
+                dailyGoalMinutes = int(Keys.focusGoal)?.coerceIn(0, FocusProSettings.MAX_DAILY_GOAL) ?: d.focusPro.dailyGoalMinutes,
+                longBreakEvery = int(Keys.focusLongEvery)?.coerceIn(1, 12) ?: d.focusPro.longBreakEvery,
+                longBreakMinutes = int(Keys.focusLongMinutes)?.coerceIn(1, 90) ?: d.focusPro.longBreakMinutes,
+            ),
         )
     }
 
@@ -339,6 +358,13 @@ class UserPreferencesDataSource @Inject constructor(
         prefs[Keys.journalReminder] = s.journal.reminder
         prefs[Keys.journalTime] = s.journal.reminderTime.minutes()
         prefs[Keys.journalPrompts] = s.journal.customPrompts.joinToString("\n") { it.replace('\n', ' ').replace('\r', ' ').trim() }
+        val focus = s.focusPro
+        prefs[Keys.focusSound] = focus.sound?.id.orEmpty()
+        prefs[Keys.focusVolume] = focus.volume
+        prefs[Keys.focusStrict] = focus.strict
+        prefs[Keys.focusGoal] = focus.dailyGoalMinutes
+        prefs[Keys.focusLongEvery] = focus.longBreakEvery
+        prefs[Keys.focusLongMinutes] = focus.longBreakMinutes
     }
 
     private fun LocalTime.minutes(): Int = hour * 60 + minute

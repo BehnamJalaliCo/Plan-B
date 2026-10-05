@@ -97,7 +97,18 @@ class TestDataGraph(
     val events = OfflineEventRepository(db, db.eventDao(), db.searchDao(), time, reminders, history)
     val trash = OfflineTrashRepository(tasks, notes, db.taskDao(), db.noteDao(), time)
     val activity = OfflineActivityRepository(db.activityLogDao())
-    val focus = OfflineFocusRepository(db, db.focusDao(), time)
+    /** Records every change of the active focus session (Plan-B Pro #26 sound and strict mode). */
+    val focusEffects = RecordingFocusEffects()
+    val focus = OfflineFocusRepository(db, db.focusDao(), time, focusEffects)
+
+    /** Device-only state of Plan-B Pro habits and focus (strict mode, Health Connect, celebrations). */
+    val wellbeingState = com.behnamjalali.planb.core.data.wellbeing.WellbeingState(
+        PreferenceDataStoreFactory.create(scope = dataStoreScope) { File(prefsDir, "wellbeing.preferences_pb") },
+    )
+    val moods = com.behnamjalali.planb.core.data.repository.OfflineMoodRepository(db, time)
+    val achievements = com.behnamjalali.planb.core.data.repository.OfflineAchievementRepository(db, time, wellbeingState)
+    val health = FakeHealthDataSource()
+    val healthSync = com.behnamjalali.planb.core.data.wellbeing.HealthHabitSync(health, db.habitDao(), habits, wellbeingState, time) { pro }
     val search = FtsSearchRepository(
         db.searchDao(), db.taskDao(), db.projectDao(), db.noteDao(), db.habitDao(), db.goalDao(), db.eventDao(), db.attachmentDao(),
     )
@@ -111,6 +122,45 @@ class TestDataGraph(
         dataStoreScope.cancel()
         prefsDir.deleteRecursively()
         filesDir.deleteRecursively()
+    }
+}
+
+/** Records the sessions the focus repository reports to its effects (sound, Do Not Disturb). */
+class RecordingFocusEffects : com.behnamjalali.planb.core.data.repository.FocusSessionEffects {
+    val changes: MutableList<com.behnamjalali.planb.core.model.FocusSession?> = Collections.synchronizedList(mutableListOf())
+    override suspend fun onSessionChanged(active: com.behnamjalali.planb.core.model.FocusSession?) {
+        changes += active
+    }
+}
+
+/**
+ * Health Connect stand-in (Plan-B Pro #27): daily totals per metric and day, granted
+ * permissions and availability are set by the test. [reads] counts calls of [total].
+ */
+class FakeHealthDataSource(
+    var available: com.behnamjalali.planb.core.data.wellbeing.HealthAvailability = com.behnamjalali.planb.core.data.wellbeing.HealthAvailability.AVAILABLE,
+) : com.behnamjalali.planb.core.data.wellbeing.HealthDataSource {
+    val granted: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
+
+    /** Totals by metric and the window's start instant. */
+    val totals: MutableMap<Pair<com.behnamjalali.planb.core.model.HealthMetric, Instant>, Long> = Collections.synchronizedMap(mutableMapOf())
+
+    @Volatile var reads = 0
+
+    fun set(metric: com.behnamjalali.planb.core.model.HealthMetric, day: java.time.LocalDate, value: Long, zone: java.time.ZoneId) {
+        totals[metric to com.behnamjalali.planb.core.model.HealthHabits.window(metric, day, zone).first] = value
+    }
+
+    fun grant(metric: com.behnamjalali.planb.core.model.HealthMetric) {
+        granted += permissionsFor(metric)
+    }
+
+    override fun availability() = available
+    override fun permissionsFor(metric: com.behnamjalali.planb.core.model.HealthMetric): Set<String> = setOf("read:" + metric.name)
+    override suspend fun grantedPermissions(): Set<String> = granted.toSet()
+    override suspend fun total(metric: com.behnamjalali.planb.core.model.HealthMetric, from: Instant, to: Instant): Long? {
+        reads++
+        return totals[metric to from]
     }
 }
 
