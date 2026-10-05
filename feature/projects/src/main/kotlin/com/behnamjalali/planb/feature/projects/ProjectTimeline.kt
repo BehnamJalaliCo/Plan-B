@@ -242,13 +242,13 @@ private fun TimelineCanvas(
                         val toStart = layout.dayIndex(to.start).coerceIn(0, layout.days - 1)
                         val sx = if (rtl) left(fromEnd) else left(fromEnd) + dayWidth
                         val ex = if (rtl) left(toStart) + dayWidth else left(toStart)
-                        val sy = headerHeight + fromRow * rowHeight + rowHeight / 2
+                        // Down from the blocker's end, under its title, then across to the waiting task.
+                        val inset = if (rtl) 6.dp.toPx() else -6.dp.toPx()
+                        val sy = headerHeight + fromRow * rowHeight + (rowHeight + barHeight) / 2
                         val ey = headerHeight + toRow * rowHeight + rowHeight / 2
-                        val step = if (rtl) -8.dp.toPx() else 8.dp.toPx()
                         val path = Path().apply {
-                            moveTo(sx, sy)
-                            lineTo(sx + step, sy)
-                            lineTo(sx + step, ey)
+                            moveTo(sx + inset, sy)
+                            lineTo(sx + inset, ey)
                             lineTo(ex, ey)
                         }
                         drawPath(path, connector, style = Stroke(width = 1.5.dp.toPx(), pathEffect = PathEffect.cornerPathEffect(4.dp.toPx())))
@@ -289,11 +289,20 @@ private fun TimelineCanvas(
                         left(day)
                     }
                     drawText(measured, topLeft = Offset(x, visibleTop + headerHeight - measured.size.height - 4.dp.toPx()))
-                    if (scale == TimelineScale.DAY && (calendarDate.day == 1 || day == firstDay + 1)) {
+                    if (scale == TimelineScale.DAY && calendarDate.day == 1) {
                         val month = measurer.measure(formatter.monthName(calendarDate.month), labelStyle)
                         val mx = if (rtl) left(day) + dayWidth - month.size.width else left(day)
                         drawText(month, topLeft = Offset(mx, visibleTop + 4.dp.toPx()))
                     }
+                }
+                // The month of the first visible day, at the visible start edge.
+                if (scale == TimelineScale.DAY) {
+                    val edge = 4.dp.toPx()
+                    val firstVisible = layout.from.plusDays((firstDay + 1).coerceAtMost(layout.days - 1).toLong())
+                    val month = measurer.measure(formatter.monthName(formatter.engine.toCalendarDate(firstVisible).month), labelStyle)
+                    val mx = if (rtl) visibleRight - month.size.width - edge else visibleLeft + edge
+                    drawRect(scheme.surfaceContainer, topLeft = Offset(mx - edge, visibleTop), size = Size(month.size.width + 2 * edge, month.size.height + edge))
+                    drawText(month, topLeft = Offset(mx, visibleTop + edge))
                 }
                 if (todayIndex in 0 until layout.days) {
                     val measured = measurer.measure(todayLabel, labelStyle.copy(color = scheme.primary))

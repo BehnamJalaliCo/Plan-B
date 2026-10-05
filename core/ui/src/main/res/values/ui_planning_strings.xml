@@ -68,4 +68,6 @@
         <item quantity="other">This task is waiting for %1$s unfinished tasks. Mark it as done anyway?</item>
     </plurals>
     <string name="ui_blocked_confirm">Complete anyway</string>
+    <string name="repeat_interval_less">Fewer: %1$s</string>
+    <string name="repeat_interval_more">More: %1$s</string>
 </resources>

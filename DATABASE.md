@@ -387,17 +387,29 @@ remain in the column. The limit of four rows is enforced in code by the reminder
 Index: `task_id`. Completing a recurring task copies `OFFSET` rows to the next occurrence;
 duplicating a task copies them too (`OfflineTaskRepository.copyRelativeReminders`).
 
+**Behaviour (Plan-B Pro #12, `TaskPlanningRepository`).** Two more `kind` values are written:
+`DEADLINE` (`offset_minutes` before 09:00 of `tasks.deadline`) and `NAG`, a settings row whose
+`offset_minutes` is the nag interval (5, 10, 15 or 30) when it is not the default 10. `NAG` is not
+a reminder: the four-row limit counts `OFFSET`, `ABSOLUTE` and `DEADLINE` only, and older readers
+skip unknown kinds. Relative rows (`OFFSET`, `DEADLINE`, `NAG`) follow recurring tasks and
+duplicates; `ABSOLUTE` rows do not. `TaskDao.tasksWithReminders` includes tasks that have only
+extra reminders.
+
 ### 3.19 `task_dependencies` (`TaskDependencyEntity`, v3)
 
 `task_id` waits for `depends_on_task_id`. PK `(task_id, depends_on_task_id)`; both FK →
 `tasks.id` **CASCADE**; index `depends_on_task_id`. Self-dependencies and cycles must be
-rejected in code before inserting (`TaskDependencyDao.insert` ignores duplicates only).
+rejected in code before inserting (`TaskDependencyDao.insert` ignores duplicates only). The
+dependencies work package does this with a depth-first search (`TaskDependencies.wouldCreateCycle`)
+that also tolerates cycles already present in restored data. Task lists select the number of
+open, live blockers as `open_blocker_count` (`TaskDao.SELECT_WITH_COUNTS`).
 
 ### 3.20 `saved_filters` (`SavedFilterEntity`, v3)
 
 Custom smart lists: `id` (PK), `name`, `icon` (`PlannerIcon.key`), `color` (`AccentColor.key`),
 `query` (TEXT NN, a JSON filter document with its own `version` field, owned by the smart-lists
-work package), `sort_order`, `created_at`, `updated_at`. Index: `sort_order`.
+work package), `sort_order`, `created_at`, `updated_at`. Index: `sort_order`. The document is
+`SmartFilterCodec` version 1, described in [docs/PRO.md](docs/PRO.md#planning-4-914).
 
 ### 3.21 `note_versions` (`NoteVersionEntity`, v3)
 
@@ -503,6 +515,12 @@ See the tables above: `tasks.deadline`, `scheduled_start`, `scheduled_end`, `nag
 completion date instead of the schedule; absent means `SCHEDULE`) and `BYSETPOS=n` together with
 `BYDAY` (`FREQ=MONTHLY;BYDAY=MO;BYSETPOS=2` = second Monday; `-1` = last). The current decoder
 ignores unknown keys, so such rules degrade to a plain schedule in code that does not know them.
+Also used: `WKST=SA` (the first day of the week "every N weeks" is counted from). With
+`BASIS=COMPLETION`, `COUNT` is the number of occurrences left and decreases with each new
+occurrence. A month without the requested weekday (`BYSETPOS=5`) is skipped.
+
+**Deadlines.** The TODAY view (and Today's completed count) includes tasks whose `deadline` is
+at most 3 days away; a task with a deadline is overdue only after its deadline.
 
 ### 3.30 Soft delete (trash, v3)
 

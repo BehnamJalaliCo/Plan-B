@@ -12,11 +12,16 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.ui.text.style.TextAlign
+import com.behnamjalali.planb.core.designsystem.component.PlannerIconButton
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -38,17 +43,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.behnamjalali.planb.core.common.Digits
 import com.behnamjalali.planb.core.designsystem.component.PlannerChip
 import com.behnamjalali.planb.core.designsystem.component.PlannerDialog
 import com.behnamjalali.planb.core.designsystem.component.PlannerSurface
-import com.behnamjalali.planb.core.designsystem.component.PlannerTextField
 import com.behnamjalali.planb.core.designsystem.theme.IconSize
 import com.behnamjalali.planb.core.designsystem.theme.MinTouchTarget
 import com.behnamjalali.planb.core.designsystem.theme.Spacing
@@ -305,7 +305,7 @@ fun CustomRecurrenceDialog(
     var positionDay by rememberSaveable { mutableIntStateOf((initial?.weekdays?.firstOrNull() ?: anchor.dayOfWeek).value) }
 
     val interval = Digits.toLatin(intervalText).toIntOrNull()?.takeIf { it in 1..999 }
-    val count = Digits.toLatin(countText).toIntOrNull()?.takeIf { it in 1..9999 }
+    val count = Digits.toLatin(countText).toIntOrNull()?.takeIf { it in 1..999 }
     val completion = allowAfterCompletion && afterCompletion
     val monthlyWeekday = !completion && frequency == RecurrenceFrequency.MONTHLY && byWeekday
     val valid = interval != null && (endMode != EndMode.COUNT || count != null) &&
@@ -342,17 +342,13 @@ fun CustomRecurrenceDialog(
         confirmEnabled = rule != null,
         onConfirm = { rule?.let(onConfirm) },
     ) {
-        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
             // The rule in plain words, as it will be saved.
-            PlannerSurface(Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite }) {
+            PlannerSurface(Modifier.fillMaxWidth()) {
                 Text(rule?.let { recurrenceSummary(it) } ?: stringResource(R.string.repeat_invalid), style = MaterialTheme.typography.titleSmall)
             }
-            PlannerTextField(
-                value = intervalText,
-                onValueChange = { intervalText = it.filter { c -> c.isDigit() }.take(3) },
-                label = stringResource(R.string.repeat_every),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            )
+            // A stepper rather than a text field: no keyboard over the dialog for a small number.
+            NumberStepper(stringResource(R.string.repeat_every), interval ?: 1) { intervalText = it.toString() }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 RecurrenceFrequency.entries.forEach { f ->
                     PlannerChip(
@@ -454,12 +450,7 @@ fun CustomRecurrenceDialog(
                 }
             }
             if (endMode == EndMode.COUNT) {
-                PlannerTextField(
-                    value = countText,
-                    onValueChange = { countText = it.filter { c -> c.isDigit() }.take(4) },
-                    label = stringResource(R.string.repeat_count),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                )
+                NumberStepper(stringResource(R.string.repeat_count), count ?: 1) { countText = it.toString() }
             }
         }
     }
@@ -473,6 +464,26 @@ fun CustomRecurrenceDialog(
             },
             allowClear = false,
         )
+    }
+}
+
+/** "Repeat every [−] 3 [+]": 1 to 999. */
+@Composable
+private fun NumberStepper(label: String, value: Int, onChange: (Int) -> Unit) {
+    val numbers = PlannerLocals.numbers
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = MinTouchTarget),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+        PlannerIconButton(Icons.Rounded.Remove, stringResource(R.string.repeat_interval_less, label), { onChange((value - 1).coerceAtLeast(1)) }, enabled = value > 1)
+        Text(
+            numbers.format(value),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.widthIn(min = 40.dp),
+            textAlign = TextAlign.Center,
+        )
+        PlannerIconButton(Icons.Rounded.Add, stringResource(R.string.repeat_interval_more, label), { onChange((value + 1).coerceAtMost(999)) }, enabled = value < 999)
     }
 }
 

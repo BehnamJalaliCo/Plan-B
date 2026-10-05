@@ -42,8 +42,26 @@ Foundation for **Plan-B Pro**. Every existing feature stays free.
 - Plan-B Pro **30-day trash and activity history** (#38): deleted tasks and notes can be restored
   for 30 days (More › Trash); a history of changes to tasks, notes, projects, events, habits and
   goals (More › Activity, and from the task and note editors). Free users' deletions stay as before.
+- Plan-B Pro **planning** (#4, #9–#14):
+  - Advanced repeats: "the second Monday" or "the last Friday" of every month (Jalali or
+    Gregorian; months without a fifth weekday are skipped), "3 days after completion", and
+    "every 2 weeks" counted from your own first day of the week, with the rule shown in words.
+  - Project **timeline**: a Gantt-style view of tasks and milestones with a today line and
+    dependency arrows, right-to-left in Persian; tap a bar to open the task.
+  - **Smart lists**: save filters (projects, tags, priority, status, dates, deadline, text,
+    sort) with an icon and color, shown as chips in Tasks; reorder and delete them.
+  - **Deadlines** separate from the planned date, with "deadline in 2 days" badges, near
+    deadlines on Today, sorting by deadline and overdue based on the deadline.
+  - **Up to five reminders** per task (before the planned time, before the deadline or at a set
+    time) and **nag until done** every 5–30 minutes, with Done and Snooze buttons.
+  - **Eisenhower matrix** with long-press drag between quadrants.
+  - **Dependencies**: tasks can wait for other tasks (cycles are refused), show a lock and ask
+    before being completed early.
 
 ### Changed
+- Overdue tasks: a task with a deadline is late only after its deadline.
+- The custom repeat dialog uses −/+ buttons for "repeat every" and the number of occurrences.
+- A restore also clears alarms of tasks that only had extra reminders.
 - The app may now use the Internet, only for the optional AI assistant. The release build may
   request only the permissions listed in `tools/allowed-permissions.txt` (checked in CI).
 - Items in the trash are left out of every list, count, reminder, search and export.

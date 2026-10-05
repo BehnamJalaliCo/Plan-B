@@ -62,4 +62,6 @@
         <item quantity="other">این کار منتظر %1$s کار ناتمام است. با این حال انجام‌شده علامت بخورد؟</item>
     </plurals>
     <string name="ui_blocked_confirm">انجام شد</string>
+    <string name="repeat_interval_less">کمتر: %1$s</string>
+    <string name="repeat_interval_more">بیشتر: %1$s</string>
 </resources>
