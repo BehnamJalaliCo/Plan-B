@@ -5,10 +5,28 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **242**.
+Total screenshots: **296**.
 
 
 ## Today
+
+### `plan_my_day`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/today/plan_my_day_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/today/plan_my_day_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/today/plan_my_day_en_light.png" width="220"/> | <img src="../artifacts/screenshots/today/plan_my_day_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/today/plan_my_day_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/today/plan_my_day_en_light_font150.png" width="220"/> |
+
+### `ritual_evening`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/today/ritual_evening_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_evening_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_evening_en_light.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_evening_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_evening_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_evening_en_light_font150.png" width="220"/> |
+
+### `ritual_morning`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/today/ritual_morning_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_morning_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_morning_en_light.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_morning_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_morning_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/today/ritual_morning_en_light_font150.png" width="220"/> |
 
 ### `today`
 
@@ -23,6 +41,12 @@ Total screenshots: **242**.
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/capture/quick_capture_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_en_light.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_en_light_font150.png" width="220"/> |
+
+### `quick_capture_smart`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/capture/quick_capture_smart_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_en_light.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/capture/quick_capture_smart_en_light_font150.png" width="220"/> |
 
 ## Tasks
 
@@ -229,6 +253,12 @@ Total screenshots: **242**.
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/settings/backup_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/settings/backup_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/settings/backup_en_light.png" width="220"/> | <img src="../artifacts/screenshots/settings/backup_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/settings/backup_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/settings/backup_en_light_font150.png" width="220"/> |
+
+### `day_planning`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/settings/day_planning_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/settings/day_planning_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/settings/day_planning_en_light.png" width="220"/> | <img src="../artifacts/screenshots/settings/day_planning_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/settings/day_planning_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/settings/day_planning_en_light_font150.png" width="220"/> |
 
 ### `settings`
 
