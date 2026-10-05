@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     @Inject lateinit var notifier: Notifier
+    @Inject lateinit var wellbeing: WellbeingSync
 
     /** Deep links (e.g. from reminder notifications) waiting to be handled by navigation. */
     private val pendingLink = MutableStateFlow<android.net.Uri?>(null)
@@ -61,6 +62,12 @@ class MainActivity : AppCompatActivity() {
                 onLinkHandled = { pendingLink.value = null },
             )
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Plan-B Pro #27: habits linked to Health Connect are checked off while Plan-B is in use.
+        wellbeing.onForeground()
     }
 
     override fun onNewIntent(intent: Intent) {

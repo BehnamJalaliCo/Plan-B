@@ -66,4 +66,12 @@
     <string name="capture_all_day">All day</string>
     <string name="capture_high_priority">High priority</string>
     <string name="capture_failed">Could not save. Please try again.</string>
+    <!-- Quick mood check-in on Today (Plan-B Pro #30). -->
+    <string name="today_mood_question">How are you feeling?</string>
+    <string name="today_mood_cd">Check in: %1$s</string>
+    <string name="today_mood_1">Very low</string>
+    <string name="today_mood_2">Low</string>
+    <string name="today_mood_3">Okay</string>
+    <string name="today_mood_4">Good</string>
+    <string name="today_mood_5">Great</string>
 </resources>

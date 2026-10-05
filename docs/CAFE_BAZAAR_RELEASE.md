@@ -33,6 +33,9 @@ the app has no ads, analytics or tracking):
 | `READ_CALENDAR`, `WRITE_CALENDAR` | Plan-B Pro sync with device calendars (Google Calendar), only when you turn on calendar sync | همگام‌سازی Plan-B Pro با تقویم‌های گوشی (تقویم گوگل)، فقط وقتی همگام‌سازی تقویم را روشن کنید |
 | `RECORD_AUDIO` | Only when you record a voice note (Plan-B Pro) | فقط وقتی یادداشت صوتی ضبط می‌کنید (Plan-B Pro) |
 | `ACCESS_NETWORK_STATE` | Wait for a connection or Wi-Fi before the one-time handwriting model download (Plan-B Pro, only after you agree) | انتظار برای اتصال یا وای‌فای پیش از دریافت یک‌بارهٔ مدل دست‌خط (Plan-B Pro، فقط پس از موافقت شما) |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | Keep the focus session's ambient sound playing with the screen off (Plan-B Pro, only while a session with a sound runs) | پخش صدای محیطی جلسهٔ تمرکز با صفحهٔ خاموش (Plan-B Pro، فقط هنگام اجرای جلسه‌ای با صدا) |
+| `ACCESS_NOTIFICATION_POLICY` | Strict focus mode turns on Do Not Disturb during a session and restores your setting afterwards (Plan-B Pro, only after you allow it in system settings) | حالت سخت‌گیرانهٔ تمرکز «مزاحم نشوید» را در طول جلسه روشن و بعد تنظیم شما را برمی‌گرداند (Plan-B Pro، فقط پس از اجازهٔ شما در تنظیمات گوشی) |
+| `health.READ_STEPS`, `READ_SLEEP`, `READ_HYDRATION`, `READ_EXERCISE`, `READ_DISTANCE` | Read-only daily totals from Health Connect to check habits off; each asked only when you link a habit to it (Plan-B Pro) | خواندن مجموع روزانه از Health Connect برای تیک زدن عادت‌ها؛ هر کدام فقط وقتی یک عادت را به آن وصل کنید (Plan-B Pro) |
 
 | Permission | English | فارسی |
 |---|---|---|
@@ -44,6 +47,9 @@ the app has no ads, analytics or tracking):
 | `READ_CALENDAR`, `WRITE_CALENDAR` | Only when you turn on calendar sync (Plan-B Pro) | فقط وقتی همگام‌سازی تقویم را روشن کنید (Plan-B Pro) |
 | `RECORD_AUDIO` | Only when you record a voice note | فقط وقتی یادداشت صوتی ضبط می‌کنید |
 | `ACCESS_NETWORK_STATE` | Handwriting model download, only after you agree (Plan-B Pro) | دریافت مدل دست‌خط، فقط پس از موافقت شما (Plan-B Pro) |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | Focus sounds with the screen off (Plan-B Pro) | صدای تمرکز با صفحهٔ خاموش (Plan-B Pro) |
+| `ACCESS_NOTIFICATION_POLICY` | Do Not Disturb during strict focus sessions, only after you allow it (Plan-B Pro) | «مزاحم نشوید» در جلسه‌های تمرکز سخت‌گیرانه، فقط پس از اجازهٔ شما (Plan-B Pro) |
+| Health Connect read permissions | Check habits off from steps, sleep, water, exercise or distance, only when you link a habit (Plan-B Pro) | تیک عادت‌ها با قدم، خواب، آب، ورزش یا مسافت، فقط وقتی یک عادت را وصل کنید (Plan-B Pro) |
 
 The last three are normal permissions (granted at install, never asked) and appear because the
 Plan-B Pro widgets use Jetpack Glance. The Wear OS companion is a separate app and is not part of

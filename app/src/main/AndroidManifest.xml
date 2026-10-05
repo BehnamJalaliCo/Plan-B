@@ -2,11 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- WorkManager (automatic backups, trash purge) asks for this, but Plan-B's work never runs
-         as a foreground service. ACCESS_NETWORK_STATE (normal, no prompt) stays: the handwriting
-         model download of Plan-B Pro notes (only after the user agrees) waits for a network or
-         for Wi-Fi through WorkManager. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+    <!-- FOREGROUND_SERVICE (normal, no prompt) is declared by core:focus: Focus Pro's ambient
+         sound plays through a media-playback foreground service while a session runs (Plan-B
+         Pro #26). WorkManager's own work never runs as a foreground service.
+         ACCESS_NETWORK_STATE (normal, no prompt): the handwriting model download of Plan-B Pro
+         notes (only after the user agrees) waits for a network or for Wi-Fi through WorkManager. -->
 
     <application
         android:name=".PlanBApplication"
@@ -123,6 +123,31 @@
                 <data android:mimeType="text/html" />
             </intent-filter>
         </activity>
+
+        <!--
+          Health Connect (Plan-B Pro #27): the screen that explains why Plan-B reads health data.
+          Health Connect opens it from its permission screen (Android 13 and older); Android 14+
+          opens it from the app's health permissions through the alias, which only the system may
+          start (START_VIEW_PERMISSION_USAGE). It only shows text.
+        -->
+        <activity
+            android:name=".health.HealthPermissionsActivity"
+            android:exported="true"
+            android:label="@string/health_rationale_title">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+        <activity-alias
+            android:name=".health.ViewPermissionUsageActivity"
+            android:exported="true"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE"
+            android:targetActivity=".health.HealthPermissionsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- "Start focus" launcher shortcut (Plan-B Pro #34): no UI, forwards to MainActivity. -->
         <activity

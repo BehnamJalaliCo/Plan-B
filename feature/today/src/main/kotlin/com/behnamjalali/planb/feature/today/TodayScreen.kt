@@ -18,6 +18,11 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.SentimentVerySatisfied
+import androidx.compose.material.icons.rounded.SentimentSatisfied
+import androidx.compose.material.icons.rounded.SentimentNeutral
+import androidx.compose.material.icons.rounded.SentimentDissatisfied
+import androidx.compose.material.icons.rounded.SentimentVeryDissatisfied
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoMode
 import androidx.compose.material.icons.rounded.Update
@@ -87,6 +92,8 @@ data class TodayActions(
     val onOpenDayPlanSettings: () -> Unit = {},
     val onRituals: () -> Unit = {},
     val onPlanDay: (PlanMode) -> Unit = {},
+    /** Plan-B Pro #30: a quick mood check-in with the chosen level (1..5). */
+    val onMoodCheckIn: (Int) -> Unit = {},
 )
 
 @Composable
@@ -114,6 +121,8 @@ private fun TodayContent(
     modifier: Modifier,
     contentPadding: PaddingValues,
 ) {
+    // Plan-B Pro #30: the quick mood check-in sits with the habits, for Pro users only (no teaser on Today).
+    val moodRow = com.behnamjalali.planb.core.ui.LocalProAccess.current.isPro
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -132,7 +141,7 @@ private fun TodayContent(
                 DashboardSection.TIMELINE -> timelineSection(data, actions)
                 DashboardSection.TASKS -> tasksSection(data, actions, onToggleTask)
                 DashboardSection.UPCOMING -> upcomingSection(data, actions, onToggleTask)
-                DashboardSection.HABITS -> habitsSection(data, actions, onCheckInHabit)
+                DashboardSection.HABITS -> habitsSection(data, actions, onCheckInHabit, moodRow)
                 DashboardSection.FOCUS -> item(key = "focus", contentType = "focus") { FocusCard(data, actions.onOpenFocus) }
                 DashboardSection.PROJECTS -> projectsSection(data, actions)
                 DashboardSection.NOTES -> notesSection(data, actions)
@@ -347,8 +356,9 @@ private fun LazyListScope.upcomingSection(data: TodayData, actions: TodayActions
     }
 }
 
-private fun LazyListScope.habitsSection(data: TodayData, actions: TodayActions, onCheckIn: (EntityId, Boolean) -> Unit) {
+private fun LazyListScope.habitsSection(data: TodayData, actions: TodayActions, onCheckIn: (EntityId, Boolean) -> Unit, moodRow: Boolean = false) {
     header("habits", R.string.today_section_habits, actions.onOpenHabits)
+    if (moodRow) item(key = "mood", contentType = "mood") { MoodQuickRow(actions.onMoodCheckIn) }
     if (data.habits.isEmpty()) {
         emptyLine("habits", R.string.today_empty_habits)
         return
@@ -493,3 +503,26 @@ private fun SmartDayCard(data: TodayData, actions: TodayActions) {
 }
 
 private const val MAX_TASKS = 8
+
+private val moodFaces = listOf(
+    Icons.Rounded.SentimentVeryDissatisfied,
+    Icons.Rounded.SentimentDissatisfied,
+    Icons.Rounded.SentimentNeutral,
+    Icons.Rounded.SentimentSatisfied,
+    Icons.Rounded.SentimentVerySatisfied,
+)
+
+private val moodNames = listOf(R.string.today_mood_1, R.string.today_mood_2, R.string.today_mood_3, R.string.today_mood_4, R.string.today_mood_5)
+
+/** "How are you feeling?" with five faces; a tap opens the mood check-in with that mood (Plan-B Pro #30). */
+@Composable
+private fun MoodQuickRow(onMood: (Int) -> Unit) {
+    PlannerCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.sm)) {
+        Text(stringResource(R.string.today_mood_question), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = Spacing.xs))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            moodFaces.forEachIndexed { i, icon ->
+                PlannerIconButton(icon, stringResource(R.string.today_mood_cd, stringResource(moodNames[i])), { onMood(i + 1) })
+            }
+        }
+    }
+}

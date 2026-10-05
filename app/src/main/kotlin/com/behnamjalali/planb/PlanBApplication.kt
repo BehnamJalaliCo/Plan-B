@@ -32,6 +32,7 @@ class PlanBApplication : Application() {
     @Inject lateinit var calendarSync: com.behnamjalali.planb.core.calendarsync.CalendarSyncController
     @Inject lateinit var rituals: com.behnamjalali.planb.core.notifications.RitualReminders
     @Inject lateinit var journalReminder: com.behnamjalali.planb.core.notifications.JournalReminders
+    @Inject lateinit var wellbeing: WellbeingSync
 
     override fun onCreate() {
         super.onCreate()
@@ -46,6 +47,8 @@ class PlanBApplication : Application() {
         personalization.start()
         // Plan-B Pro #3: two-way device calendar sync, only while the user has turned it on.
         calendarSync.start()
+        // Plan-B Pro #26, #29: Do Not Disturb and sound catch up with the focus session; badges follow the data.
+        wellbeing.start()
         appScope.launch {
             // Alarms can be lost (force-stop, restore); re-sync them off the main thread.
             runCatching { reminders.rescheduleAll() }

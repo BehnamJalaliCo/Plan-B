@@ -52,7 +52,10 @@ interface AchievementRepository {
     /** All badges with progress; recomputed whenever a badge is awarded. */
     fun observeBadges(): Flow<List<BadgeStatus>>
 
-    /** Badges awarded recently that were not celebrated yet, oldest first. */
+    /**
+     * Badges awarded recently that were not celebrated yet, oldest first. Badges awarded by the
+     * first evaluation on a device (existing data) are never celebrated.
+     */
     fun observeUncelebrated(): Flow<List<AwardedBadge>>
 
     suspend fun markCelebrated(id: EntityId)
@@ -145,8 +148,9 @@ class OfflineAchievementRepository @Inject constructor(
         val now = time.now()
         val zone = time.zone()
         val today = time.today()
-        if (state.celebratedBadgeId.first() == null) state.setCelebratedBadgeId(wellbeing.maxBadgeId())
-        return db.withTransaction {
+        // The first evaluation on this device catches up with the past: nothing it awards is celebrated.
+        val firstRun = state.celebratedBadgeId.first() == null
+        val awarded = db.withTransaction {
             val habitList = (habits.activeHabits() + archivedHabits()).map { it.toModel() }.associateBy { it.id }
             val amounts = amountsByHabit()
             wellbeing.challenges().forEach { entity ->
@@ -164,6 +168,8 @@ class OfflineAchievementRepository @Inject constructor(
                 progress.badge.takeIf { challenges.award(BadgeEntity(key = it.key, earnedAt = earnedAt)) > 0 }
             }
         }
+        if (firstRun) state.setCelebratedBadgeId(wellbeing.maxBadgeId())
+        return awarded
     }
 
     private suspend fun archivedHabits() = habits.observeHabits(true).first()

@@ -65,4 +65,12 @@
     <string name="capture_all_day">تمام روز</string>
     <string name="capture_high_priority">اولویت بالا</string>
     <string name="capture_failed">ذخیره نشد. دوباره تلاش کنید.</string>
+    <!-- Quick mood check-in on Today (Plan-B Pro #30). -->
+    <string name="today_mood_question">حالتان چطور است؟</string>
+    <string name="today_mood_cd">ثبت حال: %1$s</string>
+    <string name="today_mood_1">خیلی بد</string>
+    <string name="today_mood_2">بد</string>
+    <string name="today_mood_3">معمولی</string>
+    <string name="today_mood_4">خوب</string>
+    <string name="today_mood_5">عالی</string>
 </resources>

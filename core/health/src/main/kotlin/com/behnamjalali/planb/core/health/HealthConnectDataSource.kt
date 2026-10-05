@@ -127,6 +127,6 @@ object HealthConnectPermissions {
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal abstract class HealthModule {
+abstract class HealthModule {
     @Binds abstract fun source(impl: HealthConnectDataSource): HealthDataSource
 }

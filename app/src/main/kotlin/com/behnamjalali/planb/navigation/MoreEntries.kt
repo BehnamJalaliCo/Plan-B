@@ -3,7 +3,9 @@ package com.behnamjalali.planb.navigation
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Dashboard
+import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.Flag
+import androidx.compose.material.icons.rounded.Mood
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.RestoreFromTrash
 import androidx.compose.material.icons.rounded.Insights
@@ -19,7 +21,9 @@ import com.behnamjalali.planb.R
 import com.behnamjalali.planb.feature.focus.FocusRoute
 import com.behnamjalali.planb.feature.goals.GoalsRoute
 import com.behnamjalali.planb.feature.pro.PaywallRoute
+import com.behnamjalali.planb.feature.habits.ChallengesRoute
 import com.behnamjalali.planb.feature.habits.HabitsRoute
+import com.behnamjalali.planb.feature.journal.MoodTrackerRoute
 import com.behnamjalali.planb.feature.projects.ProjectsRoute
 import com.behnamjalali.planb.feature.reports.StatisticsRoute
 import com.behnamjalali.planb.feature.review.ReviewRoute
@@ -47,6 +51,8 @@ object MoreEntries {
         MoreEntry(R.string.more_section_grow, R.string.more_habits, Icons.Rounded.Repeat, HabitsRoute, R.string.more_habits_sub),
         MoreEntry(R.string.more_section_grow, R.string.more_goals, Icons.Rounded.Flag, GoalsRoute, R.string.more_goals_sub),
         MoreEntry(R.string.more_section_grow, R.string.more_focus, Icons.Rounded.Timer, FocusRoute, R.string.more_focus_sub),
+        MoreEntry(R.string.more_section_grow, R.string.more_challenges, Icons.Rounded.EmojiEvents, ChallengesRoute(), R.string.more_challenges_sub),
+        MoreEntry(R.string.more_section_grow, R.string.more_mood, Icons.Rounded.Mood, MoodTrackerRoute(), R.string.more_mood_sub),
         MoreEntry(R.string.more_section_grow, R.string.more_review, Icons.Rounded.Insights, ReviewRoute, R.string.more_review_sub),
         MoreEntry(R.string.more_section_grow, R.string.more_statistics, Icons.Rounded.QueryStats, StatisticsRoute, R.string.more_statistics_sub),
         MoreEntry(R.string.more_section_app, R.string.more_settings, Icons.Rounded.Settings, SettingsRoute, R.string.more_settings_sub),

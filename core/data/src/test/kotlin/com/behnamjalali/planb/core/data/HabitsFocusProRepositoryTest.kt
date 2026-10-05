@@ -131,6 +131,13 @@ class HabitsFocusProRepositoryTest {
 
     // region #29 challenges and badges
     @Test
+    fun firstEvaluation_awardsExistingAchievementsWithoutCelebrating() = runBlocking<Unit> {
+        repeat(10) { graph.tasks.setStatus(graph.tasks.save(Task(title = "t$it")), TaskStatus.DONE) }
+        assertThat(graph.achievements.evaluate()).containsExactly(BadgeDefinition.TASKS_10)
+        assertThat(graph.achievements.observeUncelebrated().first()).isEmpty()
+    }
+
+    @Test
     fun challenges_followTheData_andOneActivePerHabit() = runBlocking<Unit> {
         val id = habit()
         val challenge = graph.achievements.startChallenge(id, 7)
@@ -167,7 +174,10 @@ class HabitsFocusProRepositoryTest {
 
     @Test
     fun badges_areAwardedOnce_withTheDayTheyWereReached_andCelebratedOnlyWhenRecent() = runBlocking<Unit> {
-        repeat(10) { i ->
+        // The first evaluation on a device catches up with existing data without celebrating.
+        graph.tasks.setStatus(graph.tasks.save(Task(title = "old")), TaskStatus.DONE)
+        assertThat(graph.achievements.evaluate()).isEmpty()
+        repeat(9) { i ->
             val task = graph.tasks.save(Task(title = "t$i"))
             graph.tasks.setStatus(task, TaskStatus.DONE)
         }
@@ -176,7 +186,6 @@ class HabitsFocusProRepositoryTest {
             graph.time.advance(Duration.ofMinutes(25))
             graph.focus.finish()
         }
-        // The first evaluation starts celebrating from the badges that existed before it.
         val awarded = graph.achievements.evaluate()
         assertThat(awarded).containsExactly(BadgeDefinition.TASKS_10, BadgeDefinition.FOCUS_1)
         assertThat(graph.achievements.evaluate()).isEmpty()

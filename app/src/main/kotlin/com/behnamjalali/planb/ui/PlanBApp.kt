@@ -167,5 +167,10 @@ fun PlanBApp(
                 },
             )
         }
+
+        // Plan-B Pro #29: a badge earned just now is celebrated once, over whatever is open.
+        com.behnamjalali.planb.feature.habits.BadgeCelebrationHost(
+            onOpenBadges = { navController.navigate(com.behnamjalali.planb.feature.habits.ChallengesRoute(badges = true)) },
+        )
     }
 }

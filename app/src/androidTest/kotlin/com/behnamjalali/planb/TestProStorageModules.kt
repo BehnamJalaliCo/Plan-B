@@ -13,6 +13,8 @@ import com.behnamjalali.planb.core.billing.EntitlementPreferences
 import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.data.security.SecurityStore
 import com.behnamjalali.planb.core.data.security.SecurityStoreModule
+import com.behnamjalali.planb.core.data.wellbeing.WellbeingStore
+import com.behnamjalali.planb.core.data.wellbeing.WellbeingStoreModule
 import com.behnamjalali.planb.core.notifications.NagStateStoreModule
 import com.behnamjalali.planb.core.notifications.NagStore
 import dagger.Module
@@ -92,6 +94,19 @@ object TestNagStateStoreModule {
         @ApplicationContext context: Context,
         @ApplicationScope scope: CoroutineScope,
     ): DataStore<Preferences> = freshDataStore(context, scope, "test-nag-state")
+}
+
+/** Like [TestDataStoreModule]: a fresh Plan-B Pro habits and focus state file (Do Not Disturb, Health Connect, celebrations). */
+@Module
+@TestInstallIn(components = [SingletonComponent::class], replaces = [WellbeingStoreModule::class])
+object TestWellbeingStoreModule {
+    @Provides
+    @Singleton
+    @WellbeingStore
+    fun provideWellbeingDataStore(
+        @ApplicationContext context: Context,
+        @ApplicationScope scope: CoroutineScope,
+    ): DataStore<Preferences> = freshDataStore(context, scope, "test-wellbeing")
 }
 
 private fun freshDataStore(context: Context, scope: CoroutineScope, prefix: String): DataStore<Preferences> =

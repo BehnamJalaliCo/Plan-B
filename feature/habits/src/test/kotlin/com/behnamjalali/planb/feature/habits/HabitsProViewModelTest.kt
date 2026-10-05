@@ -131,6 +131,7 @@ class HabitsProViewModelTest {
 
     @Test
     fun celebration_showsEachRecentBadgeOnce() = runBlocking<Unit> {
+        graph.achievements.evaluate() // the device's first evaluation: nothing to celebrate
         repeat(10) { graph.tasks.setStatus(graph.tasks.save(Task(title = "t$it")), TaskStatus.DONE) }
         graph.achievements.evaluate()
         val vm = main.track(BadgeCelebrationViewModel(graph.achievements)).also { main.keepCollecting(it.pending) }

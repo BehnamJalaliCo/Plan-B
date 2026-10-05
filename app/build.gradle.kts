@@ -137,6 +137,9 @@ dependencies {
     implementation(projects.core.billing)
     implementation(projects.core.ai)
     implementation(projects.core.calendarsync)
+    // Plan-B Pro habits and focus: Focus Pro sound and Do Not Disturb (#26), Health Connect (#27).
+    implementation(projects.core.focus)
+    implementation(projects.core.health)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)

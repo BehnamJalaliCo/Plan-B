@@ -22,6 +22,10 @@
     <string name="more_goals_sub">پیشرفت قابل‌اندازه‌گیری در طول زمان</string>
     <string name="more_focus">تمرکز</string>
     <string name="more_focus_sub">پومودورو و کار عمیق</string>
+    <string name="more_challenges">چالش‌ها و نشان‌ها</string>
+    <string name="more_challenges_sub">چالش‌های عادت و نشان‌های شما</string>
+    <string name="more_mood">حال و انرژی</string>
+    <string name="more_mood_sub">ثبت حال، روندها و الگوها</string>
     <string name="more_review">مرور هفتگی</string>
     <string name="more_review_sub">مرور هفته و برنامه‌ریزی هفتهٔ بعد</string>
     <string name="more_settings">تنظیمات</string>
@@ -99,4 +103,11 @@
     <string name="wear_locked">برنامهٔ ساعت به Plan-B Pro روی گوشی نیاز دارد.</string>
     <!-- Share sheet entry of the web clipper (Plan-B Pro #22). -->
     <string name="clipper_share_label">ذخیره در Plan-B</string>
+    <!-- Health Connect's "why does Plan-B ask" screen (Plan-B Pro #27). -->
+    <string name="health_rationale_title">Plan-B و Health Connect</string>
+    <string name="health_rationale_intro">Plan-B می‌تواند وقتی قدم‌ها، خواب، آب، ورزش یا مسافت روزانه‌تان به هدفی که تعیین کرده‌اید برسد، عادت‌ها را برایتان تیک بزند.</string>
+    <string name="health_rationale_what">چه چیزی خوانده می‌شود: فقط مجموع روزانهٔ همان نوع داده‌ای که به یک عادت وصل شده (مثلاً قدم‌های امروز)، و اگر اجازه دهید مدت خواب روزهایی که حالتان را ثبت کرده‌اید.</string>
+    <string name="health_rationale_how">چطور استفاده می‌شود: فقط روی همین دستگاه، برای تیک زدن عادت‌ها و نشان دادن الگوهای خودتان. Plan-B هرگز در Health Connect نمی‌نویسد، این داده را به جایی نمی‌فرستد و در پشتیبان‌ها نمی‌گذارد.</string>
+    <string name="health_rationale_control">اختیار با شماست: دسترسی هر بار فقط برای یک نوع داده و فقط هنگام وصل کردن یک عادت خواسته می‌شود و هر وقت بخواهید می‌توانید آن را در Health Connect پس بگیرید.</string>
+    <string name="health_rationale_close">بستن</string>
 </resources>

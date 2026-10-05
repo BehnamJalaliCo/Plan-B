@@ -27,7 +27,7 @@ android.permission.READ_CALENDAR
 android.permission.WRITE_CALENDAR
 
 # WorkManager (automatic backups, 30-day trash purge, Pro home-screen widgets via Glance): keeps the device awake while a short
-# background job runs. Its foreground-service permission is removed in the manifest.
+# background job runs. Its own foreground service is never used (FOREGROUND_SERVICE is Focus Pro's, below).
 android.permission.WAKE_LOCK
 
 # Plan-B Pro voice notes (#19): runtime permission asked in context, with an explanation, only
@@ -39,6 +39,26 @@ android.permission.RECORD_AUDIO
 # handwriting model only after the user agrees, through WorkManager, waiting for a network (or
 # for Wi-Fi when "Only over Wi-Fi" is on). Nothing else reads the network state.
 android.permission.ACCESS_NETWORK_STATE
+
+# Plan-B Pro Focus Pro (#26). Normal (install-time, no prompt): the ambient sound keeps playing
+# with the screen off through a foreground service of type mediaPlayback, which runs only while a
+# focus session with a sound is running. WorkManager's own work never runs in the foreground.
+android.permission.FOREGROUND_SERVICE
+android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK
+
+# Plan-B Pro Focus Pro strict mode (#26). Normal, but Android also needs the user to allow
+# "Do Not Disturb access" in system settings (asked in context, with an explanation). Plan-B
+# turns Do Not Disturb on only while a strict session runs and puts the previous setting back.
+android.permission.ACCESS_NOTIFICATION_POLICY
+
+# Plan-B Pro Health Connect (#27): read-only daily totals, asked one kind at a time in context,
+# only when the user links a habit to that data (or compares the mood with sleep). Never written,
+# never sent anywhere, never in backups.
+android.permission.health.READ_STEPS
+android.permission.health.READ_SLEEP
+android.permission.health.READ_HYDRATION
+android.permission.health.READ_EXERCISE
+android.permission.health.READ_DISTANCE
 
 # Added by AndroidX core: protects the app's own non-exported dynamic receivers.
 com.behnamjalali.planb.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
