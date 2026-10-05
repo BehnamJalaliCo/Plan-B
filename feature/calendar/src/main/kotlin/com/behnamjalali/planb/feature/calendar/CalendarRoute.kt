@@ -23,11 +23,13 @@ fun CalendarDestination(
     viewModel: CalendarViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val nowMinute by viewModel.nowMinute.collectAsStateWithLifecycle()
     val resources = LocalResources.current
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { message ->
             when (message) {
                 CalendarMessage.Failed -> snackbarHostState.showSnackbar(resources.getString(R.string.calendar_error))
+                CalendarMessage.Imported -> snackbarHostState.showSnackbar(resources.getString(R.string.calendar_imported))
                 is CalendarMessage.Completed -> {
                     // A completed task leaves the calendar; offer the same undo as the task list.
                     val result = snackbarHostState.showSnackbar(
@@ -43,8 +45,9 @@ fun CalendarDestination(
     CalendarScreen(
         state = state,
         contentPadding = contentPadding,
+        nowMinute = nowMinute,
         callbacks = CalendarCallbacks(
-            onViewChange = viewModel::setView,
+            onModeChange = viewModel::setMode,
             onSelect = viewModel::select,
             onPage = viewModel::page,
             onToday = viewModel::goToToday,
@@ -52,6 +55,9 @@ fun CalendarDestination(
             onOpenTask = onOpenTask,
             onToggleTask = viewModel::setTaskCompleted,
             onNewEvent = onNewEvent,
+            onScheduleTask = viewModel::scheduleTask,
+            onUnscheduleTask = viewModel::unscheduleTask,
+            onImportDevice = viewModel::importDeviceItem,
         ),
     )
 }

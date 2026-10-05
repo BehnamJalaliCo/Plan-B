@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Plan-B Pro #2, #3, #6, #7 in the calendar -->
+    <string name="calendar_view_timeline">Timeline</string>
+    <!-- %1$s holiday name -->
+    <string name="calendar_holiday_named">Holiday: %1$s</string>
+    <string name="calendar_lunar_note">Lunar dates may shift by a day.</string>
+    <string name="calendar_unscheduled">Unscheduled</string>
+    <string name="calendar_unscheduled_hint">Hold a task, then drag it onto an hour.</string>
+    <string name="calendar_schedule_at">Schedule at…</string>
+    <string name="calendar_move_block">Move…</string>
+    <string name="calendar_resize_block">Change length…</string>
+    <string name="calendar_unschedule">Remove from schedule</string>
+    <string name="calendar_duration_title">Length</string>
+    <string name="calendar_close">Close</string>
+    <!-- %1$s a duration such as "1 hr 30 min" -->
+    <string name="calendar_free_gap">%1$s free</string>
+    <string name="calendar_now">Now</string>
+    <string name="calendar_anytime">Anytime</string>
+    <string name="calendar_timeline_empty">Nothing planned yet. The whole day is yours.</string>
+    <!-- %1$s calendar name -->
+    <string name="calendar_device_event">From %1$s</string>
+    <string name="calendar_untitled">(No title)</string>
+    <string name="calendar_import">Copy into Plan-B</string>
+    <string name="calendar_import_hint">This event belongs to your device calendar; Plan-B only shows it. A copy becomes a Plan-B event of its own.</string>
+    <string name="calendar_imported">Copied into Plan-B</string>
+    <string name="calendar_time_blocking_hint">Plan your day hour by hour</string>
+    <!-- %1$s task title -->
+    <string name="calendar_mark_done">Mark “%1$s” done</string>
+    <string name="calendar_mark_not_done">Mark “%1$s” not done</string>
+
+    <!-- Settings › Calendar (holidays and device calendars) -->
+    <string name="calendar_settings_title">Holidays and device calendars</string>
+    <string name="calendar_settings_official">Iran\'s official calendar</string>
+    <string name="calendar_settings_holidays">Official holidays</string>
+    <string name="calendar_settings_holidays_summary">Holidays and Fridays in red</string>
+    <string name="calendar_settings_occasions">Occasions</string>
+    <string name="calendar_settings_occasions_summary">Named days such as Teachers\' Day or Yalda Night</string>
+    <string name="calendar_settings_hijri">Hijri (lunar) date</string>
+    <string name="calendar_settings_hijri_summary">Shown under the day\'s title</string>
+    <string name="calendar_settings_lunar_source">Lunar holidays use the published calendar for 1405 and 1406 and the tabular (civil) Hijri calculation for other years. Iran fixes them by sighting the new moon, so they may shift by a day.</string>
+    <string name="calendar_settings_device">Device calendars</string>
+    <string name="calendar_settings_sync">Sync with device calendars</string>
+    <string name="calendar_settings_sync_summary">See Google Calendar and your phone\'s other calendars in Plan-B, and copy Plan-B events into one of them</string>
+    <string name="calendar_settings_permission_title">Access to your calendars</string>
+    <string name="calendar_settings_permission_text">Plan-B reads the events of the calendars you choose, to show them next to your plans, and writes only the events it creates itself. Plan-B sends nothing anywhere; your calendar app syncs its calendars as usual.</string>
+    <string name="calendar_settings_permission_continue">Continue</string>
+    <string name="calendar_settings_permission_later">Not now</string>
+    <string name="calendar_settings_permission_denied">Calendar access is off, so sync can\'t run. You can allow it in the system settings.</string>
+    <string name="calendar_settings_open_system">Open settings</string>
+    <string name="calendar_settings_show">Show these calendars</string>
+    <string name="calendar_settings_write">Write Plan-B events to</string>
+    <string name="calendar_settings_write_none">Don\'t write (show only)</string>
+    <string name="calendar_settings_create_local">Create a “Plan-B” calendar on this phone</string>
+    <string name="calendar_settings_local_name">Plan-B</string>
+    <string name="calendar_settings_no_calendars">No calendars found on this device.</string>
+    <!-- %1$s date and time -->
+    <string name="calendar_settings_last_sync">Last synced %1$s</string>
+    <string name="calendar_settings_never_synced">Not synced yet</string>
+    <string name="calendar_settings_sync_failed">The last sync didn\'t finish. Check calendar access.</string>
+    <string name="calendar_settings_sync_now">Sync now</string>
+    <string name="calendar_settings_sync_rules">If an event changes in both places, the latest change wins. Plan-B never changes or deletes events it didn\'t create. Events that repeat by Jalali months or years stay in Plan-B only. Turning sync off leaves the copied events in your calendar.</string>
+    <string name="calendar_settings_read_only">read only</string>
+</resources>

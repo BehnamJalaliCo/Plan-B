@@ -79,6 +79,12 @@ fun MonthGridView(
     onSelect: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     markers: (LocalDate) -> Int = { 0 },
+    /** Days drawn as days off (official holidays and the weekend, Plan-B Pro #2). */
+    offDay: (LocalDate) -> Boolean = { false },
+    /** Spoken after the date, e.g. the holiday's name. */
+    extraDescription: (LocalDate) -> String? = { null },
+    /** Weekday headers drawn as the weekend. */
+    weekendDay: (java.time.DayOfWeek) -> Boolean = { false },
 ) {
     val formatter = PlannerLocals.formatter
     val today = PlannerLocals.today
@@ -94,7 +100,7 @@ fun MonthGridView(
                         .semantics { contentDescription = formatter.weekdayName(day) },
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.labelMedium,
-                    color = scheme.onSurfaceVariant,
+                    color = if (weekendDay(day)) scheme.error else scheme.onSurfaceVariant,
                 )
             }
         }
@@ -111,7 +117,9 @@ fun MonthGridView(
                             .heightIn(min = MinTouchTarget)
                             .aspectRatio(1f)
                             .selectable(selected = isSelected, role = Role.Button, onClick = { onSelect(cell.date) })
-                            .semantics { contentDescription = formatter.fullDate(cell.date) },
+                            .semantics {
+                                contentDescription = listOfNotNull(formatter.fullDate(cell.date), extraDescription(cell.date)).joinToString(", ")
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
                         DayCircle(isSelected, isToday, count > 0) {
@@ -120,6 +128,7 @@ fun MonthGridView(
                             style = MaterialTheme.typography.bodyMedium,
                                 color = when {
                                     isSelected -> scheme.onPrimary
+                                    offDay(cell.date) -> if (cell.inMonth) scheme.error else scheme.error.copy(alpha = 0.5f)
                                     !cell.inMonth -> scheme.outline
                                     else -> scheme.onSurface
                                 },

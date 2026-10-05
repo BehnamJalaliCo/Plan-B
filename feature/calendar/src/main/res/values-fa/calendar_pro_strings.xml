@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_view_timeline">خط زمانی</string>
+    <string name="calendar_holiday_named">تعطیل: %1$s</string>
+    <string name="calendar_lunar_note">تاریخ‌های قمری ممکن است یک روز جابه‌جا شوند.</string>
+    <string name="calendar_unscheduled">بدون ساعت</string>
+    <string name="calendar_unscheduled_hint">کار را نگه دارید و روی یک ساعت بکشید.</string>
+    <string name="calendar_schedule_at">زمان‌بندی در…</string>
+    <string name="calendar_move_block">جابه‌جایی…</string>
+    <string name="calendar_resize_block">تغییر مدت…</string>
+    <string name="calendar_unschedule">برداشتن از برنامهٔ ساعتی</string>
+    <string name="calendar_duration_title">مدت</string>
+    <string name="calendar_close">بستن</string>
+    <string name="calendar_free_gap">%1$s وقت آزاد</string>
+    <string name="calendar_now">اکنون</string>
+    <string name="calendar_anytime">هر زمان از روز</string>
+    <string name="calendar_timeline_empty">هنوز برنامه‌ای نچیده‌اید؛ همهٔ روز در اختیار شماست.</string>
+    <string name="calendar_device_event">از تقویم %1$s</string>
+    <string name="calendar_untitled">(بدون عنوان)</string>
+    <string name="calendar_import">کپی در Plan-B</string>
+    <string name="calendar_import_hint">این رویداد مال تقویم گوشی است و Plan-B فقط آن را نشان می‌دهد. نسخهٔ کپی‌شده یک رویداد مستقل Plan-B می‌شود.</string>
+    <string name="calendar_imported">در Plan-B کپی شد</string>
+    <string name="calendar_time_blocking_hint">روزتان را ساعت‌به‌ساعت بچینید</string>
+    <string name="calendar_mark_done">علامت انجام‌شده برای «%1$s»</string>
+    <string name="calendar_mark_not_done">برداشتن علامت انجام‌شده از «%1$s»</string>
+
+    <string name="calendar_settings_title">مناسبت‌ها و تقویم‌های گوشی</string>
+    <string name="calendar_settings_official">تقویم رسمی ایران</string>
+    <string name="calendar_settings_holidays">تعطیلات رسمی</string>
+    <string name="calendar_settings_holidays_summary">تعطیلات و جمعه‌ها با رنگ قرمز</string>
+    <string name="calendar_settings_occasions">مناسبت‌ها</string>
+    <string name="calendar_settings_occasions_summary">روزهایی مثل روز معلم یا شب یلدا</string>
+    <string name="calendar_settings_hijri">تاریخ قمری</string>
+    <string name="calendar_settings_hijri_summary">زیر عنوان روز نمایش داده می‌شود</string>
+    <string name="calendar_settings_lunar_source">تعطیلات قمری برای سال‌های ۱۴۰۵ و ۱۴۰۶ از تقویم منتشرشده و برای سال‌های دیگر با محاسبهٔ جدولی (هجری قمری حسابی) تعیین شده‌اند. این تاریخ‌ها در ایران با رؤیت هلال قطعی می‌شوند و ممکن است یک روز جابه‌جا شوند.</string>
+    <string name="calendar_settings_device">تقویم‌های گوشی</string>
+    <string name="calendar_settings_sync">همگام‌سازی با تقویم‌های گوشی</string>
+    <string name="calendar_settings_sync_summary">رویدادهای تقویم گوگل و تقویم‌های دیگر گوشی را در Plan-B ببینید و رویدادهای Plan-B را در یکی از آن‌ها ثبت کنید</string>
+    <string name="calendar_settings_permission_title">دسترسی به تقویم‌ها</string>
+    <string name="calendar_settings_permission_text">Plan-B رویدادهای تقویم‌هایی را که انتخاب می‌کنید می‌خواند تا کنار برنامه‌هایتان نشان دهد، و فقط رویدادهایی را می‌نویسد که خودش ساخته است. Plan-B چیزی به جایی نمی‌فرستد؛ برنامهٔ تقویم شما مثل همیشه تقویم‌هایش را همگام می‌کند.</string>
+    <string name="calendar_settings_permission_continue">ادامه</string>
+    <string name="calendar_settings_permission_later">فعلاً نه</string>
+    <string name="calendar_settings_permission_denied">دسترسی به تقویم خاموش است و همگام‌سازی انجام نمی‌شود. می‌توانید آن را در تنظیمات گوشی روشن کنید.</string>
+    <string name="calendar_settings_open_system">باز کردن تنظیمات</string>
+    <string name="calendar_settings_show">نمایش این تقویم‌ها</string>
+    <string name="calendar_settings_write">ثبت رویدادهای Plan-B در</string>
+    <string name="calendar_settings_write_none">ثبت نکن (فقط نمایش)</string>
+    <string name="calendar_settings_create_local">ساخت تقویم «Plan-B» روی همین گوشی</string>
+    <string name="calendar_settings_local_name">Plan-B</string>
+    <string name="calendar_settings_no_calendars">تقویمی روی این گوشی پیدا نشد.</string>
+    <string name="calendar_settings_last_sync">آخرین همگام‌سازی: %1$s</string>
+    <string name="calendar_settings_never_synced">هنوز همگام‌سازی نشده</string>
+    <string name="calendar_settings_sync_failed">آخرین همگام‌سازی کامل نشد. دسترسی به تقویم را بررسی کنید.</string>
+    <string name="calendar_settings_sync_now">همگام‌سازی اکنون</string>
+    <string name="calendar_settings_sync_rules">اگر رویدادی در هر دو جا تغییر کند، آخرین تغییر می‌ماند. Plan-B هرگز رویدادهایی را که خودش نساخته تغییر نمی‌دهد یا پاک نمی‌کند. رویدادهایی که بر اساس ماه یا سال شمسی تکرار می‌شوند فقط در Plan-B می‌مانند. با خاموش کردن همگام‌سازی، رویدادهای کپی‌شده در تقویم شما باقی می‌مانند.</string>
+    <string name="calendar_settings_read_only">فقط خواندنی</string>
+</resources>
