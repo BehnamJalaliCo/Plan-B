@@ -8,6 +8,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
@@ -18,6 +19,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.behnamjalali.planb.core.data.repository.SettingsRepository
 import com.behnamjalali.planb.core.data.repository.TaskFilter
 import com.behnamjalali.planb.core.data.repository.TaskRepository
+import com.google.common.truth.Truth.assertThat
+import com.behnamjalali.planb.core.model.AppLanguage
 import com.behnamjalali.planb.core.model.TaskView
 import com.behnamjalali.planb.core.model.UserSettings
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -74,11 +77,19 @@ class AppFlowsTest {
     }
 
     @Test
-    fun onboarding_canBeSkipped_andShowsToday() {
+    fun onboarding_languageThenWelcome_canBeSkipped_andShowsToday() {
+        val language = runBlocking { settings.current().language }
         launch()
+        // First the bilingual language screen; choosing the active language needs no recreation.
+        waitFor(hasTestTag("onboarding_language_${AppLanguage.ENGLISH.tag}"))
+        waitFor(hasTestTag("onboarding_language_${language.tag}")).performClick()
+        waitFor(hasTestTag("onboarding_welcome_start") and isEnabled()).performClick()
         waitFor(hasTestTag("onboarding_skip")).performClick()
         waitFor(hasTestTag("nav_today"))
         assertThatOnboardingCompleted()
+        val stored = runBlocking { settings.current() }
+        assertThat(stored.languageChosen).isTrue()
+        assertThat(stored.language).isEqualTo(language)
     }
 
     @Test

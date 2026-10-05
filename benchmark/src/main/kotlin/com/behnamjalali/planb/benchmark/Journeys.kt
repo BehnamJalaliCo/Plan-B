@@ -8,8 +8,15 @@ import androidx.test.uiautomator.Until
 const val PACKAGE_NAME = "com.behnamjalali.planb"
 private const val TIMEOUT_MS = 5_000L
 
-/** Skips onboarding on a fresh install (no-op once it has been completed). */
+/**
+ * Goes through the first run on a fresh install (no-op once it has been completed): keeps the
+ * default language (no recreation), starts from the welcome and skips the slides.
+ */
 fun MacrobenchmarkScope.skipOnboarding() {
+    device.wait(Until.hasObject(By.res("onboarding_language_fa")), TIMEOUT_MS)
+    device.findObject(By.res("onboarding_language_fa"))?.click()
+    device.wait(Until.hasObject(By.res("onboarding_welcome_start").enabled(true)), TIMEOUT_MS)
+    device.findObject(By.res("onboarding_welcome_start"))?.click()
     device.wait(Until.hasObject(By.res("onboarding_skip")), TIMEOUT_MS)
     device.findObject(By.res("onboarding_skip"))?.click()
     device.wait(Until.hasObject(By.res("nav_today")), TIMEOUT_MS)
