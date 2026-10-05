@@ -2,7 +2,8 @@
 
 All versions are pinned in [`gradle/libs.versions.toml`](../gradle/libs.versions.toml). Only
 stable releases are used (no alpha, beta or RC artifacts). The only network code is the
-optional AI assistant in `core:ai` (OkHttp); `INTERNET` is declared there and nowhere else.
+optional AI assistant in `core:ai` (OkHttp); `INTERNET` is declared there, and ML Kit's
+handwriting model download (Plan-B Pro, after consent) uses it too.
 The merged release manifest must request only the permissions in
 [`tools/allowed-permissions.txt`](../tools/allowed-permissions.txt) (checked by CI).
 
@@ -40,6 +41,10 @@ The merged release manifest must request only the permissions in
 | androidx.work:work-runtime-ktx | 2.12.0 | Apache 2.0 | Plan-B Pro automatic backups and the daily trash purge (`ACCESS_NETWORK_STATE` and `FOREGROUND_SERVICE` are removed from the manifest; `WAKE_LOCK` stays) |
 | androidx.biometric:biometric | 1.1.0 | Apache 2.0 | Plan-B Pro App lock and fingerprint unlock of locked notes (`USE_BIOMETRIC`, `USE_FINGERPRINT`) |
 | Poolakey (`com.github.cafebazaar.Poolakey:poolakey`) | 2.2.0 | Apache 2.0 | Cafe Bazaar in-app billing (Plan-B Pro). From JitPack, restricted to this group by an `exclusiveContent` filter in `settings.gradle.kts`; brings `androidx.fragment` and adds only `PAY_THROUGH_BAZAAR` |
+| ML Kit Document Scanner (`com.google.android.gms:play-services-mlkit-document-scanner`) | 16.0.0 | ML Kit terms | Plan-B Pro document scan (#17); runs in Google Play services, the camera + crop fallback works without them |
+| ML Kit Text Recognition, unbundled (`com.google.android.gms:play-services-mlkit-text-recognition`) | 19.0.1 | ML Kit terms | Plan-B Pro OCR of Latin text (#17); the model lives in Play services, nothing bundled |
+| ML Kit Digital Ink Recognition (`com.google.mlkit:digital-ink-recognition`) | 19.0.0 | ML Kit terms | Plan-B Pro handwriting to text (#18); native recognizer in the APK (≈5 MB compressed, ARM), language models downloaded on first use after consent. Its data-transport usage logging is disabled (backend removed in the manifest) |
+| Tesseract4Android (`cz.adaptech.tesseract4android:tesseract4android`) | 4.9.0 | Apache 2.0 (Tesseract), BSD-2 (Leptonica), libjpeg/libpng licenses | Plan-B Pro Persian OCR (#17), with `fas.traineddata` from tessdata_fast (Apache 2.0) in `feature/notebooks/src/main/assets/tessdata/`. From JitPack, restricted to this group; ships no R8 rules, so `app/proguard-rules.pro` keeps its JNI classes |
 | OkHttp (+ Okio) | 5.5.0 | Apache 2.0 | HTTP client of the optional AI assistant (`core:ai`) |
 | Anjoman Max font (Regular, Medium, SemiBold, Bold) | 3.000 | Proprietary, fontiran.com — used under the owner's license | App typeface (supplied at build time, see [FONTS.md](FONTS.md)) |
 | Vazirmatn font (build fallback only) | 33.003 | SIL OFL 1.1 | Used only when the licensed fonts are absent; never in releases (`licenses/Vazirmatn-OFL.txt`) |

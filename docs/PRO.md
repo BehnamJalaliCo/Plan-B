@@ -44,16 +44,16 @@ The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable;
 13. `eisenhower` — Eisenhower matrix ✅
 14. `dependencies` — task dependencies ✅
 
-**Notes**
-15. `rich_notes` — images, attachments, tables and pen drawing in notes
+**Notes** (#15, #17–#20 and #23 implemented, see [Rich notes](#rich-notes-15-1720-23))
+15. `rich_notes` — images, attachments, tables and pen drawing in notes ✅
 16. `note_links` — links between notes and note version history
-17. `document_scan` — document scan and text search inside images
-18. `handwriting` — handwriting to text
-19. `voice_notes` — voice recording in notes with transcription
-20. `note_databases` — simple database tables in notes
+17. `document_scan` — document scan and text search inside images ✅
+18. `handwriting` — handwriting to text ✅
+19. `voice_notes` — voice recording in notes with transcription ✅
+20. `note_databases` — simple database tables in notes ✅
 21. `note_graph` — note graph view
 22. `web_clipper` — web clipper (save from the browser via Android share)
-23. `math_charts` — math formulas and charts in notes
+23. `math_charts` — math formulas and charts in notes ✅
 24. `focus_writing` — distraction-free writing with word goals
 25. `journal` — daily journal with prompts and a mood calendar
 
@@ -410,6 +410,63 @@ neutral categories (`INVALID_KEY`, `NETWORK_UNREACHABLE`, `RATE_LIMITED`, `PROVI
 the UI must only ever say to check the key or the internet connection. Only the text the user
 chooses is sent, directly to their provider. Anthropic has no suggested model ids in the
 catalog: the assistant UI should offer `listModels()` results.
+
+## Rich notes (#15, #17–#20, #23)
+
+No schema change: block content lives in the note's JSON (`NoteBlock.data`, `attachmentId`),
+files in `attachments` (owner `NOTE`) and `files/attachments/`. The note editor's toolbar has an
+**Insert** button (Photo from gallery, Take a photo, Scan document, File, Table, Drawing, Record
+voice, Database, Formula, Chart); each item shows a Pro badge to free users and opens the Pro
+screen for its feature. **Everyone can read every block**; without Pro the blocks are read-only
+(edit buttons open the Pro screen). Code: `core:model` `rich/` (payloads, table and database
+operations, chart mapping, the formula parser), `core:data` `AttachmentRepository`,
+`feature:notebooks` `rich/` (block UIs, `RichEditor`) and `media/` (recognition engines).
+
+| # | Block | How it works |
+|---|---|---|
+| 15 | Photo, File, Table, Drawing | Photos from the system Photo Picker (no storage permission) or the camera app (`ACTION_IMAGE_CAPTURE` into a FileProvider URI; no `CAMERA` permission), scaled to 2560 px on the longer side (EXIF rotation applied) and stored as JPEG 85 (PNG when transparent); captions. Files through SAF (`OpenDocument`), copied as they are; open/share through the `<package>.attachments` FileProvider (read grant for that one file). Tables: editable cells, add/insert/delete/move rows and columns, header row, reading-order columns (mirrored in Persian), cells announced as "row r, column c" with TalkBack actions. Drawing: full-screen pen canvas with pressure-sensitive width, six colors, width slider, stroke eraser, undo/redo/clear (also TalkBack actions); strokes are stored as a compact vector file (`x,y,pressure` integer triples, max 60,000 points) plus a PNG preview on paper. |
+| 17 | Scanned document | ML Kit Document Scanner (Play services, up to 10 pages, gallery import) when Google Play services exist; otherwise the camera app and a manual crop (drag the corners). Every photo and page is read for text in the background. **OCR**: Latin text with ML Kit text recognition through Play services (`play-services-mlkit-text-recognition`, no model in the APK; skipped without Play services), Persian/Arabic text with Tesseract (Tesseract4Android 4.9.0) and the bundled `fas.traineddata` from tessdata_fast (431,500 bytes, SHA-256 `db1c0a91…a4505`, Apache 2.0) — small enough to bundle, so there is no optional download. Tesseract's output is kept only at ≥55 % confidence and ≥60 % Arabic-script letters. Text is stored in `attachments.ocr_text`, shown under the image (selectable) and indexed on the note's search row; search marks such hits "Found in an image". |
+| 18 | Drawing → Convert to text | ML Kit Digital Ink Recognition with the `fa` or `en-US` model (chosen in a menu). A missing model (≈20 MB) is downloaded only after a consent dialog with an "Only over Wi-Fi" option (default on), with a progress note; failures show a neutral message. The text is inserted as a text block below the drawing. |
+| 19 | Voice recording | Recorded with `MediaRecorder` (AAC in `.m4a`, mono 16 kHz, 48 kbps, stops at 31 MB); `RECORD_AUDIO` is asked in context after an explanation, with a path to Settings when denied for good. Live waveform while recording; 48-bar waveform stored in the block; play/pause/seek and duration. **Transcribe**: on Android 13+ the file is decoded to PCM and streamed to `SpeechRecognizer` (`EXTRA_AUDIO_SOURCE`, segmented session, `EXTRA_PREFER_OFFLINE`, the on-device recognizer first), in `fa-IR` or `en-US` by the app language. Android 12 and older cannot give a file to the speech service and the microphone cannot feed a recorder and the recognizer at once, so there the transcript is dictated live after a short explanation. Stored in `attachments.transcript`, indexed ("Found in a recording"). |
+| 20 | Database | Typed columns (text, number, checkbox, date, select with options), rows, sort by a column (empty cells last; Persian collation), one filter (contains; `>`, `<`, `>=`, `<=`, `=` for numbers; ISO prefix for dates), footer with sums of number columns, checked counts and the row count. Numbers are stored with Latin digits and shown in the user's digits; dates are ISO days shown in the user's calendar (Jalali or Gregorian) with the app's date picker. |
+| 23 | Formula, Chart | Formula: LaTeX-like source parsed by `MathParser` (fractions, scripts, roots with index, Greek letters, ∑/∏/∫ with limits, `\left…\right`, `matrix`/`pmatrix`/`bmatrix`/`vmatrix`/`cases`, `\text`, functions, common symbols; never fails) and laid out natively with Compose text (no WebView), always left to right, with a source/preview toggle and a spoken description. Chart: bar, line or pie on a Canvas from inline label/value pairs or a database block of the same note (label column + first number column, rows as that database shows them); bars run in reading order, pie slices use the accent palette with a legend; the chart's spoken summary lists every value. |
+
+**Storage and limits.** Attachments follow the backup limits (`AttachmentLimits` = `BackupFormat`):
+32 MB per file, 1 GB and 10,000 files in total; a larger pick shows a calm message. Unused files
+are removed when the editor closes (after a 10-minute grace for blocks not saved yet) and at app
+start (`AttachmentMaintenance.sweep`); a file stays while the note's draft or a kept version still
+uses it, while the note is in the trash, and for locked notes (their body cannot be read). A
+permanent delete removes the files at once. Duplicating a note copies its files. Decoded previews
+are cached in memory (`AttachmentBitmaps`, ⅛ of the heap at most).
+
+**Search and locked notes.** Recognized text and transcripts are added to the owning note's
+search row (`SearchIndexer.note(…, attachmentText)`, also on rebuild/restore) and never for
+locked notes. Attachment files themselves are not encrypted for locked notes (documented in
+PRIVACY.md).
+
+**Compatibility.** Unknown block kinds (a note from a newer version) are read as text blocks and
+keep their text; old notes decode unchanged. Note that app versions before this one cannot read
+notes that contain the new block kinds (they show the note's raw text). Markdown export: tables
+and databases → GFM tables, formulas → `$$…$$`, charts → a table with the title as caption,
+photos/scans/drawings → `![caption](attachments/<file>)` and files/recordings → links, with scan
+text and transcripts quoted; the Markdown ZIP contains the files in each notebook's
+`attachments/` folder. Markdown import reads GFM tables and `$$` blocks back.
+
+**Engines and APK size.** Release APK (unsigned, R8): 4,709,567 → 17,294,258 bytes (+12.6 MB):
+Tesseract and its libraries ≈ 6.1 MB, ML Kit Digital Ink ≈ 5.3 MB (compressed native code),
+code ≈ 0.9 MB, the Persian OCR model 0.3 MB. Release builds keep only ARM native code
+(`armeabi-v7a`, `arm64-v8a`; benchmark builds keep all ABIs) and store native libraries
+compressed (`useLegacyPackaging`); with the App Bundle each phone downloads one ABI (≈7 MB more
+than before). Document scanning and Latin OCR run in Google Play services (unbundled, a few
+hundred KB of code). ML Kit's usage logging (Google data transport) is disabled by removing its
+transport backend from the manifest, so nothing is reported.
+
+**Limitations.** Without Google Play services there is no ML Kit scanner (camera + manual
+rectangular crop instead) and no Latin OCR (Persian OCR still works). Handwriting needs the model
+download (network) once per language. Transcription quality and whether it runs on the device
+depend on the installed speech service; Android 12 and older use live dictation. Tables and
+databases scroll sideways on narrow screens. Templates made from a note keep its tables,
+databases, formulas and charts but not its files.
 
 ## Reports and personalization (#31–35)
 

@@ -8,6 +8,14 @@ All notable changes to Plan-B are documented here. The project follows
 Foundation for **Plan-B Pro**. Every existing feature stays free.
 
 ### Added
+- Plan-B Pro rich notes: photos (gallery or camera), files, tables, pen drawings, scanned
+  documents, voice recordings, simple databases, formulas and charts in notes, from a new
+  Insert button in the editor. Text in photos and scans is recognized on the device (Persian and
+  Latin) and found by search ("Found in an image"); handwriting can be converted to text (the
+  language model is downloaded once, after asking); voice notes can be transcribed. Free users
+  can still read every block. Attachments are part of backups, the Markdown ZIP export includes
+  them, and tables and formulas round-trip through Markdown. New permissions: microphone (asked
+  only when recording) and network state (install-time, for the handwriting model download).
 - A new first run: the language (Persian or English) is asked first, on a bilingual screen,
   and applied at once; then an animated welcome and three intro slides, all in the chosen
   language. Reduced motion turns the animations into simple fades.

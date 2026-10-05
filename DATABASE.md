@@ -359,7 +359,7 @@ reordered:
 |---|---|---|
 | 1 | `TASK` | title, description, notes |
 | 2 | `PROJECT` | title, description |
-| 3 | `NOTE` | title and `NoteDocument.plainText()` (divider blocks excluded) |
+| 3 | `NOTE` | title and `NoteDocument.plainText()` (divider blocks excluded; table and database cells, chart labels, formulas and captions included), plus the `ocr_text` and `transcript` of the note's attachments — never for locked notes |
 | 4 | `NOTEBOOK` | title |
 | 5 | `HABIT` | title, unit |
 | 6 | `GOAL` | title, description, notes |
@@ -449,6 +449,16 @@ no foreign key: every transaction that deletes tasks, notes, notebooks or events
 cascades to its notes, so orphans are found by query rather than by id). Files without a row
 are removed by the attachment file sweep. Work packages that make OCR text or transcripts
 searchable add them to the **owner's** search row (no new `SearchEntityType`).
+
+**Use (Plan-B Pro rich notes, #15/#17/#19, `AttachmentRepository`).** Note blocks refer to rows by
+id (`NoteBlock.attachmentId`; a drawing also by `DrawingRef.vectorId`). Kinds: `IMAGE` and `SCAN`
+(JPEG/PNG, at most 2560 px), `FILE` (as picked), `AUDIO` (`audio/mp4`, `duration_ms` set),
+`DRAWING` (a PNG preview and a vector file `application/vnd.planb.drawing+json`). `ocr_text` and
+`transcript` are written through the repository, which re-indexes the note in the same
+transaction. Rows of a note that neither its content, its draft nor its kept versions use are
+deleted (with their files) by `AttachmentRepository.deleteUnused` after a 10-minute grace and at
+app start; locked notes are skipped. Added DAO queries (no schema change): `totalBytes`,
+`count`, `ownerIds`.
 
 ### 3.24 `journal_entries` (`JournalEntryEntity`, v3)
 

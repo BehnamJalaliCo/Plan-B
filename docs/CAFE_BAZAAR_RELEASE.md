@@ -8,7 +8,7 @@ Plan-B is published on [Cafe Bazaar](https://cafebazaar.ir) as `com.behnamjalali
 |---|---|---|
 | App Bundle | `release/cafebazaar/Plan-B-v<version>-release.aab` | Signed with the release key |
 | Signed bundle digest | `release/cafebazaar/Plan-B-v<version>-bazaar.bin` | Required by Bazaar for App Bundles; produced with the **official** [bundle-signer](https://github.com/cafebazaar/bundle-signer) and the same release key, so Bazaar can generate device APKs without ever receiving your key |
-| Universal APK (alternative) | `release/cafebazaar/Plan-B-v<version>-release.apk` | Use when uploading an APK instead of a bundle |
+| Universal APK (alternative) | `release/cafebazaar/Plan-B-v<version>-release.apk` | Use when uploading an APK instead of a bundle. Prefer the bundle: the rich-notes engines (Tesseract OCR, ML Kit handwriting) are native code, so the universal APK carries both ARM variants (about 17 MB) while a bundle lets each phone download only its own (about 7 MB less). Release builds contain ARM code only (`armeabi-v7a`, `arm64-v8a`); x86 emulators use debug builds. |
 | Checksums | `release/cafebazaar/SHA256SUMS.txt` | For your records and for verifying downloads |
 | R8 mapping | `release/cafebazaar/Plan-B-v<version>-mapping.txt` | Keep privately to read crash stack traces |
 | Listing texts | `store/cafebazaar/listing_fa.md`, `listing_en.md` | Name, short and full descriptions, keywords, category, rating, privacy URL |
@@ -26,11 +26,13 @@ the app has no ads, analytics or tracking):
 | `POST_NOTIFICATIONS` | Reminders for tasks, events, habits and focus | یادآور کارها، رویدادها، عادت‌ها و تمرکز |
 | `SCHEDULE_EXACT_ALARM` | Reminders at the exact minute | یادآور در همان دقیقهٔ تعیین‌شده |
 | `RECEIVE_BOOT_COMPLETED` | Restore reminders and scheduled backups after a restart | بازگرداندن یادآورها و پشتیبان‌گیری زمان‌بندی‌شده پس از راه‌اندازی دوباره |
-| `INTERNET` | Only the optional AI assistant, off until the user adds their own key | فقط دستیار هوش مصنوعی اختیاری؛ تا وارد کردن کلید شخصی خاموش است |
+| `INTERNET` | The optional AI assistant (off until the user adds their own key) and the one-time handwriting model download (Plan-B Pro, after consent) | دستیار هوش مصنوعی اختیاری (تا وارد کردن کلید شخصی خاموش است) و دریافت یک‌بارهٔ مدل دست‌خط (Plan-B Pro، پس از موافقت) |
 | `PAY_THROUGH_BAZAAR` | Plan-B Pro purchases through Cafe Bazaar | خرید Plan-B Pro از طریق کافه‌بازار |
 | `USE_BIOMETRIC`, `USE_FINGERPRINT` | Plan-B Pro App lock and locked notes (the device's own fingerprint, face or screen lock) | قفل برنامه و یادداشت‌های قفل‌شدهٔ Plan-B Pro (اثر انگشت، چهره یا قفل صفحهٔ خود گوشی) |
 | `WAKE_LOCK` | Let short background jobs finish (Plan-B Pro automatic backups, emptying the 30-day trash, home-screen widget updates) | تمام شدن کارهای کوتاه پس‌زمینه (پشتیبان‌گیری خودکار Plan-B Pro، خالی شدن سطل زبالهٔ ۳۰ روزه، به‌روزرسانی ابزارک‌ها) |
 | `READ_CALENDAR`, `WRITE_CALENDAR` | Plan-B Pro sync with device calendars (Google Calendar), only when you turn on calendar sync | همگام‌سازی Plan-B Pro با تقویم‌های گوشی (تقویم گوگل)، فقط وقتی همگام‌سازی تقویم را روشن کنید |
+| `RECORD_AUDIO` | Only when you record a voice note (Plan-B Pro) | فقط وقتی یادداشت صوتی ضبط می‌کنید (Plan-B Pro) |
+| `ACCESS_NETWORK_STATE` | Wait for a connection or Wi-Fi before the one-time handwriting model download (Plan-B Pro, only after you agree) | انتظار برای اتصال یا وای‌فای پیش از دریافت یک‌بارهٔ مدل دست‌خط (Plan-B Pro، فقط پس از موافقت شما) |
 
 | Permission | English | فارسی |
 |---|---|---|
@@ -40,6 +42,8 @@ the app has no ads, analytics or tracking):
 | `INTERNET` | Optional AI assistant only, with your own key | فقط دستیار هوش مصنوعی اختیاری، با کلید خودتان |
 | `PAY_THROUGH_BAZAAR` | Buy Plan-B Pro through Cafe Bazaar | خرید Plan-B Pro از کافه‌بازار |
 | `READ_CALENDAR`, `WRITE_CALENDAR` | Only when you turn on calendar sync (Plan-B Pro) | فقط وقتی همگام‌سازی تقویم را روشن کنید (Plan-B Pro) |
+| `RECORD_AUDIO` | Only when you record a voice note | فقط وقتی یادداشت صوتی ضبط می‌کنید |
+| `ACCESS_NETWORK_STATE` | Handwriting model download, only after you agree (Plan-B Pro) | دریافت مدل دست‌خط، فقط پس از موافقت شما (Plan-B Pro) |
 
 The last three are normal permissions (granted at install, never asked) and appear because the
 Plan-B Pro widgets use Jetpack Glance. The Wear OS companion is a separate app and is not part of

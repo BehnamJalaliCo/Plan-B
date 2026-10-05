@@ -25,7 +25,9 @@ device (a local database and a preferences file) and are readable only by Plan-B
 | Notifications (`POST_NOTIFICATIONS`) | To show the reminders you set for tasks, events, habits and focus sessions. Optional; asked only when you add a reminder. |
 | Alarms & reminders (`SCHEDULE_EXACT_ALARM`) | To deliver reminders at the exact minute. Optional; without it reminders may be slightly delayed. |
 | Run at startup (`RECEIVE_BOOT_COMPLETED`) | To restore your reminders after the device restarts. |
-| Internet (`INTERNET`) | Used only by the optional AI assistant, which is off until you turn it on and add your own provider key. Nothing else in the app uses the network. |
+| Internet (`INTERNET`) | Used by the optional AI assistant, which is off until you turn it on and add your own provider key, and for the one-time handwriting model download of Plan-B Pro notes (below), only after you agree. Nothing else in the app uses the network. |
+| Network state (`ACCESS_NETWORK_STATE`) | Granted at install, never asked. Lets the handwriting model download wait for a connection (or for Wi-Fi, if you choose "Only over Wi-Fi"). |
+| Microphone (`RECORD_AUDIO`) | Plan-B Pro voice notes. Asked only when you record a voice note, after an explanation (and, on Android 12 and older, when you dictate a transcript). The recording is stored in the note on your device. |
 | Pay through Cafe Bazaar (`com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR`) | Lets the installed Cafe Bazaar app handle Plan-B Pro purchases. |
 | Biometrics (`USE_BIOMETRIC`, `USE_FINGERPRINT`) | Plan-B Pro App lock and locked notes: your device's own fingerprint, face or screen lock confirms it's you. Plan-B never sees or stores biometric data. |
 | Keep awake (`WAKE_LOCK`) | Lets short background jobs finish: Plan-B Pro automatic backups and emptying the 30-day trash. |
@@ -35,9 +37,32 @@ With Plan-B Pro and a paired Wear OS watch, today's open tasks and habits are se
 your watch over Google's Wearable Data Layer (Bluetooth or your own Wi-Fi); this needs Google
 Play services and nothing goes to a server of ours.
 
-Plan-B does not access contacts, location, camera, microphone, accounts or shared storage. Your
-calendars are read only after you turn on calendar sync (above); the choice of calendars stays
-on this device and is not part of backups.
+Plan-B does not access contacts, location, accounts or shared storage, and has no camera
+permission. Your calendars are read only after you turn on calendar sync (above); the choice of
+calendars stays on this device and is not part of backups. The microphone is used only while you
+record a voice note or dictate a transcript.
+
+## Photos, files, scans, drawings and voice notes (Plan-B Pro)
+
+- Photos come from the system Photo Picker (Plan-B sees only the photos you pick, and needs no
+  storage permission) or from your camera app, which takes the photo and hands it to Plan-B.
+  Files come from the system file picker. Plan-B copies what you add into its private storage,
+  attached to the note; photos are scaled down to 2560 pixels. Nothing is uploaded.
+- When you open or share an attachment, only that one file is handed to the app you choose.
+- **Text in images** is recognized on your device: Latin text by Google's ML Kit inside Google
+  Play services (when your phone has them), Persian text by Tesseract inside Plan-B. Document
+  scanning uses Google's ML Kit document scanner inside Google Play services when available,
+  otherwise your camera app. Images are not sent anywhere by Plan-B.
+- **Handwriting to text** uses Google's ML Kit on your device. The first time, it needs a language
+  model (about 20 MB, Persian or English) from Google's servers: Plan-B asks first, and you can
+  limit the download to Wi-Fi. Only the model is downloaded; your drawings never leave the phone.
+  ML Kit's anonymous usage logging is switched off in Plan-B.
+- **Transcripts** of voice notes come from the speech service installed on your phone (for
+  example Google's), preferring on-device recognition. Whether that service processes audio on
+  its own servers depends on the service and its settings; Plan-B itself sends nothing.
+- Recognized text and transcripts are searchable inside Plan-B, except for locked notes, which
+  are never indexed. Attachment files are part of your backups (as files in the ZIP) and are
+  not encrypted, also for locked notes.
 
 ## Plan-B Pro purchases
 
@@ -126,14 +151,36 @@ Plan-B یک برنامه‌ریز آفلاین است. **هر چیزی که وا
 | اعلان‌ها | نمایش یادآورهایی که خودتان تنظیم می‌کنید. اختیاری است و فقط هنگام افزودن یادآور درخواست می‌شود. |
 | هشدارها و یادآورها (زمان دقیق) | ارسال یادآور در همان دقیقهٔ تعیین‌شده. اختیاری است؛ بدون آن ممکن است یادآور کمی دیرتر برسد. |
 | اجرا پس از روشن شدن دستگاه | بازگرداندن یادآورها پس از راه‌اندازی دوبارهٔ دستگاه. |
-| اینترنت | فقط برای دستیار هوش مصنوعی اختیاری که تا وقتی خودتان روشنش نکنید و کلید شخصی وارد نکنید خاموش است. هیچ بخش دیگری از برنامه از شبکه استفاده نمی‌کند. |
+| اینترنت | برای دستیار هوش مصنوعی اختیاری که تا وقتی خودتان روشنش نکنید و کلید شخصی وارد نکنید خاموش است، و برای دریافت یک‌بارهٔ مدل دست‌خط در یادداشت‌های Plan-B Pro (پایین‌تر)، فقط پس از موافقت شما. هیچ بخش دیگری از برنامه از شبکه استفاده نمی‌کند. |
+| وضعیت شبکه | هنگام نصب داده می‌شود و هرگز پرسیده نمی‌شود. دریافت مدل دست‌خط منتظر اتصال (یا اگر «فقط با وای‌فای» را انتخاب کنید، منتظر وای‌فای) می‌ماند. |
+| میکروفون | یادداشت‌های صوتی Plan-B Pro. فقط وقتی یادداشت صوتی ضبط می‌کنید و پس از توضیح درخواست می‌شود (و در اندروید ۱۲ و قدیمی‌تر، وقتی متن گفتار را با صحبت کردن می‌سازید). صدای ضبط‌شده در همان یادداشت روی گوشی شما می‌ماند. |
 | پرداخت از طریق کافه‌بازار | برنامهٔ کافه‌بازار نصب‌شده روی دستگاه، خرید Plan-B Pro را انجام می‌دهد. |
 | بیومتریک (اثر انگشت) | قفل برنامه و یادداشت‌های قفل‌شدهٔ Plan-B Pro: اثر انگشت، چهره یا قفل صفحهٔ خود گوشی هویت شما را تأیید می‌کند. Plan-B هیچ دادهٔ بیومتریکی نمی‌بیند و ذخیره نمی‌کند. |
 | بیدار نگه داشتن دستگاه | تمام شدن کارهای کوتاه پس‌زمینه: پشتیبان‌گیری خودکار Plan-B Pro و خالی شدن سطل زبالهٔ ۳۰ روزه. |
 | تقویم‌ها (خواندن و نوشتن) | همگام‌سازی Plan-B Pro با تقویم‌های گوشی (برای نمونه تقویم گوگل). فقط وقتی درخواست می‌شود که در **تنظیمات ← مناسبت‌ها و تقویم‌های گوشی ← همگام‌سازی با تقویم‌های گوشی** آن را روشن کنید. Plan-B رویدادهای تقویم‌هایی را که انتخاب می‌کنید می‌خواند تا در تقویم خودش نشان دهد (مگر اینکه خودتان رویدادی را کپی کنید، چیزی در Plan-B ذخیره نمی‌شود) و فقط رویدادهایی را که خودش ساخته، در همان یک تقویمی که انتخاب می‌کنید، می‌نویسد، تغییر می‌دهد یا پاک می‌کند. Plan-B چیزی به هیچ سروری نمی‌فرستد؛ برنامهٔ تقویم شما مثل همیشه تقویم‌هایش را همگام می‌کند. |
 
-Plan-B به مخاطبین، موقعیت مکانی، دوربین، میکروفون، حساب‌ها یا حافظهٔ مشترک دسترسی ندارد. تقویم‌های شما
+Plan-B به مخاطبین، موقعیت مکانی، حساب‌ها یا حافظهٔ مشترک دسترسی ندارد و مجوز دوربین هم ندارد. تقویم‌های شما
 فقط پس از روشن کردن همگام‌سازی تقویم (بالا) خوانده می‌شوند؛ انتخاب تقویم‌ها روی همین گوشی می‌ماند و در پشتیبان‌ها نیست.
+میکروفون فقط هنگام ضبط یادداشت صوتی یا گفتن متن گفتار استفاده می‌شود.
+
+## عکس، فایل، اسکن، نقاشی و یادداشت صوتی (Plan-B Pro)
+
+- عکس‌ها از انتخابگر عکس خود اندروید (Plan-B فقط عکس‌هایی را که انتخاب می‌کنید می‌بیند و به مجوز حافظه نیاز
+  ندارد) یا از برنامهٔ دوربین شما می‌آیند. فایل‌ها از انتخابگر فایل خود اندروید می‌آیند. Plan-B آنچه را
+  اضافه می‌کنید در فضای خصوصی خودش و کنار یادداشت نگه می‌دارد؛ عکس‌ها تا ۲۵۶۰ پیکسل کوچک می‌شوند. چیزی
+  بارگذاری نمی‌شود.
+- وقتی پیوستی را باز یا هم‌رسانی می‌کنید، فقط همان یک فایل به برنامه‌ای که انتخاب می‌کنید داده می‌شود.
+- **خواندن متن تصویر** روی خود گوشی انجام می‌شود: متن لاتین با ML Kit گوگل درون سرویس‌های Google Play (اگر
+  گوشی‌تان آن را دارد) و متن فارسی با Tesseract درون خود Plan-B. اسکن سند در صورت وجود سرویس‌های Google Play با
+  اسکنر ML Kit و در غیر این صورت با برنامهٔ دوربین شما انجام می‌شود. Plan-B تصویری به جایی نمی‌فرستد.
+- **تبدیل دست‌خط به متن** با ML Kit گوگل روی گوشی انجام می‌شود. بار اول به یک مدل زبان (حدود ۲۰ مگابایت،
+  فارسی یا انگلیسی) از سرورهای گوگل نیاز دارد: Plan-B اول می‌پرسد و می‌توانید دریافت را به وای‌فای محدود کنید.
+  فقط مدل دریافت می‌شود و نقاشی‌های شما از گوشی بیرون نمی‌روند. گزارش‌گیری ناشناس ML Kit در Plan-B خاموش است.
+- **متن گفتار** یادداشت‌های صوتی را سرویس گفتار نصب‌شده روی گوشی (مثلاً سرویس گوگل) می‌سازد و Plan-B تشخیص
+  روی دستگاه را ترجیح می‌دهد. اینکه آن سرویس صدا را روی سرورهای خودش پردازش کند به خود سرویس و تنظیماتش
+  بستگی دارد؛ Plan-B خودش چیزی نمی‌فرستد.
+- متن تصویرها و متن گفتار در جست‌وجوی Plan-B پیدا می‌شوند، به جز یادداشت‌های قفل‌شده که هرگز نمایه نمی‌شوند.
+  فایل‌های پیوست بخشی از پشتیبان شما هستند (به‌صورت فایل در ZIP) و رمزگذاری نمی‌شوند، حتی برای یادداشت‌های قفل‌شده.
 
 ## خرید Plan-B Pro
 

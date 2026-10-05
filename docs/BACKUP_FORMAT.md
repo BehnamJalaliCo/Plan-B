@@ -132,7 +132,12 @@ locked, no health metric, no sound, not strict, empty new tables):
 | `calendarLinks` (`CalendarLinkDto`) | `id`, `localType`, `localId`, `calendarId`, `externalEventId`, `lastSyncedAt`, `localVersion`?, `remoteVersion`? |
 
 Items in the trash are part of a backup. Only attachment rows whose owner exists and whose file
-is on disk are written, so every row in a backup has its bytes.
+is on disk are written, so every row in a backup has its bytes. Rich note blocks (Plan-B Pro)
+add no new array: tables, databases, formulas and charts are part of the note's `content`;
+photos, scans, files, recordings (`AUDIO`, `.m4a`) and drawings (two `DRAWING` rows: a PNG
+preview and a `application/vnd.planb.drawing+json` vector file) are ordinary attachment rows
+whose `ocrText`/`transcript` hold recognized text. The app never stores an attachment above the
+per-file or total limits below (`AttachmentLimits` equals them), so every one fits a backup.
 
 `?` marks an optional, nullable field (omitted when null). These are **not** in a backup:
 
@@ -393,6 +398,17 @@ title, subtasks only). Null fields are omitted.
 | quote | `> ` |
 | divider | `---` |
 | code | fenced with three backticks |
+| table, database (Pro) | GFM table (`\|` and `<br>` escaped; database checkboxes as `[x]`/`[ ]`, all rows in its sort order) |
+| formula (Pro) | `$$` block with the LaTeX-like source |
+| chart (Pro) | GFM table of its labels and values, then the title in italics |
+| photo, scan, drawing (Pro) | `![caption](attachments/<file>)` (a drawing's PNG); a scan's recognized text follows as a quote |
+| file, voice recording (Pro) | `[name](attachments/<file>)`; a transcript follows as a quote |
+
+  In the ZIP, the files of these blocks are written to `<Notebook>/attachments/<file name>`, so
+  the links work when the ZIP is unpacked; a locked note's blocks (and files) are not exported.
+  A single note exported from the editor as `.md` names the files instead (no folder). Markdown
+  import reads GFM tables and `$$` blocks back as table and formula blocks; image links stay
+  text.
 
 ### 7.4 Notes: JSON export
 
@@ -449,4 +465,7 @@ through `TaskRepository.save`, which also indexes it for search. The settings st
 `snapshot_leavesOutAttachmentsWithoutFileOrOwner`, `attachmentEntryNames_cannotEscapeTheStagingFolder`,
 `oversizedAttachments_areRejected`, `failedRestore_keepsCurrentDataAndAttachments`,
 `v3References_areValidated`, `deleteAllData_removesAttachmentFiles`,
-`format1Backup_restoresWithNeutralValuesForNewFields`.
+`format1Backup_restoresWithNeutralValuesForNewFields`. `RichNotesBackupTest` (Plan-B Pro rich
+notes): `everyAttachmentKind_roundTripsThroughABackup` (photo, scan with text, file, recording
+with transcript, drawing preview and vector file; searchable again after restore),
+`markdownZip_includesTheFilesAndLinksThem`, `attachmentLimits_matchTheBackupLimits`.
