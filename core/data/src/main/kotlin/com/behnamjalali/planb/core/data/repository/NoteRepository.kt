@@ -23,6 +23,7 @@ import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.NEW_ID
 import com.behnamjalali.planb.core.model.Note
 import com.behnamjalali.planb.core.model.NoteDocument
+import com.behnamjalali.planb.core.model.NoteLinks
 import com.behnamjalali.planb.core.model.Notebook
 import com.behnamjalali.planb.core.model.NotebookSection
 import com.behnamjalali.planb.core.model.SearchEntityType
@@ -213,6 +214,7 @@ class OfflineNoteRepository @Inject constructor(
             }
             val id = if (existing == null) dao.insertNote(entity.copy(id = 0)) else entity.id.also { dao.updateNote(entity) }
             writeTags(id, note.tags)
+            if (entity.encryptedPayload == null) writeLinks(id, note.document)
             searchDao.upsert(SearchIndexer.note(entity.copy(id = id)))
             if (log) history?.record(ActivityEntityType.NOTE, id, if (existing == null) ActivityAction.CREATED else ActivityAction.UPDATED, note.title)
             id
@@ -220,6 +222,17 @@ class OfflineNoteRepository @Inject constructor(
     }
 
     private val NoteEntity.isEncrypted: Boolean get() = encryptedPayload != null
+
+    /**
+     * Rewrites the outgoing links of [noteId] from the link tokens in [document] (Plan-B Pro
+     * #16). Links to notes that no longer exist stay as text only; a locked note's links are
+     * left as they were (its body is encrypted).
+     */
+    private suspend fun writeLinks(noteId: EntityId, document: NoteDocument) {
+        val targets = (NoteLinks.targets(document) - noteId).take(MAX_LINKS_PER_NOTE)
+        val existing = if (targets.isEmpty()) emptyList() else db.noteKnowledgeDao().refs(targets).map { it.id }
+        db.noteLinkDao().replaceOutgoing(noteId, existing)
+    }
 
     /** Encrypts a body with the vault (throws [VaultLockedException] while it is locked). */
     private fun seal(document: NoteDocument): ByteArray =
@@ -238,6 +251,7 @@ class OfflineNoteRepository @Inject constructor(
                 existing.copy(title = title, content = document.encode(), updatedAt = maxOf(captured, existing.updatedAt))
             }
             dao.updateNote(updated)
+            if (!existing.isEncrypted) writeLinks(id, document)
             searchDao.upsert(SearchIndexer.note(updated))
             if (log) history?.record(ActivityEntityType.NOTE, id, ActivityAction.UPDATED, title)
             // The committed note now contains drafts up to the capture time; newer ones stay.
@@ -278,6 +292,7 @@ class OfflineNoteRepository @Inject constructor(
             )
             val newId = dao.insertNote(copy)
             dao.insertTagRefs(dao.tagIds(id).map { NoteTagCrossRef(newId, it) })
+            if (copy.encryptedPayload == null) writeLinks(newId, NoteDocument.decode(copy.content))
             searchDao.upsert(SearchIndexer.note(copy.copy(id = newId)))
             if (log) history?.record(ActivityEntityType.NOTE, newId, ActivityAction.CREATED, copy.title)
             newId
@@ -386,4 +401,9 @@ class OfflineNoteRepository @Inject constructor(
 
     private fun open(payload: ByteArray): NoteDocument =
         NoteDocument.decode((vault ?: throw VaultLockedException()).decrypt(payload).toString(Charsets.UTF_8))
+
+    private companion object {
+        /** Bound for the SQL parameter list; a note with more links keeps the first ones. */
+        const val MAX_LINKS_PER_NOTE = 500
+    }
 }

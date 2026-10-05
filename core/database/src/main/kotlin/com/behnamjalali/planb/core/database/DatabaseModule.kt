@@ -43,4 +43,5 @@ object DatabaseModule {
     @Provides fun activityLogDao(db: PlanBDatabase) = db.activityLogDao()
     @Provides fun calendarLinkDao(db: PlanBDatabase) = db.calendarLinkDao()
     @Provides fun statisticsDao(db: PlanBDatabase) = db.statisticsDao()
+    @Provides fun noteKnowledgeDao(db: PlanBDatabase) = db.noteKnowledgeDao()
 }

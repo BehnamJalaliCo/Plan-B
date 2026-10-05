@@ -124,6 +124,9 @@ abstract class PlanBDatabase : RoomDatabase() {
     /** Read-only queries for statistics and reports (no tables of its own). */
     abstract fun statisticsDao(): StatisticsDao
 
+    /** Read and retention queries for note links, history, the graph and the journal (no tables of its own). */
+    abstract fun noteKnowledgeDao(): com.behnamjalali.planb.core.database.dao.NoteKnowledgeDao
+
     companion object {
         const val VERSION = 3
 
