@@ -11,6 +11,8 @@ import com.behnamjalali.planb.core.common.ApplicationScope
 import com.behnamjalali.planb.core.common.runCatchingSafely
 import com.behnamjalali.planb.core.data.DocumentFiles
 import com.behnamjalali.planb.core.data.repository.NoteDraft
+import com.behnamjalali.planb.core.data.repository.NoteHistoryRepository
+import com.behnamjalali.planb.core.data.repository.NoteLinkRepository
 import com.behnamjalali.planb.core.data.repository.NoteRepository
 import com.behnamjalali.planb.core.data.repository.TemplateRepository
 import com.behnamjalali.planb.core.data.security.BiometricKeyStore
@@ -22,6 +24,7 @@ import com.behnamjalali.planb.core.model.Markdown
 import com.behnamjalali.planb.core.model.Note
 import com.behnamjalali.planb.core.model.NoteBlock
 import com.behnamjalali.planb.core.model.NoteDocument
+import com.behnamjalali.planb.core.model.NoteLinks
 import com.behnamjalali.planb.core.model.Notebook
 import com.behnamjalali.planb.core.model.Tag
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -218,6 +221,10 @@ class NoteEditorViewModel @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val vault: NoteVault? = null,
     private val keyStore: BiometricKeyStore? = null,
+    /** Note history (Plan-B Pro #16); null keeps no versions. */
+    private val history: NoteHistoryRepository? = null,
+    /** Current titles of linked notes for exports (Plan-B Pro #16). */
+    private val links: NoteLinkRepository? = null,
 ) : ViewModel() {
     private val route = runCatching { savedState.toRoute<NoteEditorRoute>() }.getOrDefault(NoteEditorRoute())
     private val _state = MutableStateFlow(NoteEditorState())
@@ -233,6 +240,8 @@ class NoteEditorViewModel @Inject constructor(
     private val saveMutex = Mutex()
     private var dirty = false
     private var createdNew = false
+    /** The note's state before this editing session was kept as a version (Plan-B Pro #16). */
+    private var sessionSnapshotTaken = false
 
     private fun newId() = UUID.randomUUID().toString()
 
@@ -362,6 +371,11 @@ class NoteEditorViewModel @Inject constructor(
 
     fun onBlockChange(id: String, value: TextFieldValue) {
         val current = _state.value.blocks.firstOrNull { it.id == id } ?: return
+        // A deletion that cut into a link to another note removes the whole link (Plan-B Pro #16).
+        NoteLinks.repairDeletion(current.value.text, value.text)?.let { (text, caret) ->
+            replaceBlockText(id, TextFieldValue(text, TextRange(caret)))
+            return
+        }
         if (current.value.text == value.text) {
             // Selection-only change: no save needed.
             _state.update { s -> s.copy(blocks = s.blocks.map { if (it.id == id) it.copy(value = value) else it }) }
@@ -376,6 +390,19 @@ class NoteEditorViewModel @Inject constructor(
             )
         }
         result.focusId?.let { focusId -> setCursor(focusId, result.cursor) }
+    }
+
+    /** Replaces a block's text and caret from here (the field takes the new value over). */
+    private fun replaceBlockText(id: String, value: TextFieldValue) = edited { s ->
+        s.copy(blocks = s.blocks.map { if (it.id == id) it.copy(value = value) else it }, focusId = id)
+    }
+
+    /** Replaces the "[[" search [query] in block [id] with a link to [noteId] (Plan-B Pro #16). */
+    fun insertLink(id: String, query: NoteLinks.Query, cursor: Int, noteId: EntityId, title: String) {
+        val block = _state.value.blocks.firstOrNull { it.id == id } ?: return
+        if (query.start !in 0..block.value.text.length || cursor !in query.start..block.value.text.length) return
+        val (text, caret) = NoteLinks.insert(block.value.text, query, cursor, noteId, title)
+        replaceBlockText(id, TextFieldValue(text, TextRange(caret)))
     }
 
     private fun setCursor(id: String, cursor: Int) {
@@ -479,6 +506,11 @@ class NoteEditorViewModel @Inject constructor(
         val s = _state.value
         if (s.loading || s.missing || s.needsUnlock || !dirty) return@withLock
         dirty = false
+        // Version history: the state before this session, then at most one version per 10 minutes.
+        history?.let { h ->
+            runCatchingSafely { h.snapshot(s.noteId, force = !sessionSnapshotTaken) }
+            sessionSnapshotTaken = true
+        }
         runCatchingSafely { notes.updateContent(s.noteId, s.title.text.trim(), document(s)) }
             .onSuccess { if (!dirty) _state.update { it.copy(saveStatus = SaveStatus.SAVED) } }
             .onFailure {
@@ -555,7 +587,14 @@ class NoteEditorViewModel @Inject constructor(
             save()
             val s = _state.value
             runCatchingSafely {
-                val text = if (markdown) Markdown.export(s.title.text, document(s)) else Markdown.plainText(s.title.text, document(s))
+                val doc = document(s)
+                // Links read as the linked notes' current titles; Markdown links point at their .md files.
+                val titles = links?.refs(NoteLinks.targets(doc))?.filterValues { !it.trashed }?.mapValues { it.value.title }.orEmpty()
+                val text = if (markdown) {
+                    Markdown.export(s.title.text, doc) { id, title -> titles[id]?.let { fileName(it, "md", title) } }
+                } else {
+                    Markdown.plainText(s.title.text, doc) { titles[it] }
+                }
                 files.writeText(uri, text)
             }.onSuccess { _events.tryEmit(NoteEditorEvent.Exported) }
                 .onFailure { _events.tryEmit(NoteEditorEvent.ExportFailed) }
@@ -660,6 +699,8 @@ class NoteEditorViewModel @Inject constructor(
         appScope.launch {
             runCatchingSafely {
                 if (pendingDirty && !s.needsUnlock) notes.updateContent(s.noteId, s.title.text.trim(), document(s))
+                // Closing a changed note keeps its final state as a version (Plan-B Pro #16).
+                if ((pendingDirty || sessionSnapshotTaken) && !s.missing) history?.snapshot(s.noteId, force = true)
                 // A note created by opening the editor and left completely empty is discarded.
                 if (createdNew && s.title.text.isBlank() && document(s).isBlank() && !s.missing && !s.locked) notes.discardNote(s.noteId)
             }

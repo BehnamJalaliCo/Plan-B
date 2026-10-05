@@ -113,6 +113,17 @@ import com.behnamjalali.planb.core.ui.PlannerLocals
 import com.behnamjalali.planb.core.ui.ProFeature
 import com.behnamjalali.planb.core.ui.findFragmentActivity
 import com.behnamjalali.planb.core.ui.rememberProGuard
+import com.behnamjalali.planb.feature.notebooks.knowledge.NoteKnowledgeViewModel
+import androidx.activity.compose.BackHandler
+import com.behnamjalali.planb.core.ui.LocalProAccess
+import com.behnamjalali.planb.feature.notebooks.knowledge.LocalNoteLinkRefs
+import com.behnamjalali.planb.feature.notebooks.knowledge.NoteKnowledgeUi
+import com.behnamjalali.planb.feature.notebooks.knowledge.NoteLinkAssist
+import com.behnamjalali.planb.feature.notebooks.knowledge.linkedIds
+import com.behnamjalali.planb.feature.notebooks.knowledge.noteLinkSections
+import com.behnamjalali.planb.feature.notebooks.knowledge.rememberNoteLinkTransformation
+import com.behnamjalali.planb.feature.notebooks.writing.WritingModeScreen
+import androidx.compose.runtime.CompositionLocalProvider
 import com.behnamjalali.planb.core.designsystem.component.PlannerEmptyState
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.runtime.rememberCoroutineScope
@@ -152,6 +163,11 @@ fun NoteEditorDestination(
     viewModel: NoteEditorViewModel = hiltViewModel(),
     /** Opens the note's activity history (Plan-B Pro); null hides the menu item. */
     onOpenActivity: ((EntityId) -> Unit)? = null,
+    /** Opens a linked note on top of this one (Plan-B Pro #16); defaults to [onOpenNote]. */
+    onOpenLinkedNote: ((EntityId) -> Unit)? = null,
+    /** Opens the note's version history (Plan-B Pro #16); null hides the menu item. */
+    onOpenHistory: ((EntityId) -> Unit)? = null,
+    knowledgeViewModel: NoteKnowledgeViewModel = hiltViewModel(),
 ) {
     val defaultNotebook = stringResource(com.behnamjalali.planb.core.data.R.string.data_default_notebook)
     LaunchedEffect(viewModel) { viewModel.start(defaultNotebook) }
@@ -259,11 +275,49 @@ fun NoteEditorDestination(
         )
         null -> Unit
     }
+    // Plan-B Pro notes knowledge (#16, #24): links, backlinks, history and writing mode.
+    LaunchedEffect(state.noteId) { knowledgeViewModel.bind(state.noteId) }
+    val linkIds = remember(state.blocks) { linkedIds(state.blocks.map { it.value.text }) }
+    LaunchedEffect(linkIds) { knowledgeViewModel.setLinkIds(linkIds) }
+    val refs by knowledgeViewModel.refs.collectAsStateWithLifecycle()
+    val backlinks by knowledgeViewModel.backlinks.collectAsStateWithLifecycle()
+    val suggestions by knowledgeViewModel.suggestions.collectAsStateWithLifecycle()
+    var writingMode by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = writingMode) { writingMode = false }
+    val openLinked by rememberUpdatedState(onOpenLinkedNote ?: onOpenNote)
+    val openHistory by rememberUpdatedState(onOpenHistory)
+    val knowledge = NoteKnowledgeUi(
+        refs = refs,
+        backlinks = backlinks,
+        suggestionsFor = suggestions.query,
+        suggestions = suggestions.notes,
+        onSearch = knowledgeViewModel::search,
+        onInsertLink = remember(viewModel) { { blockId, query, cursor, note -> viewModel.insertLink(blockId, query, cursor, note.id, note.title) } },
+        onOpenNote = remember(viewModel) {
+            { id ->
+                viewModel.flush()
+                openLinked(id)
+            }
+        },
+        writingMode = writingMode,
+        onWritingMode = { writingMode = it },
+        onOpenHistory = if (onOpenHistory != null) {
+            remember(viewModel) {
+                {
+                    viewModel.flush()
+                    openHistory?.invoke(viewModel.state.value.noteId)
+                }
+            }
+        } else {
+            null
+        },
+    )
     NoteEditorScreen(
         state = state,
         notebooks = notebooks,
         snackbarHostState = snackbar,
         actions = actions,
+        knowledge = knowledge,
     )
 }
 
@@ -309,7 +363,13 @@ fun NoteEditorScreen(
     notebooks: List<Notebook>,
     snackbarHostState: SnackbarHostState,
     actions: NoteEditorActions,
+    /** Plan-B Pro links, history and writing mode (#16, #24); off by default. */
+    knowledge: NoteKnowledgeUi = NoteKnowledgeUi(),
 ) {
+    if (knowledge.writingMode && !state.loading && !state.needsUnlock) {
+        CompositionLocalProvider(LocalNoteLinkRefs provides knowledge.refs) { WritingModeScreen(state, actions, knowledge) }
+        return
+    }
     var menu by remember { mutableStateOf(false) }
     var dialog by rememberSaveable { mutableStateOf<String?>(null) }
     val guard = rememberProGuard()
@@ -347,6 +407,7 @@ fun NoteEditorScreen(
         }
     }
 
+    CompositionLocalProvider(LocalNoteLinkRefs provides knowledge.refs) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -390,6 +451,8 @@ fun NoteEditorScreen(
                                     add(R.string.note_remove_lock to actions.onRemoveLock)
                                 }
                                 actions.onActivity?.let { open -> add(R.string.note_activity to { guard.run(ProFeature.TRASH_HISTORY, open) }) }
+                                if (!state.needsUnlock) add(R.string.writing_mode to { guard.run(ProFeature.FOCUS_WRITING) { knowledge.onWritingMode(true) } })
+                                knowledge.onOpenHistory?.let { open -> if (!state.locked) add(R.string.history_title to { guard.run(ProFeature.NOTE_LINKS, open) }) }
                                 add((if (state.archived) R.string.note_unarchive else R.string.note_archive) to { actions.onArchive(!state.archived) })
                                 add(R.string.note_delete to { dialog = "delete" })
                             }.forEach { (label, action) ->
@@ -405,13 +468,18 @@ fun NoteEditorScreen(
         },
         bottomBar = {
             val focusedIndex = if (titleFocused) -1 else state.blocks.indexOfFirst { it.id == state.focusId }
-            BlockToolbar(
-                focused = state.blocks.getOrNull(focusedIndex),
-                canMerge = focusedIndex > 0,
-                enabled = !titleFocused && !state.needsUnlock,
-                actions = actions,
-                modifier = Modifier.navigationBarsPadding().imePadding(),
-            )
+            val focusedBlock = state.blocks.getOrNull(focusedIndex)
+            Column(Modifier.navigationBarsPadding().imePadding()) {
+                // The "[[" note picker and "Open link" (Plan-B Pro #16).
+                if (!state.needsUnlock) NoteLinkAssist(focusedBlock?.id, focusedBlock?.value, knowledge)
+                BlockToolbar(
+                    focused = focusedBlock,
+                    canMerge = focusedIndex > 0,
+                    enabled = !titleFocused && !state.needsUnlock,
+                    actions = actions,
+                    modifier = Modifier,
+                )
+            }
         },
     ) { padding ->
         if (state.loading) {
@@ -419,6 +487,8 @@ fun NoteEditorScreen(
             return@Scaffold
         }
         val textColor = MaterialTheme.colorScheme.onSurface
+        val linkIds = remember(state.blocks) { linkedIds(state.blocks.map { it.value.text }) }
+        val isPro = LocalProAccess.current.isPro
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -505,7 +575,9 @@ fun NoteEditorScreen(
                     TextButton(onClick = actions.onAddBlock) { Text(stringResource(R.string.note_add_block)) }
                 }
             }
+            noteLinkSections(knowledge, linkIds, isPro)
         }
+    }
     }
 
     when (dialog) {
@@ -626,6 +698,8 @@ private fun BlockRow(block: EditorBlock, number: Int, focusRequester: FocusReque
             },
             textStyle = style,
             cursorBrush = SolidColor(scheme.primary),
+            // Links to other notes show as their titles (Plan-B Pro #16).
+            visualTransformation = rememberNoteLinkTransformation(value.text),
             keyboardOptions = KeyboardOptions(
                 capitalization = if (block.type == BlockType.CODE) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
                 autoCorrectEnabled = block.type != BlockType.CODE,
