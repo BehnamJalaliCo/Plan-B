@@ -4,6 +4,7 @@ import android.app.LocaleManager
 import android.content.Context
 import android.os.Looper
 import android.os.LocaleList
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
@@ -257,9 +258,15 @@ class AppScreenshotTest(private val variant: Variant) {
             val matches = compose.onAllNodes(hasText(text, substring = true), useUnmergedTree = true)
             val onScreen = matches.fetchSemanticsNodes().indices.any { runCatching { matches[it].assertIsDisplayed() }.isSuccess }
             if (!onScreen) {
-                val lists = compose.onAllNodes(hasScrollToNodeAction())
-                for (i in lists.fetchSemanticsNodes().indices) {
-                    if (runCatching { lists[i].performScrollToNode(hasText(text, substring = true)) }.isSuccess) break
+                // Vertical lists first: trying a horizontal row (such as the note editor's toolbar)
+                // scrolls it to its end even when the target isn't there.
+                val vertical = SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
+                for (matcher in listOf(hasScrollToNodeAction() and vertical, hasScrollToNodeAction() and !vertical)) {
+                    val lists = compose.onAllNodes(matcher)
+                    val found = lists.fetchSemanticsNodes().indices.any { i ->
+                        runCatching { lists[i].performScrollToNode(hasText(text, substring = true)) }.isSuccess
+                    }
+                    if (found) break
                 }
             }
             compose.onAllNodes(clickable).fetchSemanticsNodes().isNotEmpty() ||
