@@ -62,6 +62,9 @@ import com.behnamjalali.planb.core.designsystem.theme.Spacing
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.FocusStatus
 import com.behnamjalali.planb.core.ui.EditorRow
+import com.behnamjalali.planb.core.ui.LocalProAccess
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.behnamjalali.planb.core.ui.PlannerLocals
 import com.behnamjalali.planb.core.ui.rememberNotificationPermissionRequest
 import java.time.Instant
@@ -82,6 +85,13 @@ data class FocusCallbacks(
 @Composable
 fun FocusDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, viewModel: FocusViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val isPro = LocalProAccess.current.isPro
+    val context = LocalContext.current
+    // Back from the Do Not Disturb settings (or the app came back): re-check access, apply it.
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { }
+    }
     val resources = LocalResources.current
     val haptics = rememberPlannerHaptics()
     val requestNotifications = rememberNotificationPermissionRequest()
@@ -119,18 +129,26 @@ fun FocusDestination(onBack: () -> Unit, snackbarHostState: SnackbarHostState, v
             onLinkTask = viewModel::linkTask,
             onStart = {
                 requestNotifications()
-                viewModel.start()
+                viewModel.start(pro = isPro)
             },
             onPause = viewModel::pause,
             onResume = viewModel::resume,
             onFinish = viewModel::finish,
             onCancel = viewModel::cancel,
         ),
+        proActions = FocusProActions(
+            onSound = viewModel::setSound,
+            onVolume = viewModel::setVolume,
+            onStrict = viewModel::setStrict,
+            onOpenDndAccess = { runCatching { context.startActivity(viewModel.dndAccessIntent()) } },
+            onDailyGoal = viewModel::setDailyGoal,
+            onLongBreak = viewModel::setLongBreak,
+        ),
     )
 }
 
 @Composable
-fun FocusScreen(state: FocusUiState, now: Instant, callbacks: FocusCallbacks) {
+fun FocusScreen(state: FocusUiState, now: Instant, callbacks: FocusCallbacks, proActions: FocusProActions = FocusProActions()) {
     val formatter = PlannerLocals.formatter
     val numbers = PlannerLocals.numbers
     var customDialog by rememberSaveable { mutableStateOf(false) }
@@ -196,6 +214,9 @@ fun FocusScreen(state: FocusUiState, now: Instant, callbacks: FocusCallbacks) {
                     PlannerButton(stringResource(R.string.focus_cancel), callbacks.onCancel, icon = Icons.Rounded.Close, style = PlannerButtonStyle.Text)
                 }
             }
+            if (active != null && active.status == FocusStatus.RUNNING && (state.sound != null || (active.strict && state.dndAccess))) {
+                item(key = "pro_status") { FocusProStatus(state) }
+            }
             if (active == null) {
                 item(key = "presets") {
                     val presets = listOf(state.pomodoroMinutes, 15, 45, 60).distinct()
@@ -222,10 +243,16 @@ fun FocusScreen(state: FocusUiState, now: Instant, callbacks: FocusCallbacks) {
             } else if (state.linkedTask != null) {
                 item(key = "linked") { EditorRow(Icons.Rounded.TaskAlt, stringResource(R.string.focus_link_task), state.linkedTask!!.title, {}) }
             }
+            item(key = "focus_pro") { FocusProSection(state, proActions) }
             item(key = "today") {
-                Text(stringResource(R.string.focus_today, formatter.duration(state.focusedTodayMinutes)), style = MaterialTheme.typography.titleSmall)
-                Text(stringResource(R.string.focus_break_hint, formatter.duration(state.breakMinutes)), style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(stringResource(R.string.focus_today, formatter.duration(state.focusedTodayMinutes)), style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        if (LocalProAccess.current.isPro) cycleText(state) else stringResource(R.string.focus_break_hint, formatter.duration(state.breakMinutes)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             item(key = "history_h") { PlannerSectionHeader(stringResource(R.string.focus_history), Modifier.fillMaxWidth()) }
             if (state.history.isEmpty()) {

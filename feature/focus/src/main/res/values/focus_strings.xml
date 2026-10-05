@@ -25,4 +25,34 @@
     <string name="focus_break_hint">Take a %1$s break.</string>
     <!-- A past session: its day and start time. -->
     <string name="focus_history_when">%1$s · %2$s</string>
+    <!-- Focus Pro (Plan-B Pro #26) -->
+    <string name="focus_pro_title">Focus Pro</string>
+    <string name="focus_pro_teaser">Ambient sounds, Do Not Disturb while you focus, a daily goal and long breaks</string>
+    <string name="focus_pro_sound">Ambient sound</string>
+    <string name="focus_pro_sound_off">Silence</string>
+    <string name="focus_pro_sound_hint">Plays while a session runs, also with the screen off.</string>
+    <string name="focus_pro_volume">Volume</string>
+    <string name="focus_pro_strict">Strict mode</string>
+    <string name="focus_pro_strict_sub">Turn on Do Not Disturb while a session runs; your previous setting comes back when it pauses or ends.</string>
+    <string name="focus_pro_strict_no_access">Plan-B is not allowed to change Do Not Disturb yet.</string>
+    <string name="focus_pro_strict_allow">Allow access</string>
+    <string name="focus_pro_strict_dialog_title">Allow Do Not Disturb access</string>
+    <string name="focus_pro_strict_dialog_text">To silence notifications while you focus, Android asks you to allow Plan-B to change Do Not Disturb. On the next screen, find Plan-B and turn it on, then come back. Plan-B turns Do Not Disturb on only during strict sessions and puts your setting back afterwards.</string>
+    <string name="focus_pro_strict_open_settings">Open settings</string>
+    <string name="focus_pro_not_now">Not now</string>
+    <string name="focus_pro_goal">Daily goal</string>
+    <string name="focus_pro_goal_none">No goal</string>
+    <!-- %1$s: focused today, %2$s: the goal (durations). -->
+    <string name="focus_pro_goal_progress">%1$s of %2$s today</string>
+    <string name="focus_pro_long_break_every">Long break after</string>
+    <string name="focus_pro_long_break_length">Long break length</string>
+    <plurals name="focus_pro_sessions">
+        <item quantity="one">%1$s session</item>
+        <item quantity="other">%1$s sessions</item>
+    </plurals>
+    <!-- %1$s: position in the cycle, %2$s: cycle length, %3$s: the next break (duration). -->
+    <string name="focus_pro_cycle">Session %1$s of %2$s · next break %3$s</string>
+    <string name="focus_pro_long_break_now">Cycle complete. Take a long break: %1$s.</string>
+    <string name="focus_pro_sound_playing">Sound: %1$s</string>
+    <string name="focus_pro_strict_on">Do Not Disturb is on</string>
 </resources>

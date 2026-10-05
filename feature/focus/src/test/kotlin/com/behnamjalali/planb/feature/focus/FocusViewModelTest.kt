@@ -1,6 +1,7 @@
 package com.behnamjalali.planb.feature.focus
 
 import androidx.lifecycle.SavedStateHandle
+import com.behnamjalali.planb.core.model.AmbientSound
 import com.behnamjalali.planb.core.model.FocusStatus
 import com.behnamjalali.planb.core.model.Task
 import com.behnamjalali.planb.core.testing.RealMainDispatcherRule
@@ -27,13 +28,14 @@ class FocusViewModelTest {
 
     private lateinit var graph: TestDataGraph
     private lateinit var viewModel: FocusViewModel
+    private val controls = FakeFocusProControls()
     private val time get() = graph.time
     private val reminders get() = graph.reminders
 
     @Before
     fun setUp() {
         graph = TestDataGraph()
-        viewModel = main.track(FocusViewModel(SavedStateHandle(), graph.focus, graph.tasks, graph.settings, graph.reminders, graph.time))
+        viewModel = main.track(FocusViewModel(SavedStateHandle(), graph.focus, graph.tasks, graph.settings, graph.reminders, graph.time, controls))
         main.keepCollecting(viewModel.uiState)
     }
 
@@ -178,7 +180,7 @@ class FocusViewModelTest {
 
         // A screen opened one second before midnight and left open.
         time.setLocal(day, LocalTime.of(23, 59, 59))
-        val lateViewModel = main.track(FocusViewModel(SavedStateHandle(), graph.focus, graph.tasks, graph.settings, graph.reminders, graph.time))
+        val lateViewModel = main.track(FocusViewModel(SavedStateHandle(), graph.focus, graph.tasks, graph.settings, graph.reminders, graph.time, controls))
         main.keepCollecting(lateViewModel.uiState)
         lateViewModel.uiState.awaitItem { !it.loading && it.focusedTodayMinutes == 10 }
 
@@ -195,5 +197,91 @@ class FocusViewModelTest {
         assertThat(state.history.single().status).isEqualTo(FocusStatus.CANCELLED)
         assertThat(state.focusedTodayMinutes).isEqualTo(0)
         assertThat(reminders.focusEnd).isNull()
+    }
+
+    // region Focus Pro (#26)
+    @Test
+    fun proStart_usesTheDefaultSoundAndStrictMode_freeStartDoesNot() = runBlocking<Unit> {
+        graph.settings.update { it.copy(focusPro = it.focusPro.copy(sound = AmbientSound.RAIN, strict = true)) }
+        viewModel.uiState.awaitItem { it.focusPro.sound == AmbientSound.RAIN }
+        viewModel.start(pro = false)
+        val free = viewModel.uiState.awaitItem { it.active != null }.active!!
+        assertThat(free.soundId).isNull()
+        assertThat(free.strict).isFalse()
+        viewModel.cancel()
+        viewModel.uiState.awaitItem { it.active == null }
+        viewModel.start(pro = true)
+        val pro = viewModel.uiState.awaitItem { it.active != null }
+        assertThat(pro.active!!.soundId).isEqualTo("rain")
+        assertThat(pro.active!!.strict).isTrue()
+        assertThat(pro.sound).isEqualTo(AmbientSound.RAIN)
+        // Effects ran for the new session (sound service and Do Not Disturb).
+        assertThat(graph.focusEffects.changes.last()!!.soundId).isEqualTo("rain")
+    }
+
+    @Test
+    fun setSound_previewsWhenIdle_andChangesTheRunningSession() = runBlocking<Unit> {
+        viewModel.uiState.awaitItem { !it.loading }
+        viewModel.setSound(AmbientSound.OCEAN)
+        viewModel.uiState.awaitItem { it.focusPro.sound == AmbientSound.OCEAN }
+        eventually { controls.previews.lastOrNull() == AmbientSound.OCEAN }
+        viewModel.start(pro = true)
+        viewModel.uiState.awaitItem { it.active?.soundId == "ocean" }
+        // Starting stops any preview.
+        eventually { controls.previews.size >= 2 && controls.previews.last() == null }
+        viewModel.setSound(null)
+        viewModel.uiState.awaitItem { it.active != null && it.active!!.soundId == null && it.sound == null }
+        viewModel.setStrict(true)
+        viewModel.uiState.awaitItem { it.active?.strict == true && it.focusPro.strict }
+        viewModel.setVolume(140)
+        assertThat(viewModel.uiState.awaitItem { it.focusPro.volume != 60 }.focusPro.volume).isEqualTo(100)
+    }
+
+    @Test
+    fun onResume_rechecksDoNotDisturbAccess_andAppliesIt() = runBlocking<Unit> {
+        assertThat(viewModel.uiState.awaitItem { !it.loading }.dndAccess).isFalse()
+        controls.access = true
+        viewModel.onResume()
+        viewModel.uiState.awaitItem { it.dndAccess }
+        eventually { controls.refreshes > 0 }
+    }
+
+    private suspend fun eventually(condition: () -> Boolean) = withTimeout(10_000) {
+        while (!condition()) kotlinx.coroutines.delay(20)
+    }
+
+    @Test
+    fun cycle_suggestsALongBreakAfterEveryFourthSessionOfTheDay() = runBlocking<Unit> {
+        graph.settings.update { it.copy(focusPro = it.focusPro.copy(dailyGoalMinutes = 60, longBreakEvery = 2, longBreakMinutes = 20)) }
+        repeat(2) {
+            graph.focus.start(Duration.ofMinutes(25).toMillis(), null)
+            time.advance(Duration.ofMinutes(25))
+            graph.focus.finish()
+        }
+        val state = viewModel.uiState.awaitItem { it.completedToday == 2 && it.focusPro.longBreakEvery == 2 }
+        assertThat(state.cycle.longBreak).isTrue()
+        assertThat(state.cycle.breakMinutes).isEqualTo(20)
+        assertThat(state.focusedTodayMinutes).isEqualTo(50)
+        viewModel.setDailyGoal(90)
+        viewModel.setLongBreak(4, 15)
+        val updated = viewModel.uiState.awaitItem { it.focusPro.dailyGoalMinutes == 90 && it.focusPro.longBreakEvery == 4 }
+        assertThat(updated.cycle.longBreak).isFalse()
+        assertThat(updated.cycle.positionInCycle).isEqualTo(3)
+    }
+    // endregion
+}
+
+/** Records what the Focus screen asks of Focus Pro's platform side. */
+class FakeFocusProControls : com.behnamjalali.planb.core.focus.FocusProControls {
+    @Volatile var access = false
+    @Volatile var refreshes = 0
+    val previews: MutableList<AmbientSound?> = java.util.Collections.synchronizedList(mutableListOf())
+    override fun hasDndAccess() = access
+    override fun dndAccessIntent() = android.content.Intent("test.DND")
+    override suspend fun refresh() {
+        refreshes++
+    }
+    override fun preview(sound: AmbientSound?, volume: Int) {
+        previews += sound
     }
 }
