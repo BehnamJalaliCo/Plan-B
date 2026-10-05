@@ -88,4 +88,9 @@ data class SearchResult(
     val title: String,
     val snippet: String = "",
     val archived: Boolean = false,
+    /** Set when a note matched only through text recognized in an image or a recording. */
+    val foundIn: SearchMatchSource? = null,
 )
+
+/** Where a note's match was found when it was not in its text (Plan-B Pro #17, #19). */
+enum class SearchMatchSource { IMAGE, RECORDING }

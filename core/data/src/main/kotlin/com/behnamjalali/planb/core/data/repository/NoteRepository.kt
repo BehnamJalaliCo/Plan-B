@@ -2,6 +2,7 @@ package com.behnamjalali.planb.core.data.repository
 
 import androidx.room.withTransaction
 import com.behnamjalali.planb.core.common.TimeProvider
+import com.behnamjalali.planb.core.data.AttachmentFiles
 import com.behnamjalali.planb.core.data.DataHistory
 import com.behnamjalali.planb.core.data.SearchIndexer
 import com.behnamjalali.planb.core.data.security.NoteVault
@@ -18,6 +19,8 @@ import com.behnamjalali.planb.core.database.dao.TagDao
 import com.behnamjalali.planb.core.database.entity.NoteTagCrossRef
 import com.behnamjalali.planb.core.database.entity.TagEntity
 import com.behnamjalali.planb.core.model.ActivityAction
+import com.behnamjalali.planb.core.model.AttachmentOwner
+import com.behnamjalali.planb.core.model.rich.RichBlocks
 import com.behnamjalali.planb.core.model.ActivityEntityType
 import com.behnamjalali.planb.core.model.EntityId
 import com.behnamjalali.planb.core.model.NEW_ID
@@ -119,7 +122,48 @@ class OfflineNoteRepository @Inject constructor(
     private val history: DataHistory? = null,
     /** Keys of locked notes; without it, locked bodies cannot be changed. */
     private val vault: NoteVault? = null,
+    /** Attachment files (Plan-B Pro rich blocks): copied with a note, deleted with it. */
+    private val attachmentFiles: AttachmentFiles? = null,
 ) : NoteRepository {
+    /** Indexes a note with the text recognized in its images and recordings (never for locked notes). */
+    private suspend fun indexNote(entity: NoteEntity) {
+        val extra = if (entity.locked || entity.encryptedPayload != null) {
+            ""
+        } else {
+            SearchIndexer.attachmentText(db.attachmentDao().forOwner(AttachmentOwner.NOTE.name, entity.id))
+        }
+        searchDao.upsert(SearchIndexer.note(entity, extra))
+    }
+
+    /**
+     * Copies the attachments of note [sourceId] to [copy] (new files, new rows) and points the
+     * copy's blocks at them. A locked body is re-encrypted with the vault; when the vault is
+     * closed the copy keeps its body and gets no files (its rich blocks show as missing).
+     */
+    private suspend fun copyAttachments(copy: NoteEntity, sourceId: EntityId): NoteEntity {
+        val files = attachmentFiles ?: return copy
+        val rows = db.attachmentDao().forOwner(AttachmentOwner.NOTE.name, sourceId)
+        if (rows.isEmpty()) return copy
+        val payload = copy.encryptedPayload
+        val document = if (payload != null) {
+            runCatching { open(payload) }.getOrNull() ?: return copy
+        } else {
+            NoteDocument.decode(copy.content)
+        }
+        val map = mutableMapOf<Long, Long>()
+        rows.forEach { row ->
+            val source = files.file(row.fileName)
+            if (!source.isFile) return@forEach
+            val name = files.newFileName(row.fileName.substringAfterLast('.', ""))
+            source.copyTo(files.file(name).also { it.parentFile?.mkdirs() })
+            map[row.id] = db.attachmentDao().insert(row.copy(id = 0, ownerId = copy.id, fileName = name, createdAt = time.now()))
+        }
+        val remapped = NoteDocument(blocks = document.blocks.map { RichBlocks.remapAttachments(it, map) })
+        val updated = if (copy.encryptedPayload != null) copy.copy(encryptedPayload = seal(remapped)) else copy.copy(content = remapped.encode())
+        dao.updateNote(updated)
+        return updated
+    }
+
     override fun observeNotebooks(archived: Boolean) = dao.observeNotebooks(archived).map { l -> l.map { it.toModel() } }
     override fun observeNotebook(id: EntityId) = dao.observeNotebook(id).map { it?.toModel() }
     override fun observeSections(notebookId: EntityId) = dao.observeSections(notebookId).map { l -> l.map { it.toModel() } }
@@ -213,7 +257,7 @@ class OfflineNoteRepository @Inject constructor(
             }
             val id = if (existing == null) dao.insertNote(entity.copy(id = 0)) else entity.id.also { dao.updateNote(entity) }
             writeTags(id, note.tags)
-            searchDao.upsert(SearchIndexer.note(entity.copy(id = id)))
+            indexNote(entity.copy(id = id))
             if (log) history?.record(ActivityEntityType.NOTE, id, if (existing == null) ActivityAction.CREATED else ActivityAction.UPDATED, note.title)
             id
         }
@@ -238,7 +282,7 @@ class OfflineNoteRepository @Inject constructor(
                 existing.copy(title = title, content = document.encode(), updatedAt = maxOf(captured, existing.updatedAt))
             }
             dao.updateNote(updated)
-            searchDao.upsert(SearchIndexer.note(updated))
+            indexNote(updated)
             if (log) history?.record(ActivityEntityType.NOTE, id, ActivityAction.UPDATED, title)
             // The committed note now contains drafts up to the capture time; newer ones stay.
             draftDao.deleteIfNotNewer(id, captured.toEpochMilli())
@@ -278,7 +322,9 @@ class OfflineNoteRepository @Inject constructor(
             )
             val newId = dao.insertNote(copy)
             dao.insertTagRefs(dao.tagIds(id).map { NoteTagCrossRef(newId, it) })
-            searchDao.upsert(SearchIndexer.note(copy.copy(id = newId)))
+            // The copy gets its own copies of the note's files (Plan-B Pro rich blocks).
+            val withFiles = copyAttachments(copy.copy(id = newId), id)
+            indexNote(withFiles)
             if (log) history?.record(ActivityEntityType.NOTE, newId, ActivityAction.CREATED, copy.title)
             newId
         }
@@ -325,11 +371,15 @@ class OfflineNoteRepository @Inject constructor(
     }
 
     override suspend fun deleteNotePermanently(id: EntityId) {
-        db.withTransaction {
+        val removed = db.withTransaction {
+            val files = db.attachmentDao().forOwner(AttachmentOwner.NOTE.name, id).map { it.fileName }
             searchDao.delete(SearchIndexer.rowId(SearchEntityType.NOTE, id))
             dao.deleteNote(id)
             db.attachmentDao().deleteOrphans()
+            files
         }
+        // The files go right away (the app-start sweep catches anything left behind).
+        attachmentFiles?.let { f -> removed.forEach { runCatching { f.file(it).delete() } } }
     }
 
     override suspend fun discardNote(id: EntityId) {
@@ -344,7 +394,7 @@ class OfflineNoteRepository @Inject constructor(
             val note = dao.getNote(id) ?: return@withTransaction
             if (note.deletedAt == null) return@withTransaction
             dao.setDeletedAt(id, null)
-            searchDao.upsert(SearchIndexer.note(note.copy(deletedAt = null)))
+            indexNote(note.copy(deletedAt = null))
             if (log) history?.record(ActivityEntityType.NOTE, id, ActivityAction.RESTORED, note.title)
         }
     }
@@ -363,7 +413,7 @@ class OfflineNoteRepository @Inject constructor(
             // Plain-text copies of the body go: history versions, the draft and the search body.
             db.noteVersionDao().deleteForNote(id)
             draftDao.delete(id)
-            searchDao.upsert(SearchIndexer.note(note.copy(locked = true, encryptedPayload = payload, content = empty)))
+            indexNote(note.copy(locked = true, encryptedPayload = payload, content = empty))
         }
     }
 
@@ -373,7 +423,7 @@ class OfflineNoteRepository @Inject constructor(
             val note = dao.getNote(id) ?: throw IllegalStateException("Note $id not found")
             val content = note.encryptedPayload?.let { open(it).encode() } ?: note.content
             dao.setLocked(id, false, null, content, now)
-            searchDao.upsert(SearchIndexer.note(note.copy(locked = false, encryptedPayload = null, content = content)))
+            indexNote(note.copy(locked = false, encryptedPayload = null, content = content))
         }
     }
 

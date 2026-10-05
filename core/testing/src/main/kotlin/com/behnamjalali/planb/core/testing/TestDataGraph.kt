@@ -87,14 +87,19 @@ class TestDataGraph(
 
     val tasks = OfflineTaskRepository(db, db.taskDao(), db.tagDao(), db.searchDao(), time, reminders, history)
     val projects = OfflineProjectRepository(db, db.projectDao(), db.tagDao(), db.searchDao(), time, history)
-    val notes = OfflineNoteRepository(db, db.noteDao(), db.noteDraftDao(), db.tagDao(), db.searchDao(), time, history)
+    private val filesDir: File = Files.createTempDirectory("planb-files").toFile()
+
+    /** Attachment files in a temporary folder; images are stored as they are ([CopyImageProcessor]). */
+    val attachmentFiles = com.behnamjalali.planb.core.data.AttachmentFiles(filesDir)
+    val notes = OfflineNoteRepository(db, db.noteDao(), db.noteDraftDao(), db.tagDao(), db.searchDao(), time, history, attachmentFiles = attachmentFiles)
+    val attachments = com.behnamjalali.planb.core.data.repository.OfflineAttachmentRepository(db, attachmentFiles, CopyImageProcessor(), time)
     val habits = OfflineHabitRepository(db, db.habitDao(), db.searchDao(), time, reminders, history)
     val events = OfflineEventRepository(db, db.eventDao(), db.searchDao(), time, reminders, history)
     val trash = OfflineTrashRepository(tasks, notes, db.taskDao(), db.noteDao(), time)
     val activity = OfflineActivityRepository(db.activityLogDao())
     val focus = OfflineFocusRepository(db, db.focusDao(), time)
     val search = FtsSearchRepository(
-        db.searchDao(), db.taskDao(), db.projectDao(), db.noteDao(), db.habitDao(), db.goalDao(), db.eventDao(),
+        db.searchDao(), db.taskDao(), db.projectDao(), db.noteDao(), db.habitDao(), db.goalDao(), db.eventDao(), db.attachmentDao(),
     )
     val settings = DataStoreSettingsRepository(preferences)
     val planning = com.behnamjalali.planb.core.data.repository.OfflineTaskPlanningRepository(db, reminders)
@@ -105,5 +110,15 @@ class TestDataGraph(
         executor.shutdown()
         dataStoreScope.cancel()
         prefsDir.deleteRecursively()
+        filesDir.deleteRecursively()
+    }
+}
+
+/** Stores images unchanged and reports a fixed size (unit tests do not decode bitmaps). */
+class CopyImageProcessor(private val width: Int = 640, private val height: Int = 480) : com.behnamjalali.planb.core.data.ImageProcessor {
+    override fun store(source: File, target: File): com.behnamjalali.planb.core.data.StoredImage {
+        if (source.length() == 0L) throw com.behnamjalali.planb.core.data.UnsupportedImageException()
+        source.copyTo(target, overwrite = true)
+        return com.behnamjalali.planb.core.data.StoredImage("image/jpeg", width, height)
     }
 }

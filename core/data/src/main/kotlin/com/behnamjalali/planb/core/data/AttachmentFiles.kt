@@ -97,13 +97,16 @@ class AttachmentFiles(private val root: File) {
 class AttachmentMaintenance @Inject constructor(
     private val db: PlanBDatabase,
     private val files: AttachmentFiles,
+    private val attachments: com.behnamjalali.planb.core.data.repository.AttachmentRepository,
 ) {
     /** Returns the number of files removed. Run off the main thread (app start). */
     suspend fun sweep(): Int {
+        // Files of rich blocks the user deleted (and that no draft or kept version uses).
+        val unused = attachments.deleteUnusedEverywhere()
         val referenced = db.withTransaction {
             db.attachmentDao().deleteOrphans()
             db.attachmentDao().allFileNames().toSet()
         }
-        return files.deleteUnreferenced(referenced)
+        return unused + files.deleteUnreferenced(referenced)
     }
 }

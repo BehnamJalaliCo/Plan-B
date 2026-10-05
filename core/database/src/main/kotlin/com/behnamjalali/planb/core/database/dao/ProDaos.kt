@@ -197,6 +197,16 @@ interface AttachmentDao {
     @Query("SELECT COALESCE(SUM(size_bytes), 0) FROM attachments")
     fun observeTotalBytes(): Flow<Long>
 
+    @Query("SELECT COALESCE(SUM(size_bytes), 0) FROM attachments")
+    suspend fun totalBytes(): Long
+
+    @Query("SELECT COUNT(*) FROM attachments")
+    suspend fun count(): Int
+
+    /** Owners of a type that have attachments (the note attachment cleanup walks these). */
+    @Query("SELECT DISTINCT owner_id FROM attachments WHERE owner_type = :ownerType")
+    suspend fun ownerIds(ownerType: String): List<Long>
+
     @Insert suspend fun insert(attachment: AttachmentEntity): Long
     @Update suspend fun update(attachment: AttachmentEntity)
 

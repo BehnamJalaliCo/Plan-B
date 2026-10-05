@@ -1,6 +1,7 @@
 package com.behnamjalali.planb.core.data
 
 import com.behnamjalali.planb.core.common.SearchNormalizer
+import com.behnamjalali.planb.core.database.entity.AttachmentEntity
 import com.behnamjalali.planb.core.database.entity.CalendarEventEntity
 import com.behnamjalali.planb.core.database.entity.GoalEntity
 import com.behnamjalali.planb.core.database.entity.HabitEntity
@@ -27,12 +28,19 @@ internal object SearchIndexer {
 
     fun task(e: TaskEntity) = entry(SearchEntityType.TASK, e.id, e.title, e.description, e.notes)
     fun project(e: ProjectEntity) = entry(SearchEntityType.PROJECT, e.id, e.title, e.description)
-    /** A locked note is found by its title only: its body never enters the index. */
-    fun note(e: NoteEntity) = if (e.locked || e.encryptedPayload != null) {
+    /**
+     * A locked note is found by its title only: its body, and the text recognized in its images
+     * and recordings ([attachmentText], Plan-B Pro #17/#19), never enter the index.
+     */
+    fun note(e: NoteEntity, attachmentText: String = "") = if (e.locked || e.encryptedPayload != null) {
         entry(SearchEntityType.NOTE, e.id, e.title)
     } else {
-        entry(SearchEntityType.NOTE, e.id, e.title, NoteDocument.decode(e.content).plainText())
+        entry(SearchEntityType.NOTE, e.id, e.title, NoteDocument.decode(e.content).plainText(), attachmentText)
     }
+
+    /** The searchable text of a note's attachments: recognized text and transcripts. */
+    fun attachmentText(attachments: List<AttachmentEntity>): String =
+        attachments.flatMap { listOfNotNull(it.ocrText, it.transcript) }.filter { it.isNotBlank() }.joinToString(" ")
     fun notebook(e: NotebookEntity) = entry(SearchEntityType.NOTEBOOK, e.id, e.title)
     fun habit(e: HabitEntity) = entry(SearchEntityType.HABIT, e.id, e.title, e.unit)
     fun goal(e: GoalEntity) = entry(SearchEntityType.GOAL, e.id, e.title, e.description, e.notes)
