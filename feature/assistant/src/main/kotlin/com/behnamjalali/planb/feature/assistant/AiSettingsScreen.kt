@@ -2,7 +2,7 @@ package com.behnamjalali.planb.feature.assistant
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -174,7 +174,7 @@ fun AiSettingsScreen(state: AiSettingsUiState, providers: List<AiProvider>, acti
                         "iran_gateway" -> stringResource(R.string.ai_settings_provider_gateway_hint)
                         "avalai" -> stringResource(R.string.ai_settings_provider_iran_hint)
                         "custom" -> stringResource(R.string.ai_settings_provider_custom_hint)
-                        else -> p.defaultBaseUrl?.let { runCatching { Uri.parse(it).host }.getOrNull() }
+                        else -> p.defaultBaseUrl?.let { runCatching { it.toUri().host }.getOrNull() }
                     }
                     hint?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
@@ -221,7 +221,7 @@ fun AiSettingsScreen(state: AiSettingsUiState, providers: List<AiProvider>, acti
                                 stringResource(R.string.ai_settings_get_key),
                                 {
                                     try {
-                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                                        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                                     } catch (e: ActivityNotFoundException) {
                                         // No browser: nothing to open.
                                     }

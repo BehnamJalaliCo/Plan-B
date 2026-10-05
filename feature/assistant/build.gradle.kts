@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.ai)
     // Dictating a question (Plan-B Pro #40).
     implementation(projects.core.speech)
+    implementation(libs.androidx.core.ktx)
 
     testImplementation(projects.core.database)
     testImplementation(projects.core.datastore)

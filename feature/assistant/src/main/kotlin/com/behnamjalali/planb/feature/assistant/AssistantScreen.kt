@@ -177,8 +177,9 @@ fun AssistantScreen(
     var pickingNote by rememberSaveable { mutableStateOf(false) }
     var showContext by rememberSaveable { mutableStateOf(false) }
     val lastLength = state.messages.lastOrNull()?.text?.length ?: 0
-    LaunchedEffect(state.messages.size, lastLength) {
-        if (state.messages.isNotEmpty()) listState.scrollToItem(listState.layoutInfo.totalItemsCount.coerceAtLeast(1) - 1)
+    LaunchedEffect(state.messages.size, lastLength, state.streaming) {
+        // Keep the newest words in view: the end of the last item, whatever its height.
+        if (state.messages.isNotEmpty()) listState.scrollToItem(listState.layoutInfo.totalItemsCount.coerceAtLeast(1) - 1, Int.MAX_VALUE)
     }
     Column(Modifier.fillMaxSize()) {
         LazyColumn(
