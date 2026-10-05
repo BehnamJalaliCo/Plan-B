@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="focus_sound_channel">Focus sounds</string>
+    <string name="focus_sound_channel_desc">Shown while an ambient sound plays during a focus session</string>
+    <string name="focus_sound_notification_title">Focus sound playing</string>
+    <string name="focus_sound_notification_text">Ambient sound</string>
+    <string name="focus_sound_stop">Stop sound</string>
+    <string name="focus_sound_rain">Rain</string>
+    <string name="focus_sound_ocean">Ocean waves</string>
+    <string name="focus_sound_brown">Brown noise</string>
+    <string name="focus_sound_pink">Pink noise</string>
+    <string name="focus_sound_white">White noise</string>
+</resources>

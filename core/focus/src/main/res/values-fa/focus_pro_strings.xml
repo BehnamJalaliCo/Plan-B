@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="focus_sound_channel">صداهای تمرکز</string>
+    <string name="focus_sound_channel_desc">هنگام پخش صدای محیطی در جلسهٔ تمرکز نمایش داده می‌شود</string>
+    <string name="focus_sound_notification_title">صدای تمرکز در حال پخش</string>
+    <string name="focus_sound_notification_text">صدای محیطی</string>
+    <string name="focus_sound_stop">قطع صدا</string>
+    <string name="focus_sound_rain">باران</string>
+    <string name="focus_sound_ocean">موج دریا</string>
+    <string name="focus_sound_brown">نویز قهوه‌ای</string>
+    <string name="focus_sound_pink">نویز صورتی</string>
+    <string name="focus_sound_white">نویز سفید</string>
+</resources>
