@@ -37,10 +37,10 @@ class HabitsViewModelTest {
         graph.close()
     }
 
-    private fun habitsViewModel() = main.track(HabitsViewModel(SavedStateHandle(), graph.habits, graph.settings, graph.time))
+    private fun habitsViewModel() = main.track(HabitsViewModel(SavedStateHandle(), graph.habits, graph.settings, graph.time, graph.healthSync))
 
     private fun detailViewModel(id: Long) =
-        main.track(HabitDetailViewModel(SavedStateHandle(mapOf("habitId" to id)), graph.habits, graph.settings, graph.time))
+        main.track(HabitDetailViewModel(SavedStateHandle(mapOf("habitId" to id)), graph.habits, graph.settings, graph.time, graph.achievements, graph.healthSync))
 
     @Test
     fun list_showsActiveHabitsWithTodayAmountAndStreak() = runBlocking<Unit> {

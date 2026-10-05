@@ -53,4 +53,202 @@
         <item quantity="one">Every day</item>
         <item quantity="other">Every %1$s days</item>
     </plurals>
+    <!-- Plan-B Pro habits (#27 Health Connect, #28 statistics, #29 challenges and badges) -->
+    <string name="habits_challenges">Challenges and badges</string>
+    <string name="habits_mood">Mood tracker</string>
+
+    <string name="habit_stats_title">Statistics</string>
+    <string name="habit_stats_open">Advanced statistics</string>
+    <string name="habit_stats_open_sub">Streaks, rates, weekdays, trend and the whole year</string>
+    <string name="habit_stats_current">Current streak</string>
+    <string name="habit_stats_best">Best streak</string>
+    <string name="habit_stats_total">Days done</string>
+    <string name="habit_stats_overall">Since the start</string>
+    <string name="habit_stats_rates">Completion rate</string>
+    <string name="habit_stats_week">This week</string>
+    <string name="habit_stats_month">This month</string>
+    <string name="habit_stats_year">This year</string>
+    <string name="habit_stats_no_rate">Nothing due yet</string>
+    <plurals name="habit_stats_days">
+        <item quantity="one">%1$s day</item>
+        <item quantity="other">%1$s days</item>
+    </plurals>
+    <plurals name="habit_stats_weeks_count">
+        <item quantity="one">%1$s week</item>
+        <item quantity="other">%1$s weeks</item>
+    </plurals>
+    <plurals name="habit_stats_days_done">
+        <item quantity="one">%1$s day done</item>
+        <item quantity="other">%1$s days done</item>
+    </plurals>
+    <string name="habit_stats_trend">Trend</string>
+    <!-- %1$s: percentage points, %2$s: rate of the recent days, %3$s: rate of the days before, %4$s: number of days (30). -->
+    <string name="habit_stats_trend_up">Up %1$s points: %2$s in the last %4$s days, %3$s in the %4$s before.</string>
+    <string name="habit_stats_trend_down">Down %1$s points: %2$s in the last %4$s days, %3$s in the %4$s before.</string>
+    <string name="habit_stats_trend_steady">Steady: %2$s in the last %4$s days, %3$s in the %4$s before.</string>
+    <string name="habit_stats_trend_none">The trend appears once the habit is %1$s days old.</string>
+    <string name="habit_stats_weeks">Last %1$s weeks</string>
+    <string name="habit_stats_months">Last %1$s months</string>
+    <!-- One bar of a chart: its label and the rate (or "nothing due"). -->
+    <string name="habit_stats_bar_cd">%1$s: %2$s</string>
+    <string name="habit_stats_weekdays">By weekday</string>
+    <string name="habit_stats_best_day">Most often done on %1$s</string>
+    <string name="habit_stats_worst_day">Hardest day: %1$s</string>
+    <string name="habit_stats_year_title">Year %1$s</string>
+    <string name="habit_stats_year_previous">Previous year</string>
+    <string name="habit_stats_year_next">Next year</string>
+    <!-- %1$s: month and year, %2$s: days done, %3$s: days in the month. -->
+    <string name="habit_stats_month_cd">%1$s: %2$s of %3$s days done</string>
+    <string name="habit_stats_week_of">Week of %1$s</string>
+    <string name="habit_stats_legend_less">Less</string>
+    <string name="habit_stats_legend_more">More</string>
+
+    <string name="habit_challenge">Challenge</string>
+    <string name="habit_challenge_start">Start a challenge</string>
+    <!-- %1$s: the challenge's length in days, %2$s: today's day number in it. -->
+    <string name="habit_challenge_running">%1$s-day challenge · day %2$s</string>
+    <string name="habit_challenge_started">Challenge started. You can do it!</string>
+
+    <string name="challenges_title">Challenges and badges</string>
+    <string name="challenges_tab">Challenges</string>
+    <string name="badges_tab">Badges</string>
+    <string name="challenges_start">Start a challenge</string>
+    <string name="challenges_new_title">New challenge</string>
+    <string name="challenges_pick_habit">Habit</string>
+    <string name="challenges_pick_length">Length</string>
+    <plurals name="challenges_length">
+        <item quantity="one">%1$s day</item>
+        <item quantity="other">%1$s days</item>
+    </plurals>
+    <string name="challenges_start_confirm">Start</string>
+    <string name="challenges_rules">Do the habit on every due day until the end. A missed day ends the challenge, unless you check it in later.</string>
+    <string name="challenges_empty">No challenges yet. Pick a habit and a length to begin.</string>
+    <string name="challenges_no_habits">Create a habit first, then challenge yourself with it.</string>
+    <string name="challenges_all_busy">Every habit already has a running challenge.</string>
+    <string name="challenges_running">Running</string>
+    <string name="challenges_earlier">Earlier</string>
+    <!-- %1$s: the day number today, %2$s: the length. -->
+    <string name="challenge_day">Day %1$s of %2$s</string>
+    <!-- %1$s: check-ins done, %2$s: check-ins needed. -->
+    <string name="challenge_progress">%1$s of %2$s done</string>
+    <string name="challenge_ends">Ends %1$s</string>
+    <string name="challenge_completed">Completed %1$s</string>
+    <string name="challenge_failed">Missed on %1$s</string>
+    <string name="challenge_abandoned">Given up</string>
+    <string name="challenge_failed_hint">A due day was missed. If you did it, check it in on the habit; otherwise try again.</string>
+    <string name="challenge_give_up">Give up</string>
+    <string name="challenge_try_again">Try again</string>
+    <string name="challenge_delete">Delete</string>
+    <string name="challenge_menu">Challenge options</string>
+    <string name="challenge_day_done">done</string>
+    <string name="challenge_day_missed">missed</string>
+    <string name="challenge_day_today">today, not done yet</string>
+    <string name="challenge_day_future">coming up</string>
+    <string name="challenge_day_rest">not due</string>
+    <!-- %1$s: date, %2$s: its state. -->
+    <string name="challenge_day_cd">%1$s, %2$s</string>
+    <string name="challenge_days_cd">Days of the challenge: %1$s done, %2$s missed, %3$s to go</string>
+    <string name="challenge_read_only">Challenges and badges you earned stay here. New challenges are part of Plan-B Pro.</string>
+
+    <!-- %1$s: badges earned, %2$s: all badges. -->
+    <string name="badges_summary">%1$s of %2$s badges earned</string>
+    <string name="badges_hint">Badges follow your own data: streaks, focus time, tasks, journal, mood check-ins and challenges.</string>
+    <string name="badge_earned_on">Earned %1$s</string>
+    <string name="badge_locked">Not earned yet</string>
+    <!-- %1$s: current, %2$s: needed. -->
+    <string name="badge_progress">%1$s of %2$s</string>
+    <string name="badge_cd_earned">%1$s, earned %2$s</string>
+    <string name="badge_cd_locked">%1$s, not earned yet, %2$s</string>
+    <string name="badge_close">Close</string>
+    <plurals name="badge_name_streak">
+        <item quantity="one">%1$s-day streak</item>
+        <item quantity="other">%1$s-day streak</item>
+    </plurals>
+    <plurals name="badge_desc_streak">
+        <item quantity="one">Do a habit on %1$s due day in a row.</item>
+        <item quantity="other">Do a habit on %1$s due days in a row.</item>
+    </plurals>
+    <plurals name="badge_name_focus">
+        <item quantity="one">%1$s hour of focus</item>
+        <item quantity="other">%1$s hours of focus</item>
+    </plurals>
+    <plurals name="badge_desc_focus">
+        <item quantity="one">Complete focus sessions of %1$s hour in total.</item>
+        <item quantity="other">Complete focus sessions of %1$s hours in total.</item>
+    </plurals>
+    <plurals name="badge_name_tasks">
+        <item quantity="one">%1$s task done</item>
+        <item quantity="other">%1$s tasks done</item>
+    </plurals>
+    <plurals name="badge_desc_tasks">
+        <item quantity="one">Complete %1$s task.</item>
+        <item quantity="other">Complete %1$s tasks.</item>
+    </plurals>
+    <plurals name="badge_name_journal">
+        <item quantity="one">%1$s-day journal</item>
+        <item quantity="other">%1$s-day journal</item>
+    </plurals>
+    <plurals name="badge_desc_journal">
+        <item quantity="one">Write in your journal %1$s day in a row.</item>
+        <item quantity="other">Write in your journal %1$s days in a row.</item>
+    </plurals>
+    <plurals name="badge_name_mood">
+        <item quantity="one">%1$s mood check-in</item>
+        <item quantity="other">%1$s mood check-ins</item>
+    </plurals>
+    <plurals name="badge_desc_mood">
+        <item quantity="one">Check in your mood or energy %1$s time.</item>
+        <item quantity="other">Check in your mood or energy %1$s times.</item>
+    </plurals>
+    <plurals name="badge_name_challenge">
+        <item quantity="one">%1$s-day challenger</item>
+        <item quantity="other">%1$s-day challenger</item>
+    </plurals>
+    <plurals name="badge_desc_challenge">
+        <item quantity="one">Complete a challenge of at least %1$s day.</item>
+        <item quantity="other">Complete a challenge of at least %1$s days.</item>
+    </plurals>
+    <string name="badge_unlocked">Badge unlocked!</string>
+    <string name="badge_unlocked_ok">Wonderful</string>
+    <string name="badge_unlocked_all">See all badges</string>
+
+    <string name="habit_health_title">Check off with Health Connect</string>
+    <string name="habit_health_sub">Mark this habit done when your daily steps, sleep, water, exercise or distance reach a goal.</string>
+    <string name="habit_health_off">Off</string>
+    <string name="habit_health_steps">Steps</string>
+    <string name="habit_health_sleep">Sleep</string>
+    <string name="habit_health_water">Water</string>
+    <string name="habit_health_active">Exercise</string>
+    <string name="habit_health_distance">Distance</string>
+    <string name="habit_health_goal_steps">Daily goal (steps)</string>
+    <string name="habit_health_goal_sleep">Daily goal (hours of sleep)</string>
+    <string name="habit_health_goal_water">Daily goal (millilitres)</string>
+    <string name="habit_health_goal_active">Daily goal (minutes)</string>
+    <string name="habit_health_goal_distance">Daily goal (kilometres)</string>
+    <string name="habit_health_goal_invalid">Enter a goal between %1$s and %2$s</string>
+    <!-- %1$s: the kind of data, e.g. "steps". -->
+    <string name="habit_health_explain">Plan-B reads only your daily total of %1$s from Health Connect, on this device, to check this habit off. Nothing is written to Health Connect or sent anywhere. You can take access back in Health Connect at any time.</string>
+    <string name="habit_health_allow">Allow access</string>
+    <string name="habit_health_connected">Connected. Days that reach the goal are checked off when you open Plan-B, up to a week back.</string>
+    <string name="habit_health_open">Open Health Connect</string>
+    <string name="habit_health_install">Health Connect needs to be installed or updated first.</string>
+    <string name="habit_health_install_button">Get Health Connect</string>
+    <string name="habit_health_unsupported">Health Connect isn\'t available on this device (it needs Android 9 or later).</string>
+    <string name="habit_health_cannot_open">Health Connect couldn\'t be opened.</string>
+    <string name="habit_health_data_steps">steps</string>
+    <string name="habit_health_data_sleep">sleep</string>
+    <string name="habit_health_data_water">water</string>
+    <string name="habit_health_data_active">exercise</string>
+    <string name="habit_health_data_distance">distance</string>
+    <!-- Amounts with their unit. -->
+    <string name="habit_health_value_steps">%1$s steps</string>
+    <string name="habit_health_value_sleep">%1$s h</string>
+    <string name="habit_health_value_water">%1$s ml</string>
+    <string name="habit_health_value_active">%1$s min</string>
+    <string name="habit_health_value_distance">%1$s km</string>
+    <!-- %1$s: today's amount, %2$s: the goal. -->
+    <string name="habit_health_today">Health Connect today: %1$s of %2$s</string>
+    <string name="habit_health_linked">Checked off by Health Connect at %1$s</string>
+    <string name="habit_health_no_access">Allow Health Connect access in Edit habit to check this habit off automatically.</string>
+    <string name="habit_health_sync">Sync now</string>
 </resources>

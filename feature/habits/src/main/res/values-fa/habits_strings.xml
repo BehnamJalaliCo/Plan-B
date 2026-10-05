@@ -53,4 +53,190 @@
         <item quantity="one">هر %1$s روز</item>
         <item quantity="other">هر %1$s روز</item>
     </plurals>
+    <!-- Plan-B Pro habits (#27 Health Connect, #28 statistics, #29 challenges and badges) -->
+    <string name="habits_challenges">چالش‌ها و نشان‌ها</string>
+    <string name="habits_mood">ردیاب حال</string>
+
+    <string name="habit_stats_title">آمار</string>
+    <string name="habit_stats_open">آمار پیشرفته</string>
+    <string name="habit_stats_open_sub">زنجیره‌ها، درصدها، روزهای هفته، روند و کل سال</string>
+    <string name="habit_stats_current">زنجیرهٔ فعلی</string>
+    <string name="habit_stats_best">بهترین زنجیره</string>
+    <string name="habit_stats_total">روزهای انجام‌شده</string>
+    <string name="habit_stats_overall">از ابتدا</string>
+    <string name="habit_stats_rates">درصد انجام</string>
+    <string name="habit_stats_week">این هفته</string>
+    <string name="habit_stats_month">این ماه</string>
+    <string name="habit_stats_year">امسال</string>
+    <string name="habit_stats_no_rate">هنوز روزی نرسیده</string>
+    <plurals name="habit_stats_days">
+        <item quantity="one">%1$s روز</item>
+        <item quantity="other">%1$s روز</item>
+    </plurals>
+    <plurals name="habit_stats_weeks_count">
+        <item quantity="one">%1$s هفته</item>
+        <item quantity="other">%1$s هفته</item>
+    </plurals>
+    <plurals name="habit_stats_days_done">
+        <item quantity="one">%1$s روز انجام شد</item>
+        <item quantity="other">%1$s روز انجام شد</item>
+    </plurals>
+    <string name="habit_stats_trend">روند</string>
+    <string name="habit_stats_trend_up">%1$s واحد بهتر: %2$s در %4$s روز اخیر، %3$s در %4$s روز قبل از آن.</string>
+    <string name="habit_stats_trend_down">%1$s واحد کمتر: %2$s در %4$s روز اخیر، %3$s در %4$s روز قبل از آن.</string>
+    <string name="habit_stats_trend_steady">ثابت: %2$s در %4$s روز اخیر، %3$s در %4$s روز قبل از آن.</string>
+    <string name="habit_stats_trend_none">روند وقتی نمایش داده می‌شود که عادت %1$s روزه شود.</string>
+    <string name="habit_stats_weeks">%1$s هفتهٔ اخیر</string>
+    <string name="habit_stats_months">%1$s ماه اخیر</string>
+    <string name="habit_stats_bar_cd">%1$s: %2$s</string>
+    <string name="habit_stats_weekdays">بر اساس روز هفته</string>
+    <string name="habit_stats_best_day">بیشتر در روز %1$s انجام شده</string>
+    <string name="habit_stats_worst_day">سخت‌ترین روز: %1$s</string>
+    <string name="habit_stats_year_title">سال %1$s</string>
+    <string name="habit_stats_year_previous">سال قبل</string>
+    <string name="habit_stats_year_next">سال بعد</string>
+    <string name="habit_stats_month_cd">%1$s: %2$s روز از %3$s روز انجام شد</string>
+    <string name="habit_stats_week_of">هفتهٔ %1$s</string>
+    <string name="habit_stats_legend_less">کمتر</string>
+    <string name="habit_stats_legend_more">بیشتر</string>
+
+    <string name="habit_challenge">چالش</string>
+    <string name="habit_challenge_start">شروع یک چالش</string>
+    <string name="habit_challenge_running">چالش %1$s روزه، روز %2$s</string>
+    <string name="habit_challenge_started">چالش شروع شد. از پسش برمی‌آیید!</string>
+
+    <string name="challenges_title">چالش‌ها و نشان‌ها</string>
+    <string name="challenges_tab">چالش‌ها</string>
+    <string name="badges_tab">نشان‌ها</string>
+    <string name="challenges_start">شروع یک چالش</string>
+    <string name="challenges_new_title">چالش تازه</string>
+    <string name="challenges_pick_habit">عادت</string>
+    <string name="challenges_pick_length">مدت</string>
+    <plurals name="challenges_length">
+        <item quantity="one">%1$s روز</item>
+        <item quantity="other">%1$s روز</item>
+    </plurals>
+    <string name="challenges_start_confirm">شروع</string>
+    <string name="challenges_rules">عادت را در همهٔ روزهای برنامه تا پایان انجام دهید. یک روزِ ازدست‌رفته چالش را تمام می‌کند، مگر اینکه بعداً آن را ثبت کنید.</string>
+    <string name="challenges_empty">هنوز چالشی ندارید. یک عادت و یک مدت انتخاب کنید.</string>
+    <string name="challenges_no_habits">اول یک عادت بسازید، بعد با آن خودتان را به چالش بکشید.</string>
+    <string name="challenges_all_busy">همهٔ عادت‌ها همین حالا چالش در جریان دارند.</string>
+    <string name="challenges_running">در جریان</string>
+    <string name="challenges_earlier">قبلی‌ها</string>
+    <string name="challenge_day">روز %1$s از %2$s</string>
+    <string name="challenge_progress">%1$s از %2$s انجام شد</string>
+    <string name="challenge_ends">پایان: %1$s</string>
+    <string name="challenge_completed">کامل شد: %1$s</string>
+    <string name="challenge_failed">جاافتاده در %1$s</string>
+    <string name="challenge_abandoned">رها شد</string>
+    <string name="challenge_failed_hint">یکی از روزهای برنامه جا افتاد. اگر انجامش داده‌اید آن را در عادت ثبت کنید، وگرنه دوباره امتحان کنید.</string>
+    <string name="challenge_give_up">رها کردن</string>
+    <string name="challenge_try_again">دوباره امتحان کن</string>
+    <string name="challenge_delete">حذف</string>
+    <string name="challenge_menu">گزینه‌های چالش</string>
+    <string name="challenge_day_done">انجام شد</string>
+    <string name="challenge_day_missed">جا افتاد</string>
+    <string name="challenge_day_today">امروز، هنوز انجام نشده</string>
+    <string name="challenge_day_future">در پیش</string>
+    <string name="challenge_day_rest">جزو برنامه نیست</string>
+    <string name="challenge_day_cd">%1$s، %2$s</string>
+    <string name="challenge_days_cd">روزهای چالش: %1$s انجام‌شده، %2$s جاافتاده، %3$s باقی‌مانده</string>
+    <string name="challenge_read_only">چالش‌ها و نشان‌هایی که گرفته‌اید اینجا می‌مانند. چالش تازه بخشی از Plan-B Pro است.</string>
+
+    <string name="badges_summary">%1$s نشان از %2$s</string>
+    <string name="badges_hint">نشان‌ها از دادهٔ خودتان می‌آیند: زنجیره‌ها، زمان تمرکز، کارها، دفتر روزانه، ثبت حال و چالش‌ها.</string>
+    <string name="badge_earned_on">گرفته‌شده در %1$s</string>
+    <string name="badge_locked">هنوز گرفته نشده</string>
+    <string name="badge_progress">%1$s از %2$s</string>
+    <string name="badge_cd_earned">%1$s، گرفته‌شده در %2$s</string>
+    <string name="badge_cd_locked">%1$s، هنوز گرفته نشده، %2$s</string>
+    <string name="badge_close">بستن</string>
+    <plurals name="badge_name_streak">
+        <item quantity="one">زنجیرهٔ %1$s روزه</item>
+        <item quantity="other">زنجیرهٔ %1$s روزه</item>
+    </plurals>
+    <plurals name="badge_desc_streak">
+        <item quantity="one">یک عادت را %1$s روزِ برنامه پشت سر هم انجام دهید.</item>
+        <item quantity="other">یک عادت را %1$s روزِ برنامه پشت سر هم انجام دهید.</item>
+    </plurals>
+    <plurals name="badge_name_focus">
+        <item quantity="one">%1$s ساعت تمرکز</item>
+        <item quantity="other">%1$s ساعت تمرکز</item>
+    </plurals>
+    <plurals name="badge_desc_focus">
+        <item quantity="one">در مجموع %1$s ساعت جلسهٔ تمرکز کامل کنید.</item>
+        <item quantity="other">در مجموع %1$s ساعت جلسهٔ تمرکز کامل کنید.</item>
+    </plurals>
+    <plurals name="badge_name_tasks">
+        <item quantity="one">%1$s کار انجام‌شده</item>
+        <item quantity="other">%1$s کار انجام‌شده</item>
+    </plurals>
+    <plurals name="badge_desc_tasks">
+        <item quantity="one">%1$s کار را انجام دهید.</item>
+        <item quantity="other">%1$s کار را انجام دهید.</item>
+    </plurals>
+    <plurals name="badge_name_journal">
+        <item quantity="one">دفتر %1$s روزه</item>
+        <item quantity="other">دفتر %1$s روزه</item>
+    </plurals>
+    <plurals name="badge_desc_journal">
+        <item quantity="one">%1$s روز پشت سر هم در دفتر روزانه بنویسید.</item>
+        <item quantity="other">%1$s روز پشت سر هم در دفتر روزانه بنویسید.</item>
+    </plurals>
+    <plurals name="badge_name_mood">
+        <item quantity="one">%1$s ثبت حال</item>
+        <item quantity="other">%1$s ثبت حال</item>
+    </plurals>
+    <plurals name="badge_desc_mood">
+        <item quantity="one">%1$s بار حال یا انرژی‌تان را ثبت کنید.</item>
+        <item quantity="other">%1$s بار حال یا انرژی‌تان را ثبت کنید.</item>
+    </plurals>
+    <plurals name="badge_name_challenge">
+        <item quantity="one">چالش‌گر %1$s روزه</item>
+        <item quantity="other">چالش‌گر %1$s روزه</item>
+    </plurals>
+    <plurals name="badge_desc_challenge">
+        <item quantity="one">یک چالش دست‌کم %1$s روزه را کامل کنید.</item>
+        <item quantity="other">یک چالش دست‌کم %1$s روزه را کامل کنید.</item>
+    </plurals>
+    <string name="badge_unlocked">نشان تازه!</string>
+    <string name="badge_unlocked_ok">عالی</string>
+    <string name="badge_unlocked_all">همهٔ نشان‌ها</string>
+
+    <string name="habit_health_title">تیک خودکار با Health Connect</string>
+    <string name="habit_health_sub">وقتی قدم‌ها، خواب، آب، ورزش یا مسافت روزانه‌تان به هدف برسد، این عادت انجام‌شده ثبت می‌شود.</string>
+    <string name="habit_health_off">خاموش</string>
+    <string name="habit_health_steps">قدم‌ها</string>
+    <string name="habit_health_sleep">خواب</string>
+    <string name="habit_health_water">آب</string>
+    <string name="habit_health_active">ورزش</string>
+    <string name="habit_health_distance">مسافت</string>
+    <string name="habit_health_goal_steps">هدف روزانه (قدم)</string>
+    <string name="habit_health_goal_sleep">هدف روزانه (ساعت خواب)</string>
+    <string name="habit_health_goal_water">هدف روزانه (میلی‌لیتر)</string>
+    <string name="habit_health_goal_active">هدف روزانه (دقیقه)</string>
+    <string name="habit_health_goal_distance">هدف روزانه (کیلومتر)</string>
+    <string name="habit_health_goal_invalid">هدفی بین %1$s و %2$s وارد کنید</string>
+    <string name="habit_health_explain">Plan-B فقط مجموع روزانهٔ %1$s را از Health Connect و روی همین دستگاه می‌خواند تا این عادت را تیک بزند. چیزی در Health Connect نوشته یا به جایی فرستاده نمی‌شود. هر وقت بخواهید می‌توانید دسترسی را در Health Connect پس بگیرید.</string>
+    <string name="habit_health_allow">اجازه دادن</string>
+    <string name="habit_health_connected">وصل است. روزهایی که به هدف برسند، هنگام باز کردن Plan-B تا یک هفته عقب‌تر تیک می‌خورند.</string>
+    <string name="habit_health_open">باز کردن Health Connect</string>
+    <string name="habit_health_install">اول باید Health Connect نصب یا به‌روز شود.</string>
+    <string name="habit_health_install_button">دریافت Health Connect</string>
+    <string name="habit_health_unsupported">Health Connect روی این دستگاه در دسترس نیست (به اندروید ۹ یا جدیدتر نیاز دارد).</string>
+    <string name="habit_health_cannot_open">Health Connect باز نشد.</string>
+    <string name="habit_health_data_steps">قدم‌ها</string>
+    <string name="habit_health_data_sleep">خواب</string>
+    <string name="habit_health_data_water">آب</string>
+    <string name="habit_health_data_active">ورزش</string>
+    <string name="habit_health_data_distance">مسافت</string>
+    <string name="habit_health_value_steps">%1$s قدم</string>
+    <string name="habit_health_value_sleep">%1$s ساعت</string>
+    <string name="habit_health_value_water">%1$s میلی‌لیتر</string>
+    <string name="habit_health_value_active">%1$s دقیقه</string>
+    <string name="habit_health_value_distance">%1$s کیلومتر</string>
+    <string name="habit_health_today">Health Connect امروز: %1$s از %2$s</string>
+    <string name="habit_health_linked">تیک خودکار Health Connect با %1$s</string>
+    <string name="habit_health_no_access">برای تیک خودکار، در «ویرایش عادت» به Health Connect اجازه دهید.</string>
+    <string name="habit_health_sync">همگام‌سازی</string>
 </resources>
