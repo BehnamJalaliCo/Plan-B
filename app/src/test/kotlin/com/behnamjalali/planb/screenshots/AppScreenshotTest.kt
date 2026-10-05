@@ -65,6 +65,15 @@ import com.behnamjalali.planb.core.model.TaskSort
 import com.behnamjalali.planb.feature.tasks.R as TasksR
 import com.behnamjalali.planb.core.ui.R as UiR
 import com.behnamjalali.planb.core.model.AppLanguage
+import com.behnamjalali.planb.core.data.repository.AttachmentRepository
+import com.behnamjalali.planb.core.model.AttachmentKind
+import com.behnamjalali.planb.core.model.BlockType
+import com.behnamjalali.planb.core.model.Note
+import com.behnamjalali.planb.core.model.NoteBlock
+import com.behnamjalali.planb.core.model.NoteDocument
+import com.behnamjalali.planb.core.model.rich.AudioData
+import com.behnamjalali.planb.core.model.rich.DrawingRef
+import com.behnamjalali.planb.core.model.rich.RichBlocks
 import com.behnamjalali.planb.core.model.Notebook
 import com.behnamjalali.planb.core.model.ProjectMilestone
 import com.behnamjalali.planb.core.model.Task
@@ -135,6 +144,7 @@ class AppScreenshotTest(private val variant: Variant) {
     @Inject lateinit var planning: TaskPlanningRepository
     @Inject lateinit var deviceCalendars: FakeDeviceCalendarStore
     @Inject lateinit var preferences: UserPreferencesDataSource
+    @Inject lateinit var attachments: AttachmentRepository
 
     private var scenario: ActivityScenario<MainActivity>? = null
     private val context: Context get() = ApplicationProvider.getApplicationContext()
@@ -380,6 +390,91 @@ class AppScreenshotTest(private val variant: Variant) {
         waitFor(hasText(fixtures.notes.first().title))
         capture("notebooks", "note_editor")
     }
+
+    // region Plan-B Pro rich notes (#15, #17, #19, #20, #23)
+
+    /** A note of its own (pinned, so it is listed first), opened in the editor. */
+    private fun openRichNote(title: String, blocks: suspend (noteId: Long) -> List<NoteBlock>) {
+        launch(pro = true) {
+            val notebook = notes.observeNotebooks().first().first().id
+            val id = notes.saveNote(Note(notebookId = notebook, title = title, pinned = true))
+            notes.updateContent(id, title, NoteDocument(blocks = blocks(id)))
+        }
+        click(s(AppR.string.nav_notebooks))
+        click(title)
+        waitFor(hasContentDescription(s(NotesR.string.note_title_hint)))
+        waitFor(hasText(title))
+    }
+
+    @Test
+    fun noteWithImageTableAndDatabase() {
+        openRichNote(t("خرید وسایل دفتر", "Office supplies")) { id ->
+            val photo = attachments.addImage(id, AttachmentKind.IMAGE, "board.jpg") { RichFixtures.photo() }
+            listOf(
+                NoteBlock("p", BlockType.IMAGE, t("تخته‌ی جلسه", "Meeting whiteboard"), attachmentId = photo.id),
+                NoteBlock("t", BlockType.TABLE, data = RichBlocks.encode(RichFixtures.table(variant.language))),
+                NoteBlock("d", BlockType.DATABASE, data = RichBlocks.encode(RichFixtures.database(variant.language))),
+            )
+        }
+        waitFor(hasTestTag(com.behnamjalali.planb.feature.notebooks.rich.LOADED_TAG))
+        capture("notebooks", "note_rich")
+    }
+
+    @Test
+    fun noteWithDrawing() {
+        openRichNote(t("طرح اولیه", "First sketch")) { id ->
+            val drawing = RichFixtures.drawing()
+            val (preview, vector) = attachments.saveDrawing(id, null, null, drawing, RichFixtures.png(drawing), drawing.width, drawing.height)
+            listOf(
+                NoteBlock("d", BlockType.DRAWING, attachmentId = preview.id, data = RichBlocks.encode(DrawingRef(vector.id, drawing.width, drawing.height))),
+                NoteBlock("x", BlockType.TEXT, t("ایده‌ی صفحه‌ی خانه با کارت‌های بزرگ.", "Home screen idea with large cards.")),
+            )
+        }
+        waitFor(hasTestTag(com.behnamjalali.planb.feature.notebooks.rich.LOADED_TAG))
+        capture("notebooks", "note_drawing")
+    }
+
+    @Test
+    fun noteWithVoiceRecording() {
+        openRichNote(t("جلسه‌ی صبح", "Morning stand-up")) { id ->
+            val file = File.createTempFile("voice", ".m4a").apply { writeBytes(ByteArray(2048)) }
+            val audio = attachments.addRecording(id, file, 83_000, t("یادداشت صوتی", "Voice note"))
+            attachments.setTranscript(audio.id, t("فردا نسخه‌ی بتا را برای تیم می‌فرستیم و بازخوردها را جمع می‌کنیم.", "Tomorrow we send the beta to the team and collect feedback."))
+            listOf(
+                NoteBlock("a", BlockType.AUDIO, data = RichBlocks.encode(AudioData(RichFixtures.waveform())), attachmentId = audio.id),
+                NoteBlock("x", BlockType.TEXT, t("کارهای بعدی را در فهرست بنویسم.", "Write the next steps into the list.")),
+            )
+        }
+        waitFor(hasText(t("فردا نسخه‌ی بتا", "Tomorrow we send"), substring = true))
+        capture("notebooks", "note_audio")
+    }
+
+    @Test
+    fun noteWithMathAndChart() {
+        openRichNote(t("جمع‌بندی فصل", "Quarter summary")) {
+            listOf(
+                NoteBlock("m", BlockType.MATH, "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"),
+                NoteBlock("s", BlockType.MATH, "\\sum_{i=1}^{n} i^2 = \\frac{n(n+1)(2n+1)}{6}"),
+                NoteBlock("c", BlockType.CHART, data = RichBlocks.encode(RichFixtures.chart(variant.language))),
+            )
+        }
+        waitFor(hasContentDescription(t("نمودار میله‌ای", "Bar chart"), substring = true))
+        capture("notebooks", "note_math_chart")
+    }
+
+    @Test
+    fun noteWithScan() {
+        openRichNote(t("فاکتور تعمیرات", "Repair invoice")) { id ->
+            val scan = attachments.addImage(id, AttachmentKind.SCAN, "scan.jpg") { RichFixtures.receipt() }
+            attachments.setOcrText(scan.id, "INVOICE No. 1042\nScreen repair      1,200,000\nBattery              850,000\nTOTAL            2,050,000")
+            listOf(NoteBlock("s", BlockType.SCAN, attachmentId = scan.id))
+        }
+        waitFor(hasTestTag(com.behnamjalali.planb.feature.notebooks.rich.LOADED_TAG))
+        waitFor(hasText("INVOICE No. 1042", substring = true))
+        capture("notebooks", "note_scan")
+    }
+
+    // endregion
 
     @Test
     fun more() {

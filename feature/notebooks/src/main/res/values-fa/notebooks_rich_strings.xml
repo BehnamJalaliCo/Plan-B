@@ -37,7 +37,7 @@
     <string name="rich_error_microphone">میکروفون در دسترس نبود.</string>
 
     <!-- Images, scans and files -->
-    <string name="rich_caption_hint">توضیح عکس را بنویسید</string>
+    <string name="rich_caption_hint">توضیحی بنویسید</string>
     <string name="rich_image_cd">عکس: %1$s</string>
     <string name="rich_image_cd_plain">عکس</string>
     <string name="rich_open">باز کردن</string>

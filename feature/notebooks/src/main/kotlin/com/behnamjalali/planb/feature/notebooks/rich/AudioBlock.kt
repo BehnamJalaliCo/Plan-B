@@ -50,6 +50,7 @@ import com.behnamjalali.planb.core.model.Attachment
 import com.behnamjalali.planb.core.model.rich.AudioData
 import com.behnamjalali.planb.core.model.rich.RichBlocks
 import com.behnamjalali.planb.core.ui.PlannerLocals
+import com.behnamjalali.planb.core.ui.ProBadge
 import com.behnamjalali.planb.core.ui.ProFeature
 import com.behnamjalali.planb.core.ui.rememberProGuard
 import com.behnamjalali.planb.feature.notebooks.EditorBlock
@@ -125,12 +126,14 @@ internal fun AudioBlock(block: EditorBlock, attachment: Attachment?, ui: RichUi?
                 val persian = androidx.compose.ui.text.intl.Locale.current.language == "fa"
                 TextButton(onClick = {
                     guard.run(ProFeature.VOICE_NOTES) { ui.transcribe(block.id, if (persian) "fa-IR" else "en-US") }
-                }) { Text(stringResource(R.string.rich_audio_transcribe)) }
+                }) {
+                    Text(stringResource(R.string.rich_audio_transcribe))
+                    if (!editable) ProBadge(Modifier.padding(start = Spacing.xs))
+                }
             }
             attachment?.transcript?.let { RecognizedTextCard(it, expandedByDefault = true, title = R.string.rich_audio_transcript) }
         }
     }
-    CaptionField(block, ui, editable)
 }
 
 /** Loudness bars; the played part in the primary color, in reading order. */

@@ -5,7 +5,7 @@ seeded with sample data and a frozen clock (12 Mehr 1405 / 4 Oct 2026, 10:00 Teh
 by Roborazzi on Robolectric with native graphics. Variants: Persian/English, light/dark and 150% font.
 Regenerate with `./gradlew recordRoborazziDebug && python3 tools/generate_ui_gallery.py`.
 Verified in CI with `./gradlew verifyRoborazziDebug`.
-Total screenshots: **296**.
+Total screenshots: **356**.
 
 
 ## Today
@@ -150,11 +150,41 @@ Total screenshots: **296**.
 
 ## Notebooks
 
+### `note_audio`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/note_audio_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_audio_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_audio_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_audio_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_audio_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_audio_en_light_font150.png" width="220"/> |
+
+### `note_drawing`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/note_drawing_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_drawing_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_drawing_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_drawing_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_drawing_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_drawing_en_light_font150.png" width="220"/> |
+
 ### `note_editor`
 
 | fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
 |---|---|---|---|---|---|
 | <img src="../artifacts/screenshots/notebooks/note_editor_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_editor_en_light_font150.png" width="220"/> |
+
+### `note_math_chart`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/note_math_chart_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_math_chart_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_math_chart_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_math_chart_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_math_chart_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_math_chart_en_light_font150.png" width="220"/> |
+
+### `note_rich`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/note_rich_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_rich_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_rich_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_rich_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_rich_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_rich_en_light_font150.png" width="220"/> |
+
+### `note_scan`
+
+| fa_light | fa_dark | en_light | en_dark | fa_light_font150 | en_light_font150 |
+|---|---|---|---|---|---|
+| <img src="../artifacts/screenshots/notebooks/note_scan_fa_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_scan_fa_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_scan_en_light.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_scan_en_dark.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_scan_fa_light_font150.png" width="220"/> | <img src="../artifacts/screenshots/notebooks/note_scan_en_light_font150.png" width="220"/> |
 
 ### `notebooks`
 
