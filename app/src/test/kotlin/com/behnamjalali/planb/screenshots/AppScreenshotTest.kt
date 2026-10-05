@@ -325,6 +325,8 @@ class AppScreenshotTest(private val variant: Variant) {
         click(s(AppR.string.nav_tasks))
         click(fixtures.tasks.first().title)
         waitFor(hasText("Rehearse"))
+        // The form loads asynchronously (task, then its planning data).
+        waitFor(hasSetTextAction() and hasText(fixtures.tasks.first().title))
         capture("tasks", "task_editor")
     }
 
@@ -575,6 +577,9 @@ class AppScreenshotTest(private val variant: Variant) {
         click(if (variant.language == AppLanguage.PERSIAN) "مهم این هفته" else "Important this week")
         click(s(TasksR.string.tasks_edit_smart_list))
         waitFor(hasText(s(TasksR.string.smart_list_priority)))
+        // The live match count arrives after a short debounce: high/medium priority within 7 days.
+        val three = if (variant.language == AppLanguage.PERSIAN) "۳" else "3"
+        waitFor(hasText(context.resources.getQuantityString(TasksR.plurals.smart_list_matches, 3, three)))
         capture("tasks", "smart_list_builder")
     }
 
@@ -629,6 +634,7 @@ class AppScreenshotTest(private val variant: Variant) {
         }
         click(s(AppR.string.nav_tasks))
         click(fixtures.tasks.first().title)
+        waitFor(hasSetTextAction() and hasText(fixtures.tasks.first().title))
         waitFor(hasText(s(TasksR.string.task_editor_more_reminders))).performScrollTo()
         waitFor(hasText(fixtures.tasks[1].title, substring = true)).performScrollTo()
         capture("tasks", "task_editor_planning")
