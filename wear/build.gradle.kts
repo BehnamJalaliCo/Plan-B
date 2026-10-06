@@ -14,8 +14,10 @@ android {
         applicationId = "com.behnamjalali.planb"
         // Wear OS 3+ (Compose for Wear OS).
         minSdk = 30
-        versionCode = 1
-        versionName = "1.0.0"
+        // Same application id as the phone app: the watch build keeps its own version-code range
+        // (1,000,000 + the phone's versionCode) so the two never collide in a store.
+        versionCode = 1_000_003
+        versionName = "1.1.0"
     }
 
     androidResources {

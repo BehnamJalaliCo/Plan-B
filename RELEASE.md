@@ -5,8 +5,8 @@
 | Field | Value | Where |
 |---|---|---|
 | `applicationId` | `com.behnamjalali.planb` (never changes) | `app/build.gradle.kts` |
-| `versionName` | `1.0.1` (Semantic Versioning) | `app/build.gradle.kts` |
-| `versionCode` | `2` (increase by one for every store upload) | `app/build.gradle.kts` |
+| `versionName` | `1.1.0` (Semantic Versioning) | `app/build.gradle.kts` |
+| `versionCode` | `3` (increase by one for every store upload; the Wear OS build uses 1,000,000 + this) | `app/build.gradle.kts` |
 | Tag | `v<versionName>`, created by the release workflow | Git |
 
 Record user-visible changes in [CHANGELOG.md](CHANGELOG.md) and in

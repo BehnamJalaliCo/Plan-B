@@ -3,9 +3,21 @@
 All notable changes to Plan-B are documented here. The project follows
 [Semantic Versioning](https://semver.org/); `versionCode` increases with every store upload.
 
+## Version history
+
+| Version | versionCode | Date | Summary |
+|---|---|---|---|
+| [1.1.0](#110--2026-10-06) | 3 | 2026-10-06 | **Plan-B Pro**: 40 premium features (monthly or lifetime), cinematic first run; every free feature stays free |
+| [1.0.1](#101--2026-10-04) | 2 | 2026-10-04 | Reliability update after a full code and screenshot review |
+| [1.0.0](#100--2026-10-04) | 1 | 2026-10-04 | First release on Cafe Bazaar |
+
 ## [Unreleased]
 
-Foundation for **Plan-B Pro**. Every existing feature stays free.
+## [1.1.0] — 2026-10-06
+
+**Plan-B Pro**: 40 premium features, sold through Cafe Bazaar as a monthly subscription
+(399,000 toman) or a lifetime purchase (1,999,000 toman). Every feature of 1.0 stays free. A new
+first run asks for the language first and then shows the welcome and three animated slides.
 
 ### Added
 - Plan-B Pro rich notes: photos (gallery or camera), files, tables, pen drawings, scanned

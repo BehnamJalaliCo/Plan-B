@@ -37,8 +37,8 @@ android {
 
     defaultConfig {
         applicationId = "com.behnamjalali.planb"
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.1.0"
         testInstrumentationRunner = "com.behnamjalali.planb.HiltTestRunner"
         // Release builds buy through Cafe Bazaar; debug builds use an in-memory store.
         buildConfigField("boolean", "FAKE_BILLING", "false")

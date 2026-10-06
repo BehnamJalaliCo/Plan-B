@@ -69,7 +69,7 @@ AlarmManager notifications · Baseline Profiles · Robolectric · Roborazzi · M
 | | |
 |---|---|
 | Application id | `com.behnamjalali.planb` |
-| Version | 1.0.1 (code 2) |
+| Version | 1.1.0 (code 3) |
 | minSdk / targetSdk / compileSdk | 26 / 37 / 37 |
 | Build | Gradle 9.8 (wrapper), AGP 9.4, Kotlin 2.4, JDK 21 |
 
