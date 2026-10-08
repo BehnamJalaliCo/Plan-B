@@ -34,14 +34,14 @@ THEMES = [
 # (folder, screen, first headline line, highlighted second line, subtitle, tilt in degrees)
 SLIDES = [
     ("today", "today", "همهٔ روزت", "در یک نگاه", "کارها، رویدادها، عادت‌ها و تمرکز در صفحهٔ امروز", 0),
-    ("capture", "quick_capture_smart", "فارسی بنویس،", "خودش می‌فهمد", "«فردا ساعت ۵ عصر جلسه» خودش کاری با تاریخ و ساعت می‌شود", -6),
-    ("calendar", "calendar_holidays_month", "تقویم شمسی", "با تعطیلات رسمی", "تاریخ قمری، مناسبت‌ها و همگام‌سازی با تقویم گوشی", 6),
+    ("capture", "quick_capture_smart", "فارسی بنویس،", "خودش می‌فهمد", "«فردا ساعت ۵ عصر جلسه» خودش کاری با تاریخ و ساعت می‌شود", -4),
+    ("calendar", "calendar_holidays_month", "تقویم شمسی", "با تعطیلات رسمی", "تاریخ قمری، مناسبت‌ها و همگام‌سازی با تقویم گوشی", 4),
     ("calendar", "calendar_time_blocking", "روزت را", "ساعت‌به‌ساعت بچین", "بلوک‌بندی زمان با کشیدن و رها کردن و چیدن خودکار روز", 0),
-    ("notebooks", "note_rich", "یادداشتی", "فراتر از متن", "عکس، جدول، طراحی، اسکن و صدا در یک یادداشت", -6),
-    ("assistant", "assistant_chat", "دستیار", "هوش مصنوعی", "از برنامه‌ات بپرس، روزت را بچین و یادداشت‌ها را خلاصه کن", 6),
+    ("notebooks", "note_rich", "یادداشتی", "فراتر از متن", "عکس، جدول، طراحی، اسکن و صدا در یک یادداشت", -4),
+    ("assistant", "assistant_chat", "دستیار", "هوش مصنوعی", "از برنامه‌ات بپرس، روزت را بچین و یادداشت‌ها را خلاصه کن", 4),
     ("focus", "focus_pro_running", "تمرکز عمیق،", "بدون مزاحمت", "صداهای محیطی آرام و حالت «مزاحم نشوید» در جلسهٔ تمرکز", 0),
-    ("habits", "habit_stats", "عادت‌های", "ماندگار بساز", "زنجیرهٔ روزها، آمار سالانه، چالش‌ها و نشان‌ها", -6),
-    ("notebooks", "journal", "دفتر روزانه", "و تقویم حال", "هر روز بنویس و حالت را ببین؛ همه چیز فقط روی گوشی خودت", 6),
+    ("habits", "habit_stats", "عادت‌های", "ماندگار بساز", "زنجیرهٔ روزها، آمار سالانه، چالش‌ها و نشان‌ها", -4),
+    ("notebooks", "journal", "دفتر روزانه", "و تقویم حال", "هر روز بنویس و حالت را ببین؛ همه چیز فقط روی گوشی خودت", 4),
 ]
 
 
@@ -126,26 +126,30 @@ def phone(path, width):
 
 def slide(index, folder, screen, line1, line2, subtitle, tilt):
     img = background(index % len(THEMES))
+    card_top = 190
+    c = card(line1, line2, subtitle)
 
+    # The whole phone (including its rounded bottom) fits between the card and the bottom edge.
     device = phone(os.path.join(SHOTS, folder, f"{screen}_fa_light.png"), 700)
     device = device.rotate(tilt, resample=Image.BICUBIC, expand=True)
+    top, bottom = card_top + c.height + 56, H - 60
+    scale = min((bottom - top) / device.height, 900 / device.width)
+    device = device.resize((int(device.width * scale), int(device.height * scale)), Image.LANCZOS)
     x = (W - device.width) // 2
-    y = 760 - int(abs(math.sin(math.radians(tilt))) * 140)
-    shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    y = top + (bottom - top - device.height) // 2
     alpha = device.split()[3].point(lambda a: int(a * 0.45))
     shadow_layer = Image.new("RGBA", device.size, (20, 10, 60, 255))
     shadow_layer.putalpha(alpha)
-    shadow.alpha_composite(shadow_layer, (x + 18, y + 34))
-    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(26)))
+    shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    shadow.alpha_composite(shadow_layer, (x + 16, y + 28))
+    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(24)))
     img.alpha_composite(device, (x, y))
 
-    # The card sits over the top of the phone.
-    c = card(line1, line2, subtitle)
     card_shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     ImageDraw.Draw(card_shadow).rounded_rectangle(
-        ((W - c.width) // 2 + 6, 214, (W + c.width) // 2 + 6, 200 + c.height + 20), 84, fill=(20, 10, 60, 70))
+        ((W - c.width) // 2 + 6, card_top + 18, (W + c.width) // 2 + 6, card_top + c.height + 20), 84, fill=(20, 10, 60, 70))
     img.alpha_composite(card_shadow.filter(ImageFilter.GaussianBlur(22)))
-    img.alpha_composite(c, ((W - c.width) // 2, 196))
+    img.alpha_composite(c, ((W - c.width) // 2, card_top))
 
     # Brand mark above the card.
     icon = Image.open(os.path.join(GRAPHICS, "icon-512.png")).convert("RGBA").resize((76, 76), Image.LANCZOS)
@@ -155,10 +159,9 @@ def slide(index, folder, screen, line1, line2, subtitle, tilt):
     d = ImageDraw.Draw(img)
     label = font("bold", 46)
     text_w = label.getlength("Plan-B")
-    total = icon.width + 18 + text_w
-    left = (W - total) / 2
-    img.alpha_composite(icon, (int(left + text_w + 18), 74))
-    d.text((left, 112), "Plan-B", font=label, fill="white", anchor="lm")
+    left = (W - (icon.width + 18 + text_w)) / 2
+    img.alpha_composite(icon, (int(left + text_w + 18), 66))
+    d.text((left, 104), "Plan-B", font=label, fill="white", anchor="lm")
 
     name = f"{index + 1:02d}_{screen}.png"
     img.convert("RGB").save(os.path.join(OUT, name), optimize=True)
