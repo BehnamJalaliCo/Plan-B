@@ -82,4 +82,4 @@ https://github.com/BehnamJalaliCo/Plan-B/blob/main/PRIVACY.md
 
 - Icon: `graphics/icon-512.png` (512×512)
 - Cover: `graphics/cover_en.png` (1024×500)
-- Screenshots in order: `graphics/screenshots/en/01_today.png` … `08_weekly_review.png`
+- Screenshots in order: `graphics/screenshots/en/01_today.png` … `08_habit_stats.png`

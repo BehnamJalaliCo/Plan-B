@@ -90,4 +90,4 @@ https://github.com/BehnamJalaliCo/Plan-B/blob/main/PRIVACY.md
 
 - آیکون: `graphics/icon-512.png` (۵۱۲×۵۱۲)
 - تصویر سربرگ: `graphics/cover_fa.png` (۱۰۲۴×۵۰۰)
-- اسکرین‌شات‌ها به ترتیب: `graphics/screenshots/fa/01_today.png` … `08_weekly_review.png`
+- اسکرین‌شات‌ها به ترتیب: `graphics/screenshots/fa/01_today.png` … `08_habit_stats.png`
