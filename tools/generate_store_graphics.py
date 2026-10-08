@@ -24,13 +24,13 @@ FONT_FILES = {"regular": "AnjomanMax-Regular.ttf", "medium": "AnjomanMax-Medium.
 # Listing order: the first screenshots are the ones most people see.
 SCREENS = [
     ("today", "today"),
-    ("calendar", "calendar_month"),
-    ("tasks", "tasks_today"),
-    ("notebooks", "note_editor"),
-    ("habits", "habit_detail"),
-    ("projects", "project_board"),
-    ("focus", "focus"),
-    ("review", "weekly_review"),
+    ("calendar", "calendar_holidays_month"),
+    ("capture", "quick_capture_smart"),
+    ("calendar", "calendar_time_blocking"),
+    ("notebooks", "note_rich"),
+    ("assistant", "assistant_chat"),
+    ("focus", "focus_pro_running"),
+    ("habits", "habit_stats"),
 ]
 
 TEXT = {
