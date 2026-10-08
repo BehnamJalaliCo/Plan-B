@@ -4,15 +4,16 @@ plugins {
 }
 
 /**
- * The Cafe Bazaar RSA public key used to verify purchase signatures on the device. It comes
- * from the environment or a Gradle property named PLANB_BAZAAR_RSA_KEY (a CI secret, or
- * ~/.gradle/gradle.properties), never from git. Without it (open-source builds) billing reports
- * "not configured" and the purchase screen says so. Only Base64 characters are kept, so the
- * value cannot break out of the generated Java string.
+ * The Cafe Bazaar RSA public key used to verify purchase signatures on the device. It is a
+ * public key (it ships inside every APK), kept in bazaar-rsa-public-key.txt; the environment or a
+ * Gradle property named PLANB_BAZAAR_RSA_KEY overrides it. Without any key billing reports "not
+ * configured" and the purchase screen says so. Only Base64 characters are kept, so the value
+ * cannot break out of the generated Java string.
  */
 val bazaarRsaKey: String = (
     System.getenv("PLANB_BAZAAR_RSA_KEY")?.takeIf { it.isNotBlank() }
         ?: providers.gradleProperty("PLANB_BAZAAR_RSA_KEY").orNull
+        ?: file("bazaar-rsa-public-key.txt").takeIf { it.isFile }?.readText()
         ?: ""
     ).filter { it.isLetterOrDigit() || it == '+' || it == '/' || it == '=' }
 

@@ -5,8 +5,8 @@
 | Field | Value | Where |
 |---|---|---|
 | `applicationId` | `com.behnamjalali.planb` (never changes) | `app/build.gradle.kts` |
-| `versionName` | `1.1.0` (Semantic Versioning) | `app/build.gradle.kts` |
-| `versionCode` | `3` (increase by one for every store upload; the Wear OS build uses 1,000,000 + this) | `app/build.gradle.kts` |
+| `versionName` | `1.1.1` (Semantic Versioning) | `app/build.gradle.kts` |
+| `versionCode` | `4` (increase by one for every store upload; the Wear OS build uses 1,000,000 + this) | `app/build.gradle.kts` |
 | Tag | `v<versionName>`, created by the release workflow | Git |
 
 Record user-visible changes in [CHANGELOG.md](CHANGELOG.md) and in
@@ -73,7 +73,7 @@ the `release` environment to require approval:
 | `PLANB_KEY_PASSWORD` | key password |
 | `PLANB_FONTS_PASSPHRASE` | passphrase of the encrypted licensed fonts (see [docs/FONTS.md](docs/FONTS.md)); also needed by CI to verify screenshots |
 | `CAFEBAZAAR_PISHKHAN_API_SECRET` | optional: Pishkhan API secret for automated upload |
-| `PLANB_BAZAAR_RSA_KEY` | optional: the Cafe Bazaar RSA public key of the app (Pishkhan → in-app billing), used to verify Plan-B Pro purchases on the device. Without it the release builds normally but cannot sell Pro (see [docs/PRO.md](docs/PRO.md)). For local builds export it or put `PLANB_BAZAAR_RSA_KEY=…` in `~/.gradle/gradle.properties`. |
+| `PLANB_BAZAAR_RSA_KEY` | optional: overrides the Cafe Bazaar RSA public key in `core/billing/bazaar-rsa-public-key.txt` (Pishkhan → in-app billing), used to verify Plan-B Pro purchases on the device (see [docs/PRO.md](docs/PRO.md)). |
 
 The workflow decodes the keystore into the runner's temporary directory with mode 600, passes
 passwords only through environment variables (never on a command line or in logs) and deletes

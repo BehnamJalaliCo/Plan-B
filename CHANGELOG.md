@@ -7,11 +7,19 @@ All notable changes to Plan-B are documented here. The project follows
 
 | Version | versionCode | Date | Summary |
 |---|---|---|---|
+| [1.1.1](#111--2026-10-08) | 4 | 2026-10-08 | Plan-B Pro can be bought: the Cafe Bazaar key is built in |
 | [1.1.0](#110--2026-10-06) | 3 | 2026-10-06 | **Plan-B Pro**: 40 premium features (monthly or lifetime), cinematic first run; every free feature stays free |
 | [1.0.1](#101--2026-10-04) | 2 | 2026-10-04 | Reliability update after a full code and screenshot review |
 | [1.0.0](#100--2026-10-04) | 1 | 2026-10-04 | First release on Cafe Bazaar |
 
 ## [Unreleased]
+
+## [1.1.1] — 2026-10-08
+
+### Fixed
+- Plan-B Pro can be bought: release builds now contain the app's Cafe Bazaar RSA public key
+  (`core/billing/bazaar-rsa-public-key.txt`), so purchases are verified instead of the Pro screen
+  saying purchases are not available. 1.1.0 was built without it.
 
 ## [1.1.0] — 2026-10-06
 

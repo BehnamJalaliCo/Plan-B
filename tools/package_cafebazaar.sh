@@ -19,8 +19,8 @@
 #   PLANB_KEY_PASSWORD        key password
 #
 # Optional:
-#   PLANB_BAZAAR_RSA_KEY      Cafe Bazaar RSA public key for Plan-B Pro purchases (docs/PRO.md);
-#                             without it the build cannot sell Pro
+#   PLANB_BAZAAR_RSA_KEY      overrides the Cafe Bazaar RSA public key in
+#                             core/billing/bazaar-rsa-public-key.txt (docs/PRO.md)
 #   PLANB_RELEASE_DIR         output directory (default: release/cafebazaar)
 #   PLANB_SKIP_GRADLE=1       reuse already-built outputs in app/build/outputs
 set -euo pipefail

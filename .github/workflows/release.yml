@@ -35,14 +35,9 @@ jobs:
     environment: release
     env:
       HAS_SIGNING: ${{ secrets.PLANB_KEYSTORE_BASE64 != '' && secrets.PLANB_KEYSTORE_PASSWORD != '' && secrets.PLANB_KEY_ALIAS != '' && secrets.PLANB_KEY_PASSWORD != '' && secrets.PLANB_FONTS_PASSPHRASE != '' }}
-      HAS_BAZAAR_KEY: ${{ secrets.PLANB_BAZAAR_RSA_KEY != '' }}
       # Releases must ship the licensed typeface, never the fallback.
       PLANB_REQUIRE_PRIVATE_FONTS: "true"
     steps:
-      - name: Note a missing Cafe Bazaar key
-        if: env.HAS_BAZAAR_KEY != 'true'
-        run: echo "::warning::PLANB_BAZAAR_RSA_KEY is not set; this release cannot sell Plan-B Pro (docs/PRO.md)."
-
       - name: Require release signing secrets
         if: env.HAS_SIGNING != 'true'
         run: |
@@ -96,9 +91,7 @@ jobs:
           PLANB_KEYSTORE_PASSWORD: ${{ secrets.PLANB_KEYSTORE_PASSWORD }}
           PLANB_KEY_ALIAS: ${{ secrets.PLANB_KEY_ALIAS }}
           PLANB_KEY_PASSWORD: ${{ secrets.PLANB_KEY_PASSWORD }}
-          # Optional: the Cafe Bazaar RSA public key for Plan-B Pro purchases (docs/PRO.md).
-          # Without it the release builds and runs, but its Pro screen says purchases are
-          # not available in this version.
+          # Optional: overrides the public key in core/billing/bazaar-rsa-public-key.txt.
           PLANB_BAZAAR_RSA_KEY: ${{ secrets.PLANB_BAZAAR_RSA_KEY }}
         run: tools/package_cafebazaar.sh
 

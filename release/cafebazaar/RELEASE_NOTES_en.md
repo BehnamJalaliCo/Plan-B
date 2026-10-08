@@ -1,4 +1,4 @@
-# Plan-B 1.1.0
+# Plan-B 1.1.1
 
 Introducing **Plan-B Pro**: 40 new features with a monthly subscription (399,000 toman) or a
 lifetime purchase (1,999,000 toman) through Cafe Bazaar. Every feature of 1.0 stays free.
@@ -45,9 +45,9 @@ only the text you choose, directly to the provider you choose.
 
 | File | Use |
 |---|---|
-| `Plan-B-v1.1.0-release.apk` | Install directly on Android 8.0+ |
-| `Plan-B-v1.1.0-release.aab` | Android App Bundle (store upload) |
-| `Plan-B-v1.1.0-bazaar.bin` | Signed bundle digest for Cafe Bazaar (generated with the official bundle-signer) |
+| `Plan-B-v1.1.1-release.apk` | Install directly on Android 8.0+ |
+| `Plan-B-v1.1.1-release.aab` | Android App Bundle (store upload) |
+| `Plan-B-v1.1.1-bazaar.bin` | Signed bundle digest for Cafe Bazaar (generated with the official bundle-signer) |
 | `SHA256SUMS.txt` | Checksums — verify with `sha256sum -c SHA256SUMS.txt` |
 
 Minimum Android version: 8.0 (API 26). Target: API 37.

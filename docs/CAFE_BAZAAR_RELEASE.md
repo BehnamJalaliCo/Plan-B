@@ -65,9 +65,9 @@ sells Pro (details in [PRO.md](PRO.md)):
 | `planb_pro_monthly` | Subscription, monthly | 399,000 toman |
 | `planb_pro_lifetime` | In-app product (managed, never consumed) | 1,999,000 toman |
 
-Copy the app's **RSA public key** from Pishkhan (in-app billing / Poolakey section) into the
-GitHub secret `PLANB_BAZAAR_RSA_KEY`. Without it the release still builds, but its Pro screen
-says purchases are not available in this version.
+The app's **RSA public key** from Pishkhan (in-app billing / Poolakey section) is in
+`core/billing/bazaar-rsa-public-key.txt` (`PLANB_BAZAAR_RSA_KEY` overrides it). Without a key the
+release still builds, but its Pro screen says purchases are not available in this version.
 
 ## Producing the files
 
@@ -129,6 +129,6 @@ fall back to the manual upload if Cafe Bazaar changes the API.
 - [ ] APK installs and starts on a real device; language switch, a reminder and backup/restore
       work.
 - [ ] Listing, what's new and screenshots are up to date in both languages.
-- [ ] `PLANB_BAZAAR_RSA_KEY` is set and both Pro products exist in Pishkhan; a test purchase
+- [ ] The Bazaar RSA key (`core/billing/bazaar-rsa-public-key.txt`) is current and both Pro products exist in Pishkhan; a test purchase
       and "Restore purchases" work with the release build (see [PRO.md](PRO.md)).
 - [ ] The release workflow's permission check passed (only allowlisted permissions).

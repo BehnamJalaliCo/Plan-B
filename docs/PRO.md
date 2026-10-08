@@ -142,19 +142,19 @@ The numbers and ids are the ones in `core/ui/.../ProFeature.kt` (ids are stable;
 Purchases are verified **on the device** with the app's Cafe Bazaar RSA public key: by
 Poolakey (`SecurityCheck.Enable`) and again by `PurchaseSignatureVerifier` (SHA1withRSA over the
 purchase JSON) plus a package-name check. The key is injected at build time as
-`BuildConfig.BAZAAR_RSA_KEY` from the environment variable or Gradle property
-`PLANB_BAZAAR_RSA_KEY` and is never committed. Open-source builds without it report "not
-configured", and the Pro screen says purchases are not available in this version.
+`BuildConfig.BAZAAR_RSA_KEY` from `core/billing/bazaar-rsa-public-key.txt` (it is a public key
+and ships inside every APK anyway); the environment variable or Gradle property
+`PLANB_BAZAAR_RSA_KEY` overrides it. Builds without any key report "not configured", and the Pro
+screen says purchases are not available in this version.
 
 How to get and set the key:
 
 1. Sign in to [Pishkhan](https://pishkhan.cafebazaar.ir) → your app → **In-app payments /
    Poolakey** (the "RSA key" or "public key" of the app). Copy the Base64 text.
 2. In Pishkhan, create the two products with the ids above (subscription and in-app product).
-3. GitHub: add the repository (or `release` environment) secret `PLANB_BAZAAR_RSA_KEY`. The
-   Release workflow passes it to the build; it is optional (a warning is shown when missing).
-4. Local release builds: `export PLANB_BAZAAR_RSA_KEY=…` or add
-   `PLANB_BAZAAR_RSA_KEY=…` to `~/.gradle/gradle.properties` (never to the repository).
+3. Put it in `core/billing/bazaar-rsa-public-key.txt` (done for Plan-B). To build with another
+   key, set `PLANB_BAZAAR_RSA_KEY` (environment, `~/.gradle/gradle.properties` or the GitHub
+   secret of the same name, which the Release workflow passes to the build).
 
 ## Testing purchases
 
